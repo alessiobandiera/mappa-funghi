@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mappa Funghi Lucchesia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+/* Layout: mappa a tutto schermo, pannello laterale su desktop, foglio in basso su telefono */
+:root{
+  --bg:#eef0ea; --panel:#fbfbf8; --fg:#1f251c; --muted:#5d6656; --line:#d6dbcf;
+  --accent:#3d6b2f; --accent-ink:#ffffff; --chip:#e6eadf;
+  --s0:#9aa093; --s1:#d8c48a; --s2:#d99a3e; --s3:#78a048; --s4:#2c6a35;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
+  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
+  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; }
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
+.app{display:grid;grid-template-columns:380px 1fr;height:100%}
+#map{height:100%;min-height:0;background:var(--bg)}
+.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
+  padding-block:18px 24px;padding-inline:18px;display:flex;flex-direction:column;gap:18px;min-width:0}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:55% 45%}
+  .panel{order:2;border-right:0;border-top:1px solid var(--line);padding-inline:16px}
+  #map{order:1}
+}
+h1{font:700 1.6rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0}
+.label{font:500 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;
+  padding:6px 12px;font:500 .9rem var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dayrow{display:flex;align-items:center;gap:10px}
+.dayrow input{flex:1;accent-color:var(--accent)}
+.daylbl{font:500 .95rem var(--mono);min-width:9.5em;text-align:right}
+.status{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;flex-basis:100%}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+button.btn{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:6px;padding:5px 10px;font:500 .85rem var(--body);cursor:pointer}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+.list li button{width:100%;display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;align-items:center;
+  background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg);padding:8px 2px;text-align:left;cursor:pointer;font:inherit}
+.list li button:hover{background:var(--chip)}
+.score{font:500 1rem var(--mono);font-variant-numeric:tabular-nums;text-align:center;border-radius:4px;padding:2px 0;color:#fff}
+.where{min-width:0}
+.where b{font-weight:600}
+.where small{display:block;color:var(--muted)}
+.det{display:flex;flex-direction:column;gap:12px}
+.det header{display:flex;justify-content:space-between;align-items:start;gap:8px}
+.det h2{font:700 1.15rem/1.2 var(--display);margin:0}
+.meta{color:var(--muted);font-size:.85rem}
+.sp{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.sp .n{font-weight:600}
+.sp .v{font:500 1.05rem var(--mono);font-variant-numeric:tabular-nums}
+.sp .why{grid-column:1/-1;color:var(--muted);font-size:.84rem}
+.spark{grid-column:1/-1;display:flex;gap:3px;align-items:flex-end;height:30px;margin-top:4px}
+.spark div{flex:1;border-radius:2px 2px 0 0;min-height:2px;position:relative}
+.spark div.fc{opacity:.5}
+.spark div.cur{outline:2px solid var(--fg);outline-offset:1px}
+select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
+.note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.note a{color:var(--accent)}
+.diario-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px}
+.diario-form label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted);min-width:0}
+.diario-form .full{grid-column:1/-1}
+.diario-form input,.diario-form select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;min-width:0}
+.esito{display:flex;gap:6px}
+.esito label{flex-direction:row;align-items:center;gap:4px;color:var(--fg)}
+.btn-primario{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:7px 12px;font:600 .9rem var(--body);cursor:pointer}
+.diario-voce{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.diario-voce .pallino{width:10px;height:10px;border-radius:50%}
+.diario-voce button{background:none;border:0;color:var(--muted);cursor:pointer;font:inherit}
+.diario-voce .apri{text-align:left;color:var(--fg);padding:0}
+.diario-azioni{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.riepilogo{font-size:.88rem;padding:8px 10px;border-radius:6px;background:var(--chip)}
+.hint{margin:0;font-size:.88rem;padding:8px 10px;border-radius:6px;background:var(--chip);color:var(--fg)}
+.leaflet-tooltip.cell-tip{font:500 .8rem var(--body);padding:4px 8px}
+@media (prefers-reduced-motion: reduce){ .bar i{transition:none} }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" aria-label="Controlli">
+    <div>
+      <h1>Funghi in Lucchesia</h1>
+      <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata per specie dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
+    </div>
+
+    <div>
+      <p class="label">Specie</p>
+      <div class="chips" id="chips" role="group" aria-label="Specie"></div>
+    </div>
+
+    <div>
+      <p class="label">Giorno</p>
+      <div class="dayrow">
+        <input type="range" id="day" min="0" max="9" value="6" aria-label="Giorno" disabled>
+        <span class="daylbl" id="daylbl">–</span>
+      </div>
+    </div>
+
+    <div class="status" id="statusbox">
+      <span id="status">Preparo la griglia…</span>
+      <button class="btn" id="reload" type="button">Aggiorna meteo</button>
+      <div class="bar"><i id="prog"></i></div>
+    </div>
+
+    <div class="legend" id="legend"></div>
+    <p class="hint" id="hint">Avvicinati sulla mappa (zoom 11 o più) per vedere i boschi reali, a maglie di circa 600 m, ognuno con la sua quota.</p>
+    <p class="meta" id="fstatus" hidden></p>
+
+    <section id="detail" class="det" hidden></section>
+
+    <section id="diario">
+      <p class="label">Diario delle uscite</p>
+      <p class="riepilogo" id="diarioRiepilogo">Segna le tue uscite, anche quelle a vuoto: apri il dettaglio di un bosco e usa «Segna un'uscita qui». Con una ventina di uscite si vede se l'indice ci prende.</p>
+      <div id="diarioLista"></div>
+      <div class="diario-azioni">
+        <button class="btn" type="button" id="diarioEsporta">Esporta il diario</button>
+        <label class="btn" for="diarioImporta">Importa un diario</label>
+        <input type="file" id="diarioImporta" accept=".json,application/json" hidden>
+      </div>
+    </section>
+
+    <section id="topbox">
+      <p class="label" id="toplbl">I punti migliori</p>
+      <ul class="list" id="top"></ul>
+    </section>
+
+    <p class="note">Indice indicativo basato su regole empiriche. Per i giorni passati usa pioggia e temperature misurate dalle stazioni della Regione dove ce n'è una vicina, altrimenti il modello meteo, che può non vedere i temporali locali. Verifica del 4 ottobre 2026 su 117 esiti reali documentati (2015–2026, Appennino toscano, emiliano e ligure): nel 75% dei confronti tra un giorno con porcini e uno senza, l'indice dà il valore più alto al primo. I boschi vengono da OpenStreetMap; dove non indica latifoglie o conifere il tipo è stimato dalla quota: correggilo nel dettaglio. Rispetta tesserino, giorni di raccolta e aree protette (Parco delle Apuane, Parco dell'Appennino tosco-emiliano). Nessuna app dice se un fungo è commestibile: fai controllare il raccolto all'Ispettorato micologico della ASL.<br>
+    Pioggia e temperature misurate: <a href="https://www.sir.toscana.it/" target="_blank" rel="noopener">SIR</a> e <a href="https://www.cfr.toscana.it/" target="_blank" rel="noopener">CFR</a> Regione Toscana · Previsione e modello: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0) · Boschi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a> (ODbL).</p>
+  </aside>
+  <div id="map" role="application" aria-label="Mappa"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+"use strict";
+/* ---------------- configurazione ---------------- */
+const GRID = {lat0:43.72, lat1:44.36, dlat:0.05, lon0:10.05, lon1:10.95, dlon:0.07};
+const PAST = 33, FUT = 4, SPAN = 10;           // 33 giorni passati + oggi e 3 di previsione; 10 mostrati
+const CACHE_KEY = "funghi-lucca-v3", CACHE_H = 3;
+const DAILY = ["precipitation_sum","temperature_2m_min","temperature_2m_max","temperature_2m_mean",
+  "relative_humidity_2m_mean","wind_direction_10m_dominant","wind_speed_10m_max"];
+// poche variabili e pochi giorni: Open-Meteo pesa ogni punto in base a variabili e giorni richiesti
+const HOURLY = ["soil_moisture_3_to_9cm","soil_moisture_9_to_27cm","soil_temperature_6cm"];
+
+const BOSCHI = {
+  pineta:"Pineta litoranea", querceto:"Querceto / latifoglie miste", castagneto:"Castagneto",
+  faggeta:"Faggeta", abetaia:"Abetaia / conifere", pianura:"Pianura e coltivi", prateria:"Crinale e praterie"
+};
+const SPECIE = [
+  {id:"porcino", nome:"Porcino", attesa:[6,10,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
+   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.5,
+   boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
+  {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
+   suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
+   boschi:{faggeta:1,castagneto:1,querceto:1,abetaia:.9,pineta:.6,pianura:.2,prateria:.15}},
+  {id:"ovolo", nome:"Ovolo buono", attesa:[7,10,16,22], pmin:20, suoloT:[14,17,23,27], notte:[9,13,19,23], secco:[6,14],
+   suoloU:[0,.30,1.01,1.02], quota:[0,200,900,1300], calo:0,
+   boschi:{castagneto:1,querceto:1,faggeta:.3,pineta:.2,abetaia:.1,pianura:.2,prateria:.1}},
+  {id:"chiodino", nome:"Chiodino", attesa:[4,7,14,20], pmin:15, suoloT:[5,8,14,18], notte:[0,4,10,14], secco:[5,12],
+   suoloU:[.05,.40,1.01,1.02], quota:[0,200,1300,1700], calo:.8,
+   boschi:{castagneto:1,querceto:1,faggeta:1,abetaia:.6,pineta:.4,pianura:.25,prateria:.1}},
+];
+const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
+  notti:"temperature notturne", aria:"umidità dell'aria", vento:"vento secco da nord", calo:"calo termico",
+  quota:"quota", bosco:"tipo di bosco", secco:"troppi giorni asciutti di fila"};
+
+/* ---------------- calcolo indice ---------------- */
+function trap(x,a,b,c,d,min=0){
+  let v; if (x<=a||x>=d) v=0; else if (x>=b&&x<=c) v=1; else if (x<b) v=(x-a)/(b-a); else v=(d-x)/(d-c);
+  return min+(1-min)*v;
+}
+const avg=(arr,k)=>arr.reduce((s,g)=>s+g[k],0)/arr.length;
+const tramontana=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
+
+function valuta(D, idx, sp, quota, bosco){
+  const f={}; let best=0, ev=null;
+  for (let j=Math.max(0,idx-sp.attesa[3]); j<=idx; j++){
+    const att=idx-j; let cum=0;
+    for (let k=Math.max(0,j-2); k<=j; k++) cum+=D[k].p;
+    if (cum<sp.pmin*.5) continue;
+    // se dopo questa pioggia c'è stato un periodo secco più lungo di quanto il terreno regge, la sua spinta è esaurita:
+    // una pioggia successiva non la "riaccende", conta solo come pioggia nuova, con i suoi tempi di attesa
+    const tolle=sp.secco[1]+Math.max(0,Math.min(8,(cum-sp.pmin)/20));
+    let st=0, mx=0;
+    for (let k=j+1; k<=idx; k++){ if (D[k].p<3 && D[k].ur<88){ st++; if (st>mx) mx=st; } else st=0; }
+    if (mx>tolle) continue;
+    const v=trap(att,...sp.attesa)*(.4+.6*Math.min(1,cum/(sp.pmin*1.5)));
+    if (v>best){best=v; ev={data:D[j].d, mm:Math.round(cum), att};}
+  }
+  f.pioggia=best;
+  const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
+  // umidità del suolo RELATIVA: 0 = il minimo delle ultime 5 settimane in quel punto, 1 = il massimo.
+  // I modelli assegnano a ogni punto un tipo di suolo diverso: in collina lo strato superficiale scende a 0,04 m³/m³,
+  // in pianura non va sotto 0,2. Le soglie assolute azzeravano proprio le zone di bosco.
+  const fin=D.slice(Math.max(0,idx-32),idx+1).map(g=>g.su), smin=Math.min(...fin), smax=Math.max(...fin);
+  const rel = smax-smin>0.02 ? (avg(u5,"su")-smin)/(smax-smin) : .5;
+  f.suoloU=trap(rel,...sp.suoloU,.15);
+  f.suoloT=trap(avg(u7,"st"),...sp.suoloT);
+  f.notti=trap(avg(u7,"tmin"),...sp.notte,.1);
+  f.aria=trap(avg(u5,"ur"),45,65,100,101,.3);
+  f.vento=Math.max(.2,1-.25*u5.filter(tramontana).length);
+  // giorni asciutti di fila fino al giorno valutato (pioggia sotto 3 mm e aria non satura):
+  // dopo il temporale servono altre piogge o umidità, altrimenti la buttata non parte o si secca
+  let secchi=0;
+  for (let k=idx; k>=Math.max(0,idx-25); k--){ if (D[k].p>=3 || D[k].ur>=88) break; secchi++; }
+  // più è piovuto, più a lungo il terreno resta bagnato: +1 giorno tollerato ogni 20 mm oltre la soglia (max 8)
+  const extra = ev ? Math.max(0,Math.min(8,(ev.mm-sp.pmin)/20)) : 0;
+  f.secco=trap(secchi,-1,0,sp.secco[0]+extra,sp.secco[1]+extra,.1);
+  if (sp.calo){
+    const prec=D.slice(Math.max(0,idx-20),idx-6);
+    if (prec.length>=7){
+      const c=trap(avg(prec,"tmed")-avg(u7,"tmed"),-3,1.5,8,14,.3);
+      f.calo=1-sp.calo*(1-c);
+    }
+  }
+  f.quota=trap(quota,...sp.quota,.05);
+  f.bosco=sp.boschi[bosco] ?? .7;
+  const vals=Object.values(f), mn=Math.min(...vals);
+  let ind=0;
+  if (mn>0){
+    const geo=Math.exp(vals.reduce((s,v)=>s+Math.log(v),0)/vals.length);
+    ind=Math.pow(geo,.6)*Math.pow(mn,.4)*Math.min(1,.5+f.pioggia)*Math.min(1,.5+f.suoloU);
+  }
+  const lim = mn<.95 ? Object.keys(f).reduce((a,b)=>f[a]<=f[b]?a:b) : null;
+  return {i:Math.round(100*ind), f, lim, ev};
+}
+
+function boscoStimato(lat, lon, elev){
+  if (elev<60) return (lon<10.32) ? "pineta" : "pianura";
+  if (elev<450) return "querceto";
+  if (elev<950) return "castagneto";
+  if (elev<1650) return "faggeta";
+  return "prateria";
+}
+
+/* ---------------- dati meteo ---------------- */
+const oggiISO = new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Rome"});
+let cells=[], dayDates=[], startIdx=0, todayIdx=0;
+let state={sp:"porcino", day:6, sel:null};
+
+// linea di costa approssimata (Marina di Pisa → Viareggio → Marina di Carrara): i punti a ovest sono mare
+const costa=la=>10.285-(la-43.72)*0.75;
+function gridPoints(){
+  const pts=[];
+  for (let la=GRID.lat0; la<=GRID.lat1+1e-9; la+=GRID.dlat)
+    for (let lo=GRID.lon0; lo<=GRID.lon1+1e-9; lo+=GRID.dlon)
+      if (lo >= costa(la)) pts.push({lat:+la.toFixed(4), lon:+lo.toFixed(4)});
+  return pts;
+}
+const mean=a=>{const v=a.filter(x=>x!=null); return v.length? v.reduce((s,x)=>s+x,0)/v.length : null;};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+function parseLoc(js){
+  const d=js.daily, h=js.hourly, byDay={};
+  h.time.forEach((t,i)=>{ const k=t.slice(0,10); const o=byDay[k]||(byDay[k]={um:[],st:[]});
+    o.um.push(mean([h.soil_moisture_3_to_9cm[i],h.soil_moisture_9_to_27cm[i]])); o.st.push(h.soil_temperature_6cm[i]); });
+  const days=d.time.map((t,i)=>{
+    const o=byDay[t]||{um:[],st:[]};
+    const tmed=d.temperature_2m_mean[i] ?? ((d.temperature_2m_min[i]+d.temperature_2m_max[i])/2);
+    return {d:t, p:d.precipitation_sum[i]??0, tmin:d.temperature_2m_min[i], tmax:d.temperature_2m_max[i], tmed,
+      ur:d.relative_humidity_2m_mean[i]??70, vd:d.wind_direction_10m_dominant[i]??180, vm:d.wind_speed_10m_max[i]??0,
+      su:mean(o.um)??.25, st:mean(o.st)??tmed};
+  });
+  return {elev:Math.round(js.elevation), days};
+}
+
+async function fetchChunk(pts){
+  const q=new URLSearchParams({latitude:pts.map(p=>p.lat).join(","), longitude:pts.map(p=>p.lon).join(","),
+    daily:DAILY.join(","), hourly:HOURLY.join(","), past_days:PAST, forecast_days:FUT, timezone:"Europe/Rome"});
+  for (let tent=0; ; tent++){
+    const r=await fetch("https://api.open-meteo.com/v1/forecast?"+q);
+    if (r.status===429){
+      let motivo=""; try{ motivo=(await r.clone().json()).reason||""; }catch(e){}
+      if (/daily/i.test(motivo)) throw Object.assign(new Error("Open-Meteo: limite giornaliero di richieste raggiunto per questa connessione. Si azzera domani."),{giornaliero:true});
+      if (tent>=6) throw new Error("Open-Meteo continua a chiedere una pausa: riprova tra qualche minuto.");
+      for (let s=30; s>0; s--){ setStatus(`Open-Meteo chiede una pausa: riprendo tra ${s} secondi`, null); await sleep(1000); }
+      continue;
+    }
+    const js=await r.json();
+    if (js.error) throw new Error(js.reason);
+    return Array.isArray(js)? js : [js];
+  }
+}
+
+// Dati preparati ogni mattina dal repository (pioggia e temperature misurate dalle stazioni della Regione).
+let DATI_SITO=null;
+async function datiDalSito(){
+  const r=await fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000), {cache:"no-store"});
+  if (!r.ok) throw new Error("dati del sito non disponibili");
+  const js=await r.json(); DATI_SITO=js;
+  const K=js.campi;
+  return js.celle.map(c=>({lat:c.lat, lon:c.lon, elev:c.elev, stazioni:c.stazioni,
+    days:c.giorni.map(a=>{ const o={}; K.forEach((k,i)=>o[k]=a[i]); return o; })}));
+}
+async function loadData(force){
+  if (location.protocol!=="file:"){
+    try{
+      const celle=await datiDalSito();
+      const q=new Date(DATI_SITO.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+      setStatus(`Meteo aggiornato ${q}. Pioggia e temperature dei giorni passati misurate da ${DATI_SITO.stazioni_sir.pioggia} pluviometri e ${DATI_SITO.stazioni_sir.temperatura} termometri della Regione Toscana.`, 1);
+      return celle;
+    }catch(e){ setStatus("Dati del sito non raggiungibili: scarico il meteo da Open-Meteo…", 0); }
+  }
+  const pts=gridPoints();
+  let salvato=null;
+  try{ salvato=JSON.parse(localStorage.getItem(CACHE_KEY)||"null"); }catch(e){}
+  if (salvato && salvato.cells.length!==pts.length) salvato=null;
+  const ora=t=>new Date(t).toLocaleString("it-IT",{weekday:"short",hour:"2-digit",minute:"2-digit"});
+  if (!force && salvato && salvato.oggi===oggiISO && Date.now()-salvato.t < CACHE_H*3600e3){
+    setStatus(`Meteo aggiornato ${ora(salvato.t)}`, 1);
+    return salvato.cells;
+  }
+  const out=[]; const CH=20;
+  setStatus(`Scarico il meteo di ${pts.length} punti…`, 0);
+  // un blocco alla volta, con una breve pausa: resta sotto il limite al minuto di Open-Meteo
+  for (let i=0; i<pts.length; i+=CH){
+    const part=pts.slice(i,i+CH);
+    let res;
+    try{ res=await fetchChunk(part); }
+    catch(e){
+      // limite giornaliero raggiunto: si usa l'ultimo meteo salvato, che contiene anche 3 giorni di previsione
+      if (e.giornaliero && salvato && Date.now()-salvato.t < 4*864e5){
+        setStatus(`${e.message} Uso il meteo salvato ${ora(salvato.t)}.`, 1);
+        return salvato.cells;
+      }
+      throw e;
+    }
+    res.forEach((js,k)=>out.push({...part[k], ...parseLoc(js)}));
+    setStatus(`Scarico il meteo: ${out.length} di ${pts.length} punti`, out.length/pts.length);
+    computeAll(out); render();          // la griglia compare man mano
+    if (i+CH<pts.length) await sleep(2500);
+  }
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({t:Date.now(), oggi:oggiISO, cells:out})); }catch(e){}
+  setStatus(`Meteo aggiornato alle ${new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}`, 1);
+  return out;
+}
+
+function computeAll(raw){
+  const prev = state.sel && !state.sel.forest ? state.sel : null;
+  const firstTime = !dayDates.length;
+  cells=raw.filter(c=>c.elev>3).map(c=>({...c, bosco:boscoStimato(c.lat,c.lon,c.elev), scores:null}));
+  if (!cells.length) return;
+  const D0=cells[0].days;
+  todayIdx=D0.findIndex(g=>g.d===oggiISO); if (todayIdx<0) todayIdx=D0.length-FUT;
+  startIdx=Math.max(21, todayIdx-6);
+  dayDates=D0.slice(startIdx, startIdx+SPAN).map(g=>g.d);
+  cells.forEach(scoreCell);
+  const dayEl=document.getElementById("day");
+  dayEl.max=dayDates.length-1; dayEl.disabled=false;
+  if (firstTime){ state.day=dayDates.indexOf(oggiISO); if (state.day<0) state.day=Math.min(6,dayDates.length-1); }
+  state.day=Math.min(state.day, dayDates.length-1);
+  dayEl.value=state.day;
+  if (prev) state.sel = cells.find(c=>c.lat===prev.lat&&c.lon===prev.lon) || null;
+  aggiornaBoschi();
+}
+function scoreCell(c){
+  if (!c.days || !dayDates.length){ c.scores=null; return; }
+  c.scores={};
+  SPECIE.forEach(sp=>{ c.scores[sp.id]=dayDates.map((_,k)=>valuta(c.days,startIdx+k,sp,c.elev,c.bosco)); });
+}
+function cellScore(c, spId, day){
+  if (!c.scores) return null;
+  if (spId!=="best") return {...c.scores[spId][day], sp:spId};
+  let b=null; SPECIE.forEach(sp=>{ const s=c.scores[sp.id][day]; if (!b||s.i>b.i) b={...s, sp:sp.id}; }); return b;
+}
+
+/* ---------------- boschi (precalcolati da OpenStreetMap) ---------------- */
+const BOSCHI_DATI={"lat0":43.7,"lon0":10.0,"righe":126,"colonne":130,"dlat":0.005555555555555556,"dlon":0.007692307692307693,"aggiornati":"aggiornati al 4 ottobre 2026","dati":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAFAFAFAFAFAFABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAxBxCJCBCBBRBZA5AZAAAAAAAAAAAAAAAJAJARAZAhApAhAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANANAAANAAAAAAAAAAAVAdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAFAFAFAFAFAFABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9B1CpCtCtC1CFBBAhAAAAAAAAAAAAAAAFANAZAZAVAdAhAdAJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAFAFAFAFAFAFAFABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAhA9BZBhC1DlCVB9AABJAAAAAAAAAAAAAAAFAVARAVAZAhAZAlAZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFABABAFAFAFAFAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABVCpD5CtCVCNCBApAAAAAAAAAAAAAAANAVANAVAdAdAlAtARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAFABAFAFAAAFABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAZAAAAA5BZBpCpD9DBB5BBAlA5AlANAAAAAAAAAAAAARANAJAZAhAlAhAhAlAlAAAAAAAAAAAAAAAAAAAAAAAAAZAdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAFABABAFABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJBVBdAAAABNChChDlDpCVBZA5AAAAAAAAAAAAAAAAAAAAAFARANAVAZAdAdApAlApAxAAAAAAAAAAAAAAAAAAAAAAAZAdApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAJAJAFABABAFAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhBhAAAAAABxCxDBD9DdDdCJCBCtCBBBAdAhAAAAAAAAAAAFANARAVAZAZAdAhApApApAhAAAAAAAAAAAAAAAAAAAVAAAAAdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFABAFAFAFAAAAAJAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZBJBRCFDRAABdBFBpDBElE9EBCpCpDFCFBBAlAhAAAAAAAAAAAAANANANAVAJAZAdAhAlApApAVAAAAAAAAAAAAAAAAAAAhARAAAAAAAAAAAAAAAAAAAAAAANAdAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAJAFAFABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZB1C1CtDdCNBxBxCFC5E5FpEhDxDxDRCtBtAxAFAAAAAAAAAAAAAFAJAJAFAVARAZAdAhAhAlAZANAAAAAAAAAAAAAAAAAhARAhAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAAAAdApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANAFAAAtBlClD9EVDhC9C1DhE9FREpEVDRCNB5CJA9ApAJAAAAAAAAAAANABAAAAAAAAARAVAVAdAhAdAZANANAVAAAAAAAAAAAAANAAAAAhAAAAAAAAAAAAAAAAAAAAAAAAAAARAlAhAtAhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAFAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABRAhApBpDZD5FNDpD5FBEZEhE5D5EBC5CpCVBNB5B1AtAAAAAAAAAAAAANANANAAAJAJANARANAZAdAdAZAVANAJAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlA1A1A5A9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAFAFAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAABZCZChDRElDlDBEdE1DpDVDNDxC5CJBhBBA5A1ApAAAAAAAAAAAAANAJARARAFANAJARAVARAVAdAdAVANANAAAAAAAAAAAAAAAZAlAdAAAAAAAAAAAAAAAAAAAAAAAAAlAxBBBFBVBJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFABABAFAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA1BVA9B9DJDpDlCNDdENEFCVB5CpDFB1CRBNAhAAARAJAFAAAAAAAFANANANARARAJANARARAVAZAdAdAZARAVAAAAAAAAAAAAAAAAARAAAAAAARAAAAAAAAAAAAAAAAAxA5BBBdBRBlBdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAFAFAFAFAFABAAAAAAAAAAAAAAAAAAAAAAAAAAARB1AAAAA9BBCBCtC1CFBpCRDFDlAABdBtB1BZBNApAZAVANAFAAAAAAAAANANANARARARANANAAARAVAZAAAdAZANAJANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVA1A5BNBVBpBpCNCVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAFAJAJABABAAAAAAAAAAAAAAAAAAAAAAAAAFBNCFAAAAAABNBpCJB9CJA9CpClDBChCZBNBRAhAdANAAAFAAAAAAAAAAAAAAAAARAAAAARANANANAVAVAVAZAdAVAVAdANAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhAtBFBRAACBCJCdCpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFABAFAFAFAJAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAB5CRAAAAAxAlAtBZA9BlApBRB9DNBxBtBBAAAAAlAJAJAFAAAAAAAAAAAAAAAJANAAAAANANANAJANAVARAVAZAZAdAZAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlAZAxAABpBtCxDFCtCVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFABAFAJABAFAAAAAAAAAAAAAAAAAAAAAAAAAAAtB5CdCxAAAAAAAAAxAhAtAABVBdClBxAlBRA1ApANAAAAAAAAAAAAAAAAAAAJANANANAAANAAAAAJARARAVAVAVAZAVARARAAAAAAAAAAAAAJARAAAVAAAAAAAAAAAAAdAAA5BNBlB5CVClDpChB9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFABAFAFAFAFABAAAAAAAAAAAAAAARBFAAAAAAAAAtBJB9CtC1CFAdAAANAlAxAABBA5BhBBAZBBAVANAVAFAAAAAAAAAAAAAAAAAFAJAJAAANAAAAAAAAARARARAVAVAVANANAFAAAAAAAAAAAAANAVAAAAAAAAAAAAAZAVApAABJBpCBCdCpDhDRCNBxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAJAFABAFAJABABAAAAAAAAAAAAAAAlAlAAAAAAAAAtB1CBClB5BlBtAAAJAJANAZAxApAhANAAANAAAZARAFAAAAAAAAAAAAAAAAAAAFAFAJAAAAAAAAAAAAAAARARANAJAFAFAFAAAAAFAGAKAOAAAAAAAAAAAAAAAAAVAAAtAAAABVCNChDhDxCtBpBdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAFAFAFAJABAAAAAAAAAAAAAAAdAAAAAAAAARB5CVCZCdChCBBBAAAJAAAAAAAJAFAFAJAFAAAAAZARAAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAFAAAAAFAJAFAAAAAKAOAKAOAAAAAAAAAAAAAAAhAAA9AABZCRB5CtD5CxBpBVBNAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFABAFAFAFAAAAAAAAAAAAAAAAA1AAAAAAAAAxCZBtDFC5B9BZAxAAAJAAAAAAAFAFAFAAAFAAANAVAdAAAAAAAAAAAAAAAAAFAAAAAAAAAAAJAAAAAJAAAAAAAKAKAAAAAAAFAAAAAAAOAOAAAAAAAAAAANAVAAAAAAAAA9BVCNCRCNDBDZCVBhBFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAFAFAFABAAAAAAAAAAAAAAABBVA1AxAAAAAFAlA9CBCpBpBBBBAAAJAAAFAFAAAJAAAAAAAAAAAAAAAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAJANAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAVARAZAAA1BNB1CNC5DFDFCJBtBpBpAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAFAAAAAAAFABAAAAAAAAAAAAAABFAdAdAVApAJAFAdAVAdA5BdAhARAAAAAFAFAFAFAJAAAAAAAAAAAAAAAFAFAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhAlA9BVBlBtClDRChBtBdBBA9BZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAAAAAAAFAAAAAAAAAAAAAAARBZAVANAJAAAAAAAJAJAVARANAFAAAAAJAAAMAFAJAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAAAAFAFAFAAAAAAAAAAAAAAAAAAAAAZAhA5BNBRBxCFCxC5BxBVAAAABBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAAAAAAAAAAAAAAAAAAAAAAAZAxAdAlAhAVAFAAAJAJAJAJAFAFAFAFAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAAAAAAAAAAAAVAAA5BVBxB1CNCRDNCBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAFAFAAAAAAAAAAAAAAAAAAAAAAAFBRBFBJBdBVBBAVAAAAAAAFAFAFAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAZAhARANAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtB5BdCBCZB9CVB9AAAxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAAAAAAAAAAAAAAAAAAAAAAAJANAxBpBpCBApARAZAAAAAAAJAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZAAAAARAdAlApAdARAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdApBVCdCpCRBRBJA1AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAAAAAAAAAAAAAAAAAAAAAAAAAJAhBRBFA1AhAVAAAAAAAFAAAJAFAJAJAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVAAAAAAA1A5ApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlApAABMBZClCNBJAtAAAhAAAAAAAdAZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlBhChBxB1A9AdAAAAAAAAAAAJAJAAAAAAAAAZAAAAAAAJAJAJAAAAAAAAAAAAAAAAAAAZAAAZA1BFApAZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAxA5AABABkBgB9BxBtA1A1AAAAAdAAAVAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAANANAAAdB1B9CZCpBNAZARANAAANAdAdAJAAAAAAARAVAAAAAAAJAJAAAAAAAAAAAAAAAAAAAAAAAVApA9AtAdAAAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAAAlBZBMBMCQCkBsBJA1AAAAAAAdAAAdAZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAxAdA1BFBxBtBxBhAdAtAZAAAdAtAZAVAVAVAZANANAJANANAAAAAAAAAAAAAAAAAAAAAAAVAAAAAVAxAxAVAAAAAAAAAAAAAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5BJBcBwBsBsBkBAAwAlAhAAAAAVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAApBhBZBhBhBZBxBJBBARAlAdAhBFA9A5AxAlANAAANAVAZANAAAAAAAAAAAAAJAAAAAAAAAhAAAdAVAxAdAAAAAAAAAAAAAAANAAAAAAAAAAAAAAAAAAAAAAAAAABlAAB5CwC8CkBsA8AoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAhBNBNCBB1BhB5BZAtAlBJBJAZBBBZBZApAVAZAAAVAVApAZANAAAAAAAAAAAAANAAAAAAAAAVAxAhAAAlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0BEBcCkCwB4BQBEAlAdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAdAAAAAAAAA1B1B9CJB1BlAxApA5BJCFBpAxBNAABVBFAtARAhAVApAxAAANANANAAAAAAAAAAAAAAAAAAAVAdAhAAAdAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAARA5AAAAAAAAAVA0B4C4CIBsBgAtAhAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAFARBFBhCBCZCNCFCBBVBZBpCJBJBxBlBlCdCJBJAlAhAxApAtAdAAAAANANAAAAARARAdAAAAA1AAAAAAAAAAAAAAAAAAAAAAAAAAAAB8BIAwAZAZAAAAAlAdAAAAAAAtAAAdBUCUBwBIBQBNA1ApAYAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABAAAAAFAAAAAAAZBVBdBdCBCVBVBxA5AtBBBNA1CBBpB5BZBJAxAdBBBdBdBNAAAAAAANARAVAZAAAAAhAAA5BJAABgAAAAAABFAAAAAAAAAAAAAACgB0BYBEAZAAAAApBNApBxAAAABVAlAlBkB8BEA0BIBAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBFAxAAAAAlA5BxBhBlBVBZBBBZA9A9A5AtA1BdBdAtAxAZBJBNCpCZBpAtAxApBBARAAAAApAAAlAxBRBdBlCICgB8AACMA8AABUCIAAAAA4CkDAB8BcBgA9AABNBBBtBRAABRA9AxAdApA8BAAAAkBcA8A0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANBZAAAABlBJBxBZBVBhB5CBBxCFBxBhBBAAAAAlAhAhA9BRBVBlCdBdA1AtAxAdAdAAAAA1BNBQBFBFAABsCoDMDADIDkB4BsCwCgCQBkAwAACUDECMB4B8BdBIBUCBCoB8BUApAAA4BEA0AAAwAoAhAsAsAcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAdBJCNB9BZBFAtAABJB5CpC9CZBxCZChB1BlAAA1AAAtBxBxB1ChCJB1AAAxBRAhAVAAAsA8CQBsB5BZCQCMDQEUD0EIDwCIBQDEDUCsBwBQBMBwCYCkCgB8CUB8BwCQCsBkA0AABIBkBEBwAABEAwAwAsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAANA9BpB1AxA5AdA1AAAtA5BRCFC5CdC9CNChCNCVBpBhBVCVCVC9CdBlA9BBBZAABdAABABYBUC4CYCoCkDYDgDYEsFAEQDACYBQC4DgCgC4B4AsCIC8CwC4CsCUCkCoCECoBYBoCQBoCACkCICMBsA0AsA5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAFBFBBBRAtAZAVAAAAAAAAAAClC9EVDRDFDdDBCdBhBBB9CFC1C9CRBRA9AlB1BxAVAABcCYC8DUDUC0D4E8EwEkE8FgFMD8C8BYCwEAD8DABcBMCkDECoDQDcDcDEDwC8CoBgCMCACoCIDIDMDQCsBkBFAxAsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVA1AZARAAAhApAABpCxE5ERDBDtENEFEVDlCtBJBZCZCxB1CFCFBZA1BhApBAAAAAA0BcBwCkEID0E0FoFYFEF0FcEcEMC0BoCwEQEEDIBoBICICcCsD4EAEgEIDUD0CcBwCYCsDMDIC4DsDQCwB0AAA1AxApAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAQAAAAApBFCVCpEFFVF5EZDtElDNEJDxCZCBCJCxCBBhBRA9A9BJBJAZAoCICgB0BwBsC0D0FoFMF4F0FsFkFUEoD8CsCADUEUDsCgBgBcBcCcDIDwD0EcD8EYDcCUCICIDQDoDsDkDUCsBwBEAAA1AtAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB9C9DJFVGlExFFENDVCZCdDdDdDBC9DdCpCNBFApAlAhAAAcCoC4DMCcCgDkD0EoE0FsFYFMFsFUEkEoDgCwCICkDgDsDICYBcBgCQCcDMDkEkE0EoDsCwCkCkC0D8EADoDEB8BYAAAAAAAAAsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlBBBxClD1FZGtFxFVENDJDdCtCBDJDBB5CVB9BZBJBZBBCNBFAABMDEEQEAEAEgEMEIEgFMFMGAGEFIFcFAEUDQDYCgDADoDMC0BgB8B0C4DkEQFAE4E0EIDcDUDADIEMD8DMCMBkClAAAAAAA0AtAAAAAAAAAAAAAAAAAABIBVAAAAAABMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlCZBhBdCRBdBFAxCNDZERFlG1FhEJDREFEZENDpCRB1BxBxBlCVB5CxCpC1BVAABoDMDEEIE8D4DkDYEEFMFsGAGMF0FwFsE4E4EEDACwD4DwCwCACUAADMEME0EEDoFEEcEIEoDwDUEsD4C0CAChC9AABpAABZA5AAAAAtAAAAAAAAAAAwBoCMB4BwBgCQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC1CFB1DlDFEFC9DFChBtDRFJFRFxFFEhFlFFFVE5DBClCtCtCZCBBhBtCxDFDlCFAAAAAkBYDQCoCcCIDIE4EMFwGMGEGMFcFYEwEQD0C8CkDkD4C4CcB8BsCsDcDgEIEAE0FEFQFAEoEkFADwDACJDlDZCNCtBtBRA5A5AAAAAABNAAAABNAABUCMDACkCkC4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC9BtBlDlE9F5EdEZDNDRClDJFBFtFhFVHNFxEdDRCpDBDpDVDhC1CFBVBtBlDFBxAhAAAAAwCABMCECkD0EwDsFwFkF8GYFkEUEEDoDMEADQEQDoCsCgBsCsBwCYC0CkC4D8EoFYFYFMFIE8EADYClDdDxDBC9BtBVAAAAAABFAtBFBFBdBpAAAABsCgDADcDkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACtDVC9DZEFCpEhGRFlFVE5ENEZDpFFGdGhHNGRFlFNDpD9ERENERElDdCJBxBVBBAtA1BVCRA5AAAsAsBkB4DIDoD8FQEoF4GAFwFMFAEgEkE0D8EMEEDsDACMCoDcDAC0DMEkEEEoFUFgFcFgFAEEDkDhElENDhC5CdBlAAA-BJBRA9BRBxB5BpBlAAAABgCQDID4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABtDxDdEhEJExFtEBDtEFEVEpGNE5GdF5FpGNFNFNElE5FFEhFxFlE9EFChCVB9B9CJCJDdDtClBlAAAAAwCACcDEEoEsDwEwFQFIFUEsEoFAFgE0EsFMEQDYCwCwD4EwDkCgDoEwFUEgFMFQF4FgEgD5ElEtDdChCJBxBqBmA6BNBdBZBJBlCpBtAAClDACwCMCsDUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAACFDZFJFRFZGBD9DxCpCZEBFFHFAAGRFVFNFpEdD5D1EhFxGFFNFFFBENDpDRChDJEpDhElDNCFBdA9AAAABsCYC4EYEMC8EEEYEcE0EIFAFEFkGMFsGEFADgC8C8EMFUEgDkC4EAEcD8EoFYGIFkEsE1E5EVDRCBCFC1CmB2AABlCBBZBdCNC1CZAACNDBDwC8DUEIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGAGAAAAAFAAAAAAAAAAAAAZARBtDhCNDJDRDREtEVDBCNDFDlENGZAAGVFhE1EZEZFZFBD9D1ExDxEFERF5FFDtD9D1ElE5E5DZCtBtBZAAAABoDUBwDYCUDAEgD4DoDsDYEkFcGQGIGwGsFED4DMC4D0FIE8D0DgDYDMD4E4GYGIGUGIFsFhD1C1CdDhDZCVBxAABdCxCtCNB9C5C5CdCNCZDZEUDoE0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAAAAGAFAAAFAAAlAAAAAABdBFBJBRB9BdCVCtDFB1CNCdCxCZDJExHdFVE5FBEtFVFtGNEpC9ElDNDdEhFxFZFVEtEtFVEREpEVDpC1ChAABQB8CkBwCUC0DwDACoDMCwDoD4EMFAE8EwFUF0E0EYD0DsEYEsD8EYEYEkE4FwGQGQGwGsGEEcEMEADhEJD5CtBhBlBhCBDJChCZC5DxDRDRDdDZDxE5E9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAFA5BVAhAABtBZBFBVBZBRBNBBBNBlBFBFDdDVDRE1FxHJFpFhFpFNEZEREhD5CxCdCZCxDxD9D1EpFVFlExDpDhDpEVDxDJCRBdA0BwCIBsC8CECoDkCgCkEADkDwDsDoEEEkFgFsFAEMEAEoEoFIFMFAFcFIF8GAFoGYGgFUFMEwEQEVExDlCVChCFBdBtClDlClC1D5EZD9D5EpDpE1F9AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABFAABVCJDNAtBZCtDNDFDNBFCFCVC9ChBZBhDVDRDxFZHBG9G5GRFZE5ENDVENDNDxCxCJCVCtENE5E1ElEpEBCxCxCdC1BVAAAABQCcA4BsCMDsDECQCcD8C8C4DgEUEIEkGUGcFYE0EsFAFkGIF0FYFQEwE4FUFgGAGQGEFEE0FNE5FBDlDNDRCtBdCtDND9D1D5EFFVFFE9FpEZGBGdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0BoB8AACdDhDJBJCZCpEZDpCJBNChDdFRDBDlC5CVC9FBF9GxGtGhHdGlExFRENEhEhFBEVDZCxB5CRDhD1DREBDtDtC1BhCJAxA9BFBFA4A9BJB0CEBcBQC0DoCsDAD4FIGAFQF0GYGcFoFkGQGAGwGAE8D8FcFoFwGEGEFcFAE4EwFJEpExEBEFD5ChBtCNCdDdEhE5FpFpGhGdGRFtGZFxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNB1DdEBEZCZBFC1ERFFDVBxC5CFChEtFZEtDVDNDxGlGVExFRFhGZGZFtFpEdE9FRF1E5DJD1DVBlCRDxCdDFDtCVCFBRBhAtBdB9B9CNBdBRBZBJChB9CYC0B4CwDkEsF8GQGgG4GsAAFsFIFsGYF4E0EAEwE0FsGlGlF9FNFRFBF1FNEhFJExDpCtCdB9DFDtEVFdGZGlGlGRG1GxF9GFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA9AABlA9CBDxE1DVBJCZD9F5D1CVERDtDlDNFJF1ElExE1F5FqEKEOFBE1E9FFElFRF1F9GZFdENFJElClCVBlB5DFC1B1A1AtAxA9BhC1DlClB1CZDZC1CVDdCFBoCMDAEYFYF8FgE0FIF4GcE0EoE0FcEsEwDoEIEkFkGJHBG9GNFlF5GlFVFFEZFZD1ChDRClC9EFFJGFGxG1FxGRGNGtG9GpAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAlBpB1CZCRChDVEpENB5CJDlF1DdDtEtE1FFEhF5G5GFGtHNHKFqD-DyDtEVE5FJDVD5FVF1GJG5FNF5GNEtDBClBNCJAxAAAAA1BRCRA9CRD5DJCJCNDxC9ClDZChCRBUCYD0D0EkD4DgGEG4FADsD8EMFYD8DAEAE4FVGdHJG5HRHdHBG9F5FNFZEhEhDxEFDhDNDND9E1GRFlF5G9HNG9HFHZHhAAAAAAAAAAAAAAAAAFAAAAAAAAAAAAAAAAAAAABBCJDBDNDJEJE9FNEJB5ClEJF5DNEdFhGRGxHRAAH2G2AAAAHeF2EiEOC2DlD9EZDVEhFdERFdHBFpDxENEhChB1BZA1A1A9BJBlBhCpBtBdCxDdC1CRDxDJDBDZCxCJCRCUCkCoDkDsD8GcFYFQDgDMEoEgDMDQD0EhGBG9GxGpGxG5HBGFFpExFhFRERFFFNFBEVEFEFFlFtFdFpGZGhHRHRHxHFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACRDREBEpFVFBAAFBDdCRD5GRFpE1AAGdHpAAJmISHqAAAAAAHWHCFOE2CyDRDFDJE1EJD9FJFFFVEJB9CNBlA9A1BFBJBVBpB9BhCtC5BZCZDZDlCZDZEpEhDlC9DFCdBlBgB0DQD4D0EsEoD8DYDEDUCsCkDED9E1GBGdGpFtFxFtF1FZFFEpEpEZEhENElFlFhFVExFhGhFRFZGRGlHNHBF9GBAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAABBB9CVDlExElElAAAAF5D5D9GRHBGFGpGFHhHqH6IKG2AAAAJKAAIWHyFWDuDeCVEBEZDFDRD5DdEpDdCpBRAAAAA5BNBVBtBlCRCZCBDdCFCNDdEVDxEJFVEpEFAAEJDxDdB9CACAB0B8DoC0CMCYC5DFDlC9CtDxE1FZFlFpE9EpExE1FJEtExElExEpE5EJEhE9FtF5GBGFFZFBFZGJGhHlGxFdAAAAAAABAAAAAAAAAAAAAJA1AAAdA9AAAAAAA1BFAxB5C1DlDxDdD1E9G5F9AAIxHJG9FhFxG5HWGiGKFyHGHOH-ICHmHaFmE2DiCiChCVCtDBC9CVDJCVBFAAAABBAABZBZB5CRCxDBC1ClC5BtDBD9ElD5FBFBAAFxGVAAE5CJDdDZDZClC1ClC1DdEBElE9DlDhDBEBEJElFBEREBEZElAAFJFFE5FJFdGFE1ElEdF9GpF1GNGxFpFJFVGtGxHNGFAAAAAAAAAAAAAAAAAAAAARAAA1BpBlBVBRCVB5C9CRA9BxBlB5DJEdEpGlIZJVHNGxGxFmGqIKH2F6FSGCEeFKFyGuG6GCF-EaEOC6C2C6BiB5BhBtBxAAAABFBVBdBNAABhCBDJC9EREBD9DBClCZDVEtAAF1AAAAAAGlEtDdCtDhEtDVC5DdDtDJD9E5FJF1EVEhC5DRDVDtDtEFAAE1FNFVFRE9FRFtGZGNF9FlEBEtE9FlFVGlGRExGBGFG1HlFtAAAAAAAAAAAAAAAAAAAAARAAA5B1B9A9CdDBC5DlDJBNBJCZEVE5FlE1G5HpHFGBFxFBFNEqFSFmFCEmEmFKD6FyGyFmE-GaFiEqE2EyDKDaCWB-BOAAAABVBhBhBxBpBxCFB1DlCxEFERENDtDJDJCxENExF1AAGhFlEhE9FJDZERGFD5EdDhFhFFEdE5GNF9FlERDBD1EhElEtE1FVFVGBG5F5FpG1HBHdG9HBGJEhD1E1ElFZG1HVFNFFFRGlHhF9AAAAAAAAAAAAAAAtAAAAAAAdBpBxBdCJDFD1ExEtEBB1BZDpFZDhDNEdFdAAGpHdFpAAAAGFAAESFNFFDuDiDGGKF6EyFSFOGOGiFuEOECC2DCCGCGAAAABdBdB5CNBxCJClC9C1DlC5ENEtEZD5EdCxENFFF1AAHVGJFlFlEdDRFdG1ENFFDpGNFxEtFVF5HdF5FJDNEBE9FdFhGBG9GxHRH9HBGVHhIJIdHRFVEuEGEWD6FdGdHNHBGNEtEtFxGlG1AAAAAAAAAAAAAdAtCBA5AAAABJBVBtC5DZExEhEtDBDJA1ClDNC1C5CxE1AAHFIFGdAAAAHFGRAAHdFxEpEtDyCqD2D2FGFOFWFCE6E-EWDqCmCSCCAAAABpB5CBCNB1ChCdDVDRC1EVD5EtFhEVExDVDREdFJGhHlHBGVF1EhDVEpHBFdEtE9FxHJFhFpGtHFGFENDNEZDtD5EdFBF1HlINI9HtHJIJI9GxGVE1E6FiF7EaEhFdGNGRHFF9ENE5FtGdAAAAAAAAARAhAhBZCVA9BNA1ApAtB1CJCVCpDtEhDVCRDVBBBZBpCpC9ChEZF5AAAAAAAAAAAAAAItAAGxHRGNFBCyCuEeEiEqECFSD-DiDSCmB-BuAAAABhBtB1CRCRC1DFDBDtD1DtFFEFFVE9E1FhEJDhEVFJGZH9AAINGNENEFFlGZFhGZF5HVHFHdIxG9FpFNEREVEtE9FZFlE5GFHhI5H1HlH9IJG5GFEtFdGlGCEWDuEdE9FFGhFtFNERE9F9AAAAAAAAAVA1BlChCVBFBVBtApAABhBhBlCtCdAAAAENC1B9EFAADJCtAAAAF5AAAAJRJFI9JFHRIdHtHhHJGVFVENDVCaCODWD6ECDyC2DuCyCmAAAABVBdBlB1B5CZDRD5EFENEZDJExERFFF1FJGdFxFlD1FVFxGhJZGxFlFxFNFVG5G1GlFdGRIJIdHRF9FxFRD5D1ElF9GhG1GJGFHlIlIlJFIhHxGhFNFxG5HdF-FSE-D-DiElF5G9GZExEVFlAAAAAAAVApAABFCVCZCdBxBZA1A5CdCRAADZAAAADhD9DtB9CFEdEdC1DxGpAAAAIZIFI1GVGtHFHtINHBGhFNERExEVDJDhCKC-DuEKCuDyDuC2AAAABNB1CJCtCxDJChEZEVFFEhDVEdFZFBFpGJHlHBE1FRGZHhFpIpGdG5IRG5FVF5HtIdGdINIxIVGxFdFFENDZEBFNGdAAAAHJGJHRIpJFKBH5GlF9GlG9HtIdHKGOFuFyEiDdE9FJGhFBDxFNAAAAAABJBNAAAxBFCFDNCpBlBpBFCtAAAAAAAAAAEREdEpCtChD5FxDlAAAAAAI1HRHdI1GlFlGBF5FtHBGlFtFNGNDxEJExDxCpCiDiCWDSDODGCVB1CJBRCRDpD9D1DpCxEdFlFdEBEVGJGlFdGlIZGZFxFdGtH9GFHRIdIFI1HJGFHxIhJVI1IpHZHVGNFNEFDpE9EpFpGhHVIFHVGRHRH5IhJ1IhHlHVH9IVHxGZGFGKFeEpEFDtDtEpFxFlDtEhAAAVA9A1BlCdBJCRClDJCBBRDBBlAAAAAAAAAAAAEtFJFZAAChEJAAAAFxIFAAIVGBHVIJHlGBEpEpE1GxG1GdGFGFFRFpDxD5DhC2DOCKCqCuDdDJDBCVBVCtD1EdEZE1DlD9FJFVElDxFtHJGhGFHdHpHZF5HVG5HtHtJpJtJVHVHNHhKBJNItIBGlGJFxFREBEFFpEhE9FlHFIVItHJHtJFJpKlJdIdIxJhIJGVFtEtEhEhE9E1FJD1D9FRF5E1DpAAApBJA9BhCtB9BVB5DVCJCRClCpAAAAAAAAAAAAAAAAD5ElDtE1EtAAGlAAAAAAFxHZGpGZEpDxD1EpGVFtGhGpGdGVFNFVEBClB6B2B2COC5DRDhDJB1B9DNExExFpFFEdDpFdF1ExD9FVG1HNHpIJJdHtHFHpHZI1IZJpKNJFIZIhI1JNIZHpHVF9FBFBEJDxFJGBFtGJGhGtIFItININIxKNKRINJRIxIlHhGRGbF_FVGBF1GhF5EdDNENFxFRDtAlBRCNCNB5DBDFCFCZDJCVC1DVDZE1AAAAAAAAIxAAAAAAHFE9FBAAAAAAAAAAAAG1GRE9EpEJDpDxFVFVFFFxGdHxHFGBFVEFC5ClCtCpAACdCVCxDBBlCFCxEBFdGNF9FRDZE5GRFlFVFBFVGVHJJNKtJFI9JBH1JtJpAAAAKpKhKJJRIVHlG5GJFVGZFZD9FBGBG1HJGpHpIVH9JNKJJxJdAAJRH1IhI1H1IJIdHNHhF1GhG1HNGNE9DhD9FtGJEpA9AtBVCpDNDNDpCVDVDdDhCtEhAAAAHlHZAAAAAAAAAAAAIJAAAAAAAAAAKNJhAAHxGJEFDtDpDxEFEBDxFdFpGNHlGFFdEhDdC9C5ClAAB5B1CBBlCxBhChDtDdEZFtGtE1D1EBFFG9FpFdGBGtH1I5KlAAK1JhI5KVAAKNKBKtJ9JlIdHpGtGBGdHdHBFVEpFlHJIJIlHRIRJtJlAAAAAAAAJJI9HhG1IJG5GhHhIdHtHNH1INHVFVE9DxDlExGZEpBhBJBVB9ChEBD1DZD1EdEhDpElGJGNHlIZIhAAAAINH5HBHtAAKBJxAAAAINH5AAGxGVEpEpFlFZElDZEVExFpGRGpFpE1DhD1DFCdB5AAAACpDJCVB9CFDBEBElFpHFGJEpExExFhF1HlGdG1G9IVKtAAAAKFKVAAAAAAKJJFJRJpJJIVHBHNItINHZGNE5FVG1HdIhJJItJdAAAAAAAAAAKdIBHZHRGRHRHdF5GlHJIVIJHZGdGjGrF9FTDZEBFREJAAB1BZCNDlDhC9DtElERFZE5FtFhG1HhIRHVAAINHFGFF1H1AAI1IRJlJVIBHhIFG5FtFFGFGZGlEpDdEVFdE9FNGZExEJDpC9CxCJB5AAAAChDBCBDFCFDhExF9FpHdG1FtF5EVGdGVHtGlHlIZKRAAKNKtJJKFKVKVKFAAKlJBIZINIFIFH5HpHNF9FdExFxHFINIlJVJ9AAAAAAJ9AAAAKBHpHFGBGFFVHBGBFlGFHhI9HBFtFdG_HnGIENDNC9DJBtChCdCpEFDhCVDZDNDxEBDpEpEdFpFlHRHFFpF5EpE5GJHhI9HtHJAAAAAAFtFpFlGJGlGVGdGlFxEZDFEFEFEZElEZDpDFAAAAB9CZCNAACVCxC9EFDhCpEpF5GlG9G9HFGhE9FpHFIRIdIBJZAAAAJ1JRH5JJKlJ9KJAAKtKhKFJRIlH1HlGhFxFpFtFxGJHRH9JBJ5AAAAAAJlJBJ5JxKRJpJBHZHdFVFtGtE5GRH1HRGxG9FFFFF5FdEJDZC1CdBtCFC9C9DdC5CRClCZCxCZDRD1ENERG1GpGpD5DVEVFRGxAAItG5AAAAAAHBGBEVExF9FFGBF9FtE1EhDtDRC9DpDlD9DJCtAAAACVChCRCVClC5CdD1FFDVDBExFBF1GhHhGlFtFlHVI5JZJxKNAAKtJVIhHpI9JpJxJxKhJ1JlJlIxINHhG5G5GZG5F9GhGhHtItJhKdJtJhJJJ1IFIhJtKlLBJ9H1FxExEtFpElFxGhGdHJG5FlDxEREJD5DdCpCtAACxDFDlC9CpB9CBB9DFCJCBCRClEpFNF1E5C5EVFlGdAAAAJBGdHlJNIJIhF5EtAAEpF1HRGlFhFNFdFRD9DdDFCpDVDNCNAAC1C9ClCpAACpDZD5C1EhFFEJDlEFElF5HRHpGJHJIBIlK5K1KZKJKFItH5HZIxKJJtJBJ1JNIpJBIZH1HdHxHJININGpHRHhH5JFAAJvJZIhIlI9HlIJJJJ9JJJdH5GlGlFlD5E1FNFhGdGZFZElDhDhDtDpDVChDBBZB9CpDNC1CZCRB5CtDFB9CpDJDNEZD5ENCxC1E9HtG1FhFdItF9HNIFGdF9GNGBEJEpF9GlG1FVFlGJFxFZD5DVAAChChAACtDRCxClCxAADFDpEVEND1E9FZEdF1ExGJH9H5HVIlJpKVKhJ1I9JNJ9JpH1HFINJMJpIkJZIpH5I1IVINIBIpIZJdJNHdAAIxItJ9KVJEIgHzHxIVIRHRIBIVHxH5IZIpHJGVFFDtEFFdFZFVEtEBDVC1DBDIC9CxDpClDFDtDpClBpCBCVDtCNB5C1C9C9ExENCRCVEFGBFdD1D9F1IJG1FZFtF1GBFBE1EBE9FpF9GdF1EtElFhEhAAAAAAAAAAAADtDVCtDBC5DdC5EhFNFRD1DlExGZGtF5FVGlIxIhJpKVJ1JpItH5I9KFJ1IAG1HpIpJJH9ItH5IJJJI9JBI1JtKFAAAAJJJNAAKNKNJhIkH5HYGpINH5GZHpG9GhHFINI1H5HlGdEFDtENEdFDEhD5DYDBCtChCRCvDNDdDtDJDFCdBhBdCFC5ClBtC1DNCJDdDRClCpEZFJDlDpEBFtG1GJEtEdEREVEVEZEJEpFFFNFxF9FlEdD1EVDdAAAACdAADJD9DhDNDVDZEBDlElFdGBEZFNEVGVHBHdGlGZHxJJKJJhJFJJIlHxJhKPI3HxG5HRIoIUHNHxHNH9IQI1JdJNJ5KpAAAAJ9JxAAKLJJIhIDHVG1F9HzIvGxF5F9G9HNHtING1GVF5DtDND5EREZEVEBAADlDJAAAADNDlCRClC1B9B5B9BpBpCJCpBdCpDFClBpB5BhBhCRDhC1CVExElFdFBEpE9EuEyEKECAAEVElEhFFFpE1EBDRD1DNAAAACxDdENEFAADNDlEJE1EFDlFZGZGdGFEpFZG5HRHdHtIJJpJRJBIZJZIBIFJtAAJAHsHAG9H9IPHhHDHHHhHpIRIpJFKZAAKpJ5JFIlJVKVJZHxHhGxGNFdHFITIVFxGJHVHNG9HVFxFBERD1C9DZDVDtDxD5DxDJCvCNCdDFDqCZBdBxCBBVBlBVBNCBBRCNCRC1CNBpBVAAAABxBpBtCdC9D1EpD9EFEmFWFGEuEmEWDtDlEBEhExERAAAACxAAAADFDdExEpENAADlEZExFVFZDlERFFGVGhGBE9FdHVItJFJtJ5J5ItHhIhHVH5I1AAJFIEG5HBIhI1HVGhGxGtHNIBH9JNAAAAKlI1JhHpIpJBKBI5HpHBGNFFGRIPIRFpFlGhGFGRGRFQAAEBDRC5C1C1C9DFDZDhDZC_AACNC9DWBhBpBNBJBVBZAABdBRCNBpChCpCNBdBlCRCNCdCtC1DRDdEdDtDtEOEaFOFSFeFKEuEeEWDdD1D9DxDhAAAAAADZD9EtElFFEpAAD1EtF9GBFhEhEFE5GFHxGtGVF9F5HVIFIlJ5J1JRHxHcHhHjIbItJNIdGVHkIRItIJGnGNGVHVHdINKZLFAAKJIUHsGtHdH_JHI3JZINHJFJF1IJIZGdExFJFdFlFRElERD1DZDVDRDdCxClClC9DRDJAAAACpC6BFBBA5BlBRBJBpBdBJBdCtCZCdCJBJBZCBCxB9CRC5D9EdEBDxCxDaEyFSEqE2FiFeFSE-AADlDRDFAAAAAAAAAAFRExEhFdFJE5ENFpF1HJGlFNFFENF1GZHhIJHpHdH9IhJpKJJNIjIQH5GzHTHvHpIpIxHJF9HZH1HtGpGJG1HYH5J1J1KjAAAAI9H5GxGdGlHVHRHxIMGQFdFpGlInHlF1EVEhFBEtE1ERD5D1D4D8EBDlDFAACdCxChAAAACFCaA1AlApAtA1A9A5BJBhCRCRBtBxBxBJBtCxB5BdCBCdC9EhEJC9DODeDyDqEGFKFeEyEqEmD2DWAAAADZAAAAAAE5E5ExFpFZFhFtFxElGFHJHdGhFhFtEpFZGlH1IpH9JVJdJ9JNIfILHrHRHHGRGsGZHdHtG5F1GJGcGxGZGlHTHpJJJbKTAAAAAAJhI_AAAAFtGJGhHHIFGBENFpHdHvIJFlD1ENEZEJEtE5EVEREjElEND1AAAAAACRCRChC1CdCGAhBFBNBNBNBRBZBZBxBxB1BRCBBNBRB9BtBxCJBhCVDRDtDRCZCaCiDGAAEWFGFiE6EWD6DiDiAAAADlEVAAFZF1GBFZGRGRF1HZIVG1FdFtGxGZHVHNGdFNGtIJJlJJJ1JyJCIZIDHvHVG1GdGdG5GJF1GRGJFdFZFVFpGZG9IrIRIoJzKvAAAAAAKTJQI7AAF9FNFhFVGJFlEBF1G7GRHdFZExDxD1DpEFEtE9E5FJFJElENAAAAC1CpAADJDZDFChA5BFA1A5A9ApA1BRBpBdBFA9BVBFB1BJBdBdChCRBtBxB1CBCRAAAAC9EBE1FeE2FGEWEWEJAAAAD5DlENAAF1HFGZGRGtHBGtIlItHVG9FxF5IBHpIRG1GNGJHVJBKaJqImIOICH6HeHJG9HJHXGlF9GlFdFVFRE9FpF5HXIJJLJ7JbKbAAAAAAAAKLJcIjIbAAFxFBExEhEtEBExFpF5G5G9FdE1DNDxEVE1FZFtFtGBFdEdAADZDJDJDNDlD5DlDBAhAlAAAlAxA5A5BVA1BFBFAAA5A9CNCdCNCNB1CpDVDNCVChDFDBAAAAD9FNFqFCEuEqE9EZEdE1ENDtEVFVGVHlHVG5HlHhIJJ5I5H1G9HFF5H1I9I1INGpG9IFJdJ6I2IWHyHeHWHqHeAAH8HNGxGlGxGBF1FdAAFhGRHTH9JBKHKNKhK1AAAAAAKXJPIbAAAAGFF9FxEXDvDdEdEVE1FlFtEpEpDJDxElFBFdGRGdG1FlEtAAD5DlD1EBEFEdD9DRApAlAAAAAlBFBVBhBBAAA5BJBdBdCRCxCxDZChClDNDtDRCVC1DlEJEpFJFdGZFZAAFRFVEVE5FFD9EFElF5HBIBH1HhH1IJIRJNJJIlIVHZGxHRHtIxIBGxHVJNJBJmIyISHuHSG6HeH6ISIKHpHdH7HnHHF9FMAAFRGhHZIdI1IlIlJJJiKBKRKBKMJbIRH9GxHJHYFpFJEND5DpDtEJEdEpD9DVDNEBEdE9FxGtGnG5GDFdFRAAEFEdAAAAExDxDJA5A1A5AAApA5BlBZBFBNBJA9BhCBCdC9DlEBDZDFDVEZDJCtC1DND9EtFlGJAAFZFFAAEhEpE5FtEBAAExGhHtH9HtHJHtIFIlJVKZJNH5HNHdJNIVItIhHVIdIpJZJlJqIqH-AAAAG6HmIyIeINIZIVHxHFF1AAFtFZFBGBHhHxHdH5IRIeIhI9JdJuJgIZIDH7IbH9G1GBFFEVDFDVDxEFEND1DVDJDpEJEtFdGBF9GJGpGPGRFFEpE1AAAAEtEFDtAxA5A5BFA9A1A5A5A9BRBRBZBNCJCRCZC5C9D9EBExEFDVDBDhDNDlD5ExGJF9F9FlFVE1FlFxF1EFAAElGhHNH9HRHNHpIRIlJNKNJRJRI1IpKVJdJxI5INIxJhJlKWJqI-IKHaGuGiHqISIxIZHxHUG0GrGVFxGxF5EtGZG5GtGhHhHlHuIGIlIlJRJlJRI_JHInIVHRGRFdENDhAADJDZDpDxC9DBDpERE5FtFhFVFZFtGVGDFRFVFhE5FJFVE5EFAxAxA9BJBNBFAAA5BNBVBVBpBdBVBdCBCBCxDtFBFREVEhDFDtEtEJEJFhGFGdGJF9GBFhF1GBE9EJFNFdExGpH5GFG9HpItJFI5JlK1KhJdJFKxAAKpJdJJJ1KWJuJSIyJKIaHiGyGSHWH6IJI1IwIUH_HbG1GRHFGlFhFZF1FZFtGjHCG6HiHWIhJpJhJdIBHbHnHvGfFhE5EJAAAAC1C5DJDNCtC9DtEZFBFtFRExExFFFhGJGFFlFZFBEpFFFBAABFA9A9BVBBBFA5BJBNBRBhCBCRCVBhBxCVClDtE9ENFBE5D1DtFNExEdF5GNHJGtHFGVGNHJGNGBE1FFGtE9ExFNGFGJHJHdINIVJNK1LFKVAAAAKdKFJ9JpK1JiIiIeISIeHyG6GqGKGyGmHtJBJtJJItH5HRHFHhGdFpE1EhEtFtGWF6G-GSHpItJPH9JEHxGTGNGYGfFqFBEhEJD1DhDJCpChCdDND1EFEdE5E1EVENEpFFGVGtGJFlFpEJEhEpEJBBBRBFBRBNBBBJBZBZBlBxChDJDdDFBpAAC5D9DxD5EFFJFNE1F1FdFhFpFpHdH5HRG1HtHtG9F9FRFZG1GRFxFVF1HpHhHhHVHlIdJFKJAAAAKZJtIZIVI5JlJGIGHeHuIOH6HeHCGSGeHSH-IxKFJhJNIlININHnGZF1E9ERFBF2FeF3FqG5IJHtG9HhH9G3FtFVFpFwFoAAE9EdEpENDxDRDFCdC1DRDZEBElERD5DxAAFBGRGZF5FpFRE5D1DtDdAxBFBVBNBBBRBRBZCBB9CtCtD1ENDZBpCFCdCdC5DBDxEhFBEpE5F5GhHBGdGxIJH1IZJJIVHRGlFRGBG9IVGhGdFpGpIBI9IZINIlKNAAAAKxKBJBIBIJHlHlIdHNG-HOIKH6HOGqGKGOHiINIBI1JVJtJZJVIdH5HNGfFVFJElFBExFZFdHBHvFpGLHBGNF9AAE1E5FFFBFNFTFJFNFBENDtDhC5CZC1DdEBD5DxDVAAAAE9FxF1GFF5GFFVENEJDxBBAAAABZBNBpBdCFCdCtDdDhDpCtDNDRCBC9AAAAC5DBDdDxD1D9EpFxGtIZHtIpJJJ5J1ItHdG9GlGBHpIlItHlGlGZH1JdKVI1JhLJAAAAK1JJI5JVJ9JVG1G5GmGeHGHmH2HyHaGyFuGtHdHdHtIpIpIZItIpIFHNGdFZFpEtE5EFD9E9FtGhFFFlFdFdAAAAE5EZEZElE1FZFpGFFZE9ElD1DJCZCdDFDRDRDNC9DVAAAAFVF5FtAAFZGJFJE9ElBVBZBJBFBtBhB5CJDVD9EFERC9CpCdCFChDREJAAAAAADhENFBE1F1FJF5H5JFJhKlKhKBJFIFHpGxGBHFIRJhJFHZHVHRJVKtJZKJAAAAAAKFKJJRKZLFJ1HlGWF2F-GmHiIWIGHyG6GKGBGBGdHlIFHxH9H9IdHlGxGBF9GrFfFxFVFND5EVE9EhExEpE1FdFyFOAAEOEFEVEhEtFRFlFBEdD1DhC5CNCpCpCxCtDNAAEFAAFTFnFXFtFJFcFZFJEhBJBNB5BdBRCFCZCNCND1ENEND1DZCxClClDFEJEpFNAAEREhFhFtHFGRFxG9IZJtJdKVJRIZIRHtGNGpG9IFJdJFH1IpH1H9JpLJAAAAKpK9K5KRJ9LNKhJJHlHBGNF6HyHWHiHCG2G-G2GCFxGhG1G5GxHVHJHVH1HpHVHEHcGsGVF9GZFNElDxDdD9EBElFOGCFmFSEmD6DeDyD5EBEdEBDhDNDZC9CNCtC5DNDVDpD9AAEaE6EyFGFKFWE-E3FREtBJBZBxB9BdBtDJDZDZDhEFElExEBDlDBDZC1CtC9DVExFxGBGJHhHVGdGxHFHJH5JlKJJNJJIFG9G1HJHxIFKBJJJZKFJNIpJVKxKlKZJtKtKlKhLJKxJtIhHxHNG1FWFiFWFyFyGOG2HaGGFZFxGhGBGBGFGdHVH1IdINIJHlHnHFGlF5FlFZEZDxDVDxEaFGFyGSGOFaEeDmC-DJDhDdDFC1CpCpC5CFC9DdD5EFDtDhD2D-ECEmE6EyEpFBAAEtEpBBBJBhBpCRBpB9DlERElFFFtFhE9DxDxDVDhD1EZEdDhEZGhHxH5IdHhHVH5IdJBKxKdJ9JNIVHpHZHxIhJNJ9KpAAAAKFK1KtJ1JhJRKlAAAAAAKdKJJFIpIZIJHdF5FOEyFCFSF2GqHWGuF-FhFVFdFZF5GdG1HhIlJNJFIZIZHlAAGxGhFlFBEJDdDdEFEtFiGGGSGOFCECDSCpC5CtChCRCJCZCdCBCZDJDdDpDNDODCDeEWFGAAEeAAE1FBFZFNBdBRBpCFC5C5B9B9C1C1EpEVD1E5FdFJEZEZFNEhFhERD1FlGVGxIJJBJJJZJdKtK1JlJRKdJ9IZIJIpJlKdAAAAKVJ1KtJtJNI9JtKdAAAAAAJ5JRJBIZH1HlGhGRAAAAAAEmFJGGGmHSGuGWGUFyFVE9FlGBGxH1IdIxJtJNJTIhHxH3GwFtFJEVDtDRDtEVEuF6GKGGFqEeDqAACVCmCdCtC1DBDBCZCBCZDFC9CpC9AAAAEmFmE6EeEeEmE1FNFpBlB5BpCtDdEVC9CZBxCVDJD9CxEVEZE9FVFRFpFxGVFJEdExFpFlGpHpJpAAAAK9JpJRIdKFJ1JVJFJpKJKdJ1KZKNIxKhI5IZJtAAAAAAAAKVJdIpIJH9HRGlGBFqFaFSFdExFJFiGGG-HaHKG2GKFqFFFFFrGNGlHZIBJBIVIvIfHpHTHDGNFZE1EBDNDZD1ESEyFOFGFSEWDaCxCqDRDJDZDdDpDVC9CRCFCtCdCpAAAAAAAAFiFmEuEyE-FOFGFGB5CRCFCRDVEdEBCpC9CdB9CFCNC1DZDhDNDJE9F5GZGFFFFtE9FdG1IxKFJBK6KxJxIJHxJhJVIdKRJ5J9IxJBJ9KBIdIxINJdKVAAAAAAKZI5IRIJHpHVHNAAAAFmFKEuE6FSE9GGGiHSICHnAAGaFyFJEtFLFlGFG5HZHtHlIJINIUHhGfG4GRFpEtD1DFDVAAAAEKEOEKD6DCCaDGDqDxENEWAAAADBCpB5CNCpDdEBAAAAAAEaESD2DOESFGE2EOB9CpC1CpDVFBEdEFDxC1CNDhDJDNDJDFDNDJDRD1E9GlGNAAFpFhGtHVIRIhJmJdJNIFHVIdHpIlKJJVI5IRIdJBKZJRHdH5JxKdAAAAKlJdIVHlHdG1G1AAAAAAGFFxFaFCEWFJFuGmHWIWH6AAG6GaFmE5EZE5FZGRGlHVHFHhIAH9HNGRFxGJAAE9EVDtDGDCDaDmDqDmDSCmC-DyEGEqE6FWAADxDNCdAAB5C9DpEtE5EZERDxDyDWC-DODiECEuClC1DtEZDlEBFxFNDxCdClDlEJC9EtD9DpDtDlDpD9ExFJGJGZF1GhHZHhIFIuImI1IZG5HdIZJpAAJxIRHRH1IxKJI5GpIpJpKVAAAAJtJNIJHRG5GpGNAAGZHBGZF1FqFGEKE1FlGOG2IOIIAAAAGeFqAAEZEZEvF1F5GpGpHBHpHhHNGpAAFNAAFNE4EOD-AADKCyCuCqC1CyDWDyEWFCFOEqEWDOCyCWAAAACBDNDhEpERDdDVDOC2DCAADyESE6AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"};
+// I poligoni dei boschi di OpenStreetMap (© contributori OpenStreetMap, ODbL) sono stati elaborati una volta sola
+// e incorporati qui: maglie da 0,1°/18 × 0,1°/13 (circa 620 × 620 m), tenute se coperte almeno al 40% da bosco.
+// Ogni maglia occupa 2 caratteri: 0 = niente bosco, altrimenti 1 + classe + 4 × (quota / 10 m).
+// Classe: 0 non indicata, 1 latifoglie, 2 conifere, 3 misto.
+const FZ=11;
+const B64="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+const CLS_TXT={b:"latifoglie (da OpenStreetMap)", n:"conifere (da OpenStreetMap)", m:"bosco misto (da OpenStreetMap)",
+  u:"tipo non indicato in OpenStreetMap: stimato dalla quota"};
+let forest=[];
+const allForest=()=>forest;
+
+function boscoDaClasse(cls, elev, lon){
+  if (cls==="n") return elev<400 ? "pineta" : "abetaia";
+  if (elev<60) return lon<10.32 ? "pineta" : "querceto";
+  if (elev<450) return "querceto";
+  if (elev<950) return "castagneto";
+  return "faggeta";
+}
+function caricaBoschi(){
+  const D=BOSCHI_DATI, s=D.dati, cl=["u","b","n","m"];
+  const val=ch=>B64.indexOf(ch);
+  for (let R=0; R<D.righe; R++) for (let C=0; C<D.colonne; C++){
+    const k=(R*D.colonne+C)*2, v=val(s[k])*64+val(s[k+1]);
+    if (v<=0) continue;
+    const x=v-1, cls=cl[x%4], elev=Math.floor(x/4)*10;
+    const lat=+(D.lat0+(R+.5)*D.dlat).toFixed(5), lon=+(D.lon0+(C+.5)*D.dlon).toFixed(5);
+    forest.push({forest:true, lat, lon, elev, cls, bosco:boscoDaClasse(cls,elev,lon), scores:null, days:null, rect:null});
+  }
+}
+function rettangolo(fc){
+  const D=BOSCHI_DATI;
+  fc.rect=L.rectangle([[fc.lat-D.dlat/2,fc.lon-D.dlon/2],[fc.lat+D.dlat/2,fc.lon+D.dlon/2]],
+    {stroke:false, fillColor:COL[0], fillOpacity:.3, renderer:forestRenderer});
+  fc.rect.bindTooltip(()=>{ const s=cellScore(fc,state.sp,state.day);
+    return `${s? s.i+" · "+spName(s.sp)+" · ":""}${fc.elev} m · ${BOSCHI[fc.bosco]}`; },{className:"cell-tip", sticky:true});
+  fc.rect.on("click",()=>select(fc));
+  forestLayer.addLayer(fc.rect);
+}
+// Ogni maglia eredita il meteo del punto di griglia più vicino, con le temperature corrette per la quota.
+// Le maglie con lo stesso punto meteo, quota (a 50 m) e tipo di bosco condividono il calcolo.
+let cacheIndice=new Map();
+function attachWeather(fc){
+  if (!cells.length){ fc.scores=null; return; }
+  let best=null, bd=1e9;
+  for (const c of cells){ const d=(c.lat-fc.lat)**2+((c.lon-fc.lon)*.72)**2; if (d<bd){bd=d; best=c;} }
+  if (!best || bd>0.0064){ fc.scores=null; return; }
+  const q=Math.round(fc.elev/50)*50, key=best.lat+"|"+best.lon+"|"+q+"|"+fc.bosco;
+  let r=cacheIndice.get(key);
+  if (!r){
+    const dt=(best.elev-q)*0.0065;
+    const tmp={days:best.days.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt})), elev:q, bosco:fc.bosco};
+    scoreCell(tmp); r={days:tmp.days, scores:tmp.scores}; cacheIndice.set(key,r);
+  }
+  fc.wc=best; fc.days=r.days; fc.scores=r.scores;
+}
+function aggiornaBoschi(){ cacheIndice=new Map(); forest.forEach(attachWeather); }
+function setForestStatus(t){ document.getElementById("fstatus").textContent=t; }
+
+/* ---------------- interfaccia ---------------- */
+const COL=["#9aa093","#d8c48a","#d99a3e","#78a048","#2c6a35"];
+const LAB=["fuori stagione","scarsa","possibile","buona","ottima"];
+const band=i=> i>=70?4: i>=50?3: i>=30?2: i>=10?1:0;
+const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
+  const s=d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"});
+  return iso===oggiISO? "Oggi" : s; };
+const spName=id=>id==="best"?"Migliore":SPECIE.find(s=>s.id===id).nome;
+
+function setStatus(t,p){ document.getElementById("status").textContent=t; if (p!=null) document.getElementById("prog").style.width=(100*p)+"%"; }
+
+const map=L.map("map",{zoomControl:true, preferCanvas:true}).setView([44.02,10.45],10);
+map.attributionControl.addAttribution("Boschi © contributori OpenStreetMap (ODbL) · Meteo Open-Meteo.com");
+const layers={
+  "Topografica (Esri)":L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
+    {maxZoom:18, attribution:"Tiles © Esri"}),
+  "Sentieri (OpenTopoMap)":L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+    {maxZoom:17, attribution:"© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)"}),
+  "Satellite (Esri)":L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    {maxZoom:18, attribution:"Tiles © Esri, Maxar, Earthstar Geographics"}),
+};
+layers["Topografica (Esri)"].addTo(map);
+// se la rete blocca le tile Esri (es. proxy aziendale) passa da sola a OpenTopoMap
+let tileErr=0, tileOk=0;
+layers["Topografica (Esri)"].on("tileload",()=>tileOk++).on("tileerror",()=>{
+  if (++tileErr===4 && tileOk===0){ map.removeLayer(layers["Topografica (Esri)"]); layers["Sentieri (OpenTopoMap)"].addTo(map);
+    setStatus("La mappa Esri non si carica da questa rete: uso OpenTopoMap.", null); } });
+const gridLayer=L.layerGroup().addTo(map);
+const stazioniLayer=L.layerGroup().addTo(map);
+L.control.layers(null,{"Stazioni della Regione":stazioniLayer},{collapsed:false,position:"topright"}).addTo(map);
+async function caricaStazioni(){
+  if (location.protocol==="file:") return;
+  try{
+    const js=await (await fetch("dati/stazioni.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"})).json();
+    js.stazioni.forEach(s=>{
+      if (s.lat==null) return;
+      const f=v=>v==null?"–":(Math.round(v*10)/10).toLocaleString("it-IT");
+      const um=s.umidita&&s.umidita[0]&&s.umidita[0]!=="-"?` · umidità ${s.umidita[0]}%`:"";
+      L.circleMarker([s.lat,s.lon],{radius:4,color:"#1d4e89",weight:1.5,fillColor:"#fff",fillOpacity:1})
+        .bindTooltip(`<b>${s.nome}</b> (${f(s.quota)} m)<br>pioggia: oggi ${f(s.oggi)} · 7 gg ${f(s.p7)} · 30 gg ${f(s.p30)} mm<br>giorni senza pioggia: ${f(s.asciutti)}${um}`)
+        .addTo(stazioniLayer);
+    });
+  }catch(e){}
+}
+caricaStazioni();
+const forestLayer=L.layerGroup();
+const forestRenderer=L.canvas({padding:.3});
+let selMarker=null;
+const vistaBoschi=()=>map.getZoom()>=FZ;
+
+function buildChips(){
+  const box=document.getElementById("chips");
+  [...SPECIE.map(s=>({id:s.id,n:s.nome})), {id:"best",n:"Migliore"}].forEach(s=>{
+    const b=document.createElement("button"); b.className="chip"; b.type="button"; b.textContent=s.n; b.dataset.id=s.id;
+    b.setAttribute("aria-pressed", String(s.id===state.sp));
+    b.onclick=()=>{ state.sp=s.id; box.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===s.id))); render(); };
+    box.appendChild(b);
+  });
+  document.getElementById("legend").innerHTML=COL.map((c,i)=>`<span><i style="background:${c}"></i>${LAB[i]}</span>`).join("");
+}
+
+function renderGrid(){
+  gridLayer.clearLayers();
+  cells.forEach(c=>{
+    const s=cellScore(c,state.sp,state.day); if (!s) return; const b=band(s.i);
+    const r=L.rectangle([[c.lat-GRID.dlat/2,c.lon-GRID.dlon/2],[c.lat+GRID.dlat/2,c.lon+GRID.dlon/2]],
+      {stroke:false, fillColor:COL[b], fillOpacity: b===0? .18 : .5});
+    r.bindTooltip(`${s.i} · ${spName(s.sp)} · ${c.elev} m`,{className:"cell-tip", sticky:true});
+    r.on("click",()=>select(c));
+    gridLayer.addLayer(r);
+  });
+}
+function renderForest(){
+  const vista=map.getBounds().pad(.3);
+  forest.forEach(fc=>{
+    if (!vista.contains([fc.lat,fc.lon])) return;      // si disegnano solo le maglie vicine alla zona inquadrata
+    if (!fc.rect) rettangolo(fc);
+    const s=cellScore(fc,state.sp,state.day);
+    if (!s){ fc.rect.setStyle({fillColor:COL[0], fillOpacity:.3}); return; }
+    const b=band(s.i); fc.rect.setStyle({fillColor:COL[b], fillOpacity: b===0? .45 : .75});
+  });
+}
+function renderModo(){
+  const boschi=vistaBoschi();
+  if (boschi){ if (map.hasLayer(gridLayer)) map.removeLayer(gridLayer); if (!map.hasLayer(forestLayer)) forestLayer.addTo(map); }
+  else { if (map.hasLayer(forestLayer)) map.removeLayer(forestLayer); if (!map.hasLayer(gridLayer)) gridLayer.addTo(map); }
+  document.getElementById("hint").hidden=boschi;
+  document.getElementById("fstatus").hidden=!boschi;
+}
+
+function renderTop(){
+  const boschi=vistaBoschi(), b=map.getBounds().pad(-.05);
+  let src = boschi ? allForest().filter(fc=>b.contains([fc.lat,fc.lon])) : cells;
+  const arr=src.map(c=>({c, s:cellScore(c,state.sp,state.day)})).filter(x=>x.s&&x.s.i>0)
+    .sort((a,b)=>b.s.i-a.s.i).slice(0,8);
+  document.getElementById("toplbl").textContent=(boschi?"I boschi migliori nella zona inquadrata":"I punti migliori")+
+    ` · ${spName(state.sp)} · ${fmtDay(dayDates[state.day])}`;
+  const ul=document.getElementById("top"); ul.innerHTML="";
+  if (!arr.length){ ul.innerHTML=`<li class="meta">${boschi && !src.length ? "Nessun bosco caricato qui per ora." : "Nessun punto con indice sopra zero per questo giorno."}</li>`; return; }
+  arr.forEach(({c,s})=>{
+    const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
+    btn.innerHTML=`<span class="score" style="background:${COL[band(s.i)]}">${s.i}</span>
+      <span class="where"><b>${c.elev} m · ${BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E${state.sp==="best"?" · "+spName(s.sp):""}</small></span>
+      <span class="meta">›</span>`;
+    btn.onclick=()=>select(c,true); li.appendChild(btn); ul.appendChild(li);
+  });
+}
+
+function select(c, fly){
+  state.sel=c;
+  if (selMarker) map.removeLayer(selMarker);
+  selMarker=L.circleMarker([c.lat,c.lon],{radius:7,color:"#111",weight:2,fillColor:"#fff",fillOpacity:1,interactive:false}).addTo(map);
+  if (fly) map.flyTo([c.lat,c.lon], Math.max(map.getZoom(), c.forest?14:12), {duration: matchMedia("(prefers-reduced-motion: reduce)").matches?0:.6});
+  renderDetail();
+}
+
+function renderDetail(){
+  const box=document.getElementById("detail"), c=state.sel;
+  if (!c){ box.hidden=true; return; }
+  const opts=Object.entries(BOSCHI).map(([k,v])=>`<option value="${k}"${k===c.bosco?" selected":""}>${v}</option>`).join("");
+  let html=`<header><div><h2>${c.forest?"Bosco · ":""}${c.elev} m · ${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E</h2>`;
+  if (c.scores){
+    const g=c.days[startIdx+state.day];
+    let rain=0; for (let k=Math.max(0,startIdx+state.day-32); k<=startIdx+state.day; k++) rain+=c.days[k].p;
+    html+=`<div class="meta">${fmtDay(dayDates[state.day])} · pioggia ultime 5 settimane ${Math.round(rain)} mm · suolo ${g.su.toFixed(2)} m³/m³, ${g.st.toFixed(1)} °C</div>`;
+    const fonte=(c.forest?c.wc:c)||{}, stz=fonte.stazioni||{};
+    const giorniMis=c.days.slice(0,startIdx+state.day+1).filter(x=>x.fp).length, giorniPass=c.days.slice(0,startIdx+state.day+1).filter(x=>x.d<oggiISO).length;
+    if (DATI_SITO) html+=`<div class="meta">${stz.pioggia&&stz.pioggia.length?`Pioggia misurata (${stz.pioggia.join(", ")}) in ${giorniMis} giorni su ${giorniPass}`:"Nessun pluviometro entro 12 km: pioggia stimata dal modello"}${stz.temperatura&&stz.temperatura.length?` · temperature da ${stz.temperatura[0]}`:""}. Previsione: Open-Meteo.</div>`;
+  }
+  html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
+  if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${CLS_TXT[c.cls]}${c.wc?` · meteo del punto a ${c.wc.elev} m, temperature corrette per la quota`:""}</p>`;
+  html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;
+  if (!c.scores) html+=`<p class="meta">Il meteo di questa zona è ancora in arrivo.</p>`;
+  else SPECIE.forEach(sp=>{
+    const s=c.scores[sp.id][state.day];
+    const why=[];
+    if (s.ev) why.push(`${s.ev.mm} mm ${fmtDay(s.ev.data,true).toLowerCase()==="oggi"?"oggi":"il "+fmtDay(s.ev.data,true).toLowerCase()}, ${s.ev.att} giorni prima`);
+    else why.push("nessuna pioggia utile nella finestra di attesa");
+    if (s.lim) why.push(`limita: ${FATTORI[s.lim]}`);
+    const spark=c.scores[sp.id].map((x,k)=>`<div class="${dayDates[k]>oggiISO?"fc":""}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
+    html+=`<div class="sp"><span class="n">${sp.nome}</span><span class="v">${s.i} <span class="meta">${LAB[band(s.i)]}</span></span>
+      <span class="why">${why.join(" · ")}</span><div class="spark" aria-hidden="true">${spark}</div></div>`;
+  });
+  html+=`<p class="meta">Barre: ultimi 7 giorni e 3 di previsione (più chiari). <a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
+  const oggiOSel = dayDates[state.day] && dayDates[state.day]<=oggiISO ? dayDates[state.day] : oggiISO;
+  const spDef = state.sp==="best" ? "porcino" : state.sp;
+  html+=`<form class="diario-form" id="diarioForm">
+    <strong class="full">Segna un'uscita qui</strong>
+    <label>Giorno <input type="date" id="dfData" value="${oggiOSel}" max="${oggiISO}" required></label>
+    <label>Specie cercata <select id="dfSp">${SPECIE.map(sp=>`<option value="${sp.id}"${sp.id===spDef?" selected":""}>${sp.nome}</option>`).join("")}</select></label>
+    <div class="full esito" role="radiogroup" aria-label="Esito">
+      <label><input type="radio" name="dfEsito" value="si" checked> Trovati</label>
+      <label><input type="radio" name="dfEsito" value="no"> Niente</label>
+    </div>
+    <label>Quantità (kg, facoltativa) <input type="number" id="dfKg" min="0" step="0.1" inputmode="decimal"></label>
+    <label>Nota <input type="text" id="dfNota" maxlength="120"></label>
+    <button class="btn-primario full" type="submit">Salva nel diario</button>
+  </form>`;
+  box.innerHTML=html; box.hidden=false;
+  document.getElementById("diarioForm").onsubmit=e=>{ e.preventDefault(); salvaUscita(c); };
+  document.getElementById("closeDet").onclick=()=>{ state.sel=null; if (selMarker){map.removeLayer(selMarker); selMarker=null;} renderDetail(); };
+  document.getElementById("boscoSel").onchange=e=>{ c.bosco=e.target.value;
+    if (c.forest && c.wc){ const dt=(c.wc.elev-c.elev)*0.0065; c.days=c.wc.days.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt})); }
+    scoreCell(c); render(); };
+}
+
+/* ---------------- diario delle uscite ---------------- */
+// Resta solo in questo browser (localStorage). «Esporta» ne salva una copia in un file .json.
+const DKEY="funghi-diario-v1";
+let diario=[];
+try{ diario=JSON.parse(localStorage.getItem(DKEY)||"[]"); }catch(e){ diario=[]; }
+const diarioLayer=L.layerGroup().addTo(map);
+function salvaDiario(){ try{ localStorage.setItem(DKEY, JSON.stringify(diario)); }catch(e){} }
+function salvaUscita(c){
+  const data=document.getElementById("dfData").value, sp=document.getElementById("dfSp").value;
+  const trovati=document.querySelector('input[name="dfEsito"]:checked').value==="si";
+  const kg=parseFloat(document.getElementById("dfKg").value), nota=document.getElementById("dfNota").value.trim();
+  if (!data) return;
+  const k=dayDates.indexOf(data);
+  const indice = c.scores && k>=0 && data<=oggiISO ? c.scores[sp][k].i : null;   // l'indice che la mappa dava quel giorno
+  diario.unshift({id:Date.now().toString(36), data, sp, trovati, kg:isNaN(kg)?null:kg, nota,
+    lat:c.lat, lon:c.lon, elev:c.elev, bosco:c.bosco, indice});
+  salvaDiario(); renderDiario();
+  document.getElementById("diarioForm").reset();
+  document.getElementById("dfData").value=data;
+  setStatus(`Uscita ${data===oggiISO?"di oggi":"del "+new Date(data+"T12:00").toLocaleDateString("it-IT",{day:"numeric",month:"long"})} salvata nel diario${indice==null?" (l'indice di quel giorno non è più calcolabile)":""}.`, null);
+}
+function renderDiario(){
+  diarioLayer.clearLayers();
+  const lista=document.getElementById("diarioLista"); lista.innerHTML="";
+  diario.forEach(u=>{
+    L.circleMarker([u.lat,u.lon],{radius:6,weight:2,color:"#fff",fillColor:u.trovati?"#2c6a35":"#b4472f",fillOpacity:1})
+      .bindTooltip(`${fmtDay(u.data,true)} · ${spName(u.sp)} · ${u.trovati?"trovati":"niente"}`).addTo(diarioLayer);
+    const r=document.createElement("div"); r.className="diario-voce";
+    r.innerHTML=`<span class="pallino" style="background:${u.trovati?"#2c6a35":"#b4472f"}"></span>
+      <button class="apri" type="button"><b>${new Date(u.data+"T12:00").toLocaleDateString("it-IT",{day:"numeric",month:"short",year:"numeric"})}</b> · ${spName(u.sp)} · ${u.trovati?"trovati"+(u.kg?` (${u.kg} kg)`:""):"niente"}<br><span class="meta">${u.elev} m · ${BOSCHI[u.bosco]||""} · indice quel giorno: ${u.indice==null?"non calcolato":u.indice}${u.nota?" · "+u.nota.replace(/</g,"&lt;"):""}</span></button>
+      <button type="button" aria-label="Elimina questa uscita" title="Elimina">✕</button>`;
+    const [apri,elimina]=r.querySelectorAll("button");
+    apri.onclick=()=>map.flyTo([u.lat,u.lon],Math.max(map.getZoom(),14));
+    elimina.onclick=()=>{ if (confirm("Eliminare questa uscita dal diario?")){ diario=diario.filter(x=>x.id!==u.id); salvaDiario(); renderDiario(); } };
+    lista.appendChild(r);
+  });
+  // confronto: l'indice era più alto nei giorni con funghi che in quelli a vuoto?
+  const conIndice=diario.filter(u=>u.indice!=null), si=conIndice.filter(u=>u.trovati), no=conIndice.filter(u=>!u.trovati);
+  const m=a=>Math.round(a.reduce((s,u)=>s+u.indice,0)/a.length);
+  const box=document.getElementById("diarioRiepilogo");
+  if (!diario.length) return;
+  let t=`${diario.length} uscite segnate (${diario.filter(u=>u.trovati).length} con funghi). `;
+  if (si.length && no.length){
+    t+=`Indice medio nei giorni con funghi: ${m(si)}; a vuoto: ${m(no)}. `;
+    if (conIndice.length<10) t+="Sono ancora poche uscite per trarre conclusioni.";
+    else if (m(si)-m(no)>=10) t+="Finora l'indice distingue i giorni buoni da quelli a vuoto.";
+    else t+="Finora l'indice NON distingue bene i giorni buoni da quelli a vuoto: va corretto.";
+  } else t+="Per il confronto servono sia uscite con funghi sia uscite a vuoto, segnate entro una settimana.";
+  box.textContent=t;
+}
+document.getElementById("diarioEsporta").onclick=()=>{
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(diario,null,1)],{type:"application/json"}));
+  a.download=`diario-funghi-${oggiISO}.json`; document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById("diarioImporta").onchange=e=>{
+  const f=e.target.files[0]; if (!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{ try{
+      const nuove=JSON.parse(rd.result).filter(u=>u&&u.id&&u.data&&u.sp);
+      const ids=new Set(diario.map(u=>u.id)); const agg=nuove.filter(u=>!ids.has(u.id));
+      diario=[...agg,...diario].sort((a,b)=>b.data.localeCompare(a.data)); salvaDiario(); renderDiario();
+      setStatus(`Importate ${agg.length} uscite nel diario.`, null);
+    }catch(err){ setStatus("Il file scelto non è un diario valido.", null); } };
+  rd.readAsText(f); e.target.value="";
+};
+
+function render(){
+  renderModo();
+  if (!dayDates.length || !cells.length) return;   // niente meteo: niente da colorare
+  document.getElementById("daylbl").textContent=fmtDay(dayDates[state.day]) + (dayDates[state.day]>oggiISO?" (prev.)":"");
+  if (vistaBoschi()) renderForest(); else renderGrid();
+  renderTop(); renderDetail();
+}
+
+document.getElementById("day").addEventListener("input",e=>{ if (!dayDates.length) return; state.day=+e.target.value; render(); });
+document.getElementById("reload").addEventListener("click",()=>start(true));
+let moveT=null;
+map.on("moveend zoomend",()=>{ clearTimeout(moveT); moveT=setTimeout(render,150); });
+
+async function start(force){
+  const btn=document.getElementById("reload"); btn.disabled=true;
+  try{ const raw=await loadData(force); computeAll(raw); render(); }
+  catch(e){ setStatus(e.giornaliero ? e.message+" Non c'è un meteo salvato da usare nel frattempo."
+                                      : "Non riesco a scaricare il meteo: "+e.message+" Controlla la connessione e premi Aggiorna meteo.",0); }
+  finally{ btn.disabled=false; }
+}
+caricaBoschi();
+setForestStatus(`Boschi: ${forest.length.toLocaleString("it-IT")} maglie da circa 600 m, da OpenStreetMap (${BOSCHI_DATI.aggiornati}).`);
+buildChips();
+renderModo();
+renderDiario();
+start(false);
+</script>
+</body>
+</html>
