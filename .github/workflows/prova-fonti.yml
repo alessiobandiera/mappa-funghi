@@ -4,12 +4,16 @@ on:
   push:
     paths: [".github/workflows/prova-fonti.yml"]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   prova:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Controlla le fonti
         run: |
+          exec > >(tee prova-fonti.txt) 2>&1
           prova() {
             nome="$1"; url="$2"; trova="$3"
             out=$(curl -sS -L -m 60 -A "mappa-funghi (github actions)" -o /tmp/r -w "%{http_code} %{size_download}" "$url" 2>&1) || out="ERRORE $out"
@@ -27,3 +31,9 @@ jobs:
           head -c 300 /tmp/r; echo
           prova "Consorzio Borgotaro" "https://www.fungodiborgotaro.com/stannonascendo.php" ''
           echo "IP del runner:"; curl -sS -m 20 https://api.ipify.org; echo
+      - name: Salva il risultato nel repository
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add prova-fonti.txt
+          git commit -m "Risultato prova fonti" && git push
