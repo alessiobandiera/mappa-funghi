@@ -35,6 +35,7 @@ import urllib.parse
 import urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 from zoneinfo import ZoneInfo
 
 RADICE = Path(__file__).resolve().parent.parent
@@ -114,7 +115,7 @@ def stazioni_sir(tipo: str) -> list[dict]:
 def serie_sir(tipo: str, ident: str, dal: date) -> dict:
     """Serie giornaliera dall'archivio SIR: pioggia {data: mm} o temperatura {data: [min, max]}."""
     idst = "pluvio" if tipo == "pluvio" else "termo"
-    txt = scarica(f"https://www.sir.toscana.it/archivio/download.php?IDST={idst}&IDS={ident}").decode("utf-8", "replace")
+    txt = scarica(f"https://www.sir.toscana.it/archivio/download.php?IDST={idst}&IDS={ident}", timeout=180).decode("utf-8", "replace")
     out = {}
     for riga in txt.splitlines():
         a = riga.split(";")
@@ -140,16 +141,23 @@ def serie_sir(tipo: str, ident: str, dal: date) -> dict:
 def aggiorna_sir(oggi: date) -> dict:
     dal = oggi - timedelta(days=GIORNI_SIR)
     risultato = {"aggiornato": datetime.now(ROMA).isoformat(timespec="minutes"), "pluvio": [], "termo": []}
+    griglia = punti_griglia()
     for tipo in ("pluvio", "termo"):
-        st = stazioni_sir(tipo)
-        log(f"SIR {tipo}: {len(st)} stazioni nella zona")
-        for s in st:
+        raggio = RAGGIO_PIOGGIA_KM if tipo == "pluvio" else RAGGIO_TEMP_KM
+        tutte = stazioni_sir(tipo)
+        # solo le stazioni abbastanza vicine ad almeno un punto della mappa
+        st = [s for s in tutte if any(km(s["lat"], s["lon"], la, lo) <= raggio for la, lo in griglia)]
+        log(f"SIR {tipo}: {len(st)} stazioni utili su {len(tutte)} nella zona")
+
+        def una(s):
             try:
                 s["dati"] = serie_sir(tipo, s["id"], dal)
             except Exception as e:
                 log(f"  {s['id']} {s['nome']}: {e}")
                 s["dati"] = {}
-            time.sleep(0.3)
+            return s
+        with ThreadPoolExecutor(max_workers=4) as ex:
+            st = list(ex.map(una, st))
         risultato[tipo] = [s for s in st if s["dati"]]
         log(f"  con dati recenti: {len(risultato[tipo])}")
     return risultato
