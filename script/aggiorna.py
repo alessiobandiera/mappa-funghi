@@ -156,8 +156,13 @@ def aggiorna_sir(oggi: date) -> dict:
                 log(f"  {s['id']} {s['nome']}: {e}")
                 s["dati"] = {}
             return s
+        fatte = []
         with ThreadPoolExecutor(max_workers=4) as ex:
-            st = list(ex.map(una, st))
+            for s in ex.map(una, st):
+                fatte.append(s)
+                if len(fatte) % 10 == 0 or len(fatte) == len(st):
+                    log(f"  {tipo}: {len(fatte)}/{len(st)} stazioni scaricate")
+        st = fatte
         risultato[tipo] = [s for s in st if s["dati"]]
         log(f"  con dati recenti: {len(risultato[tipo])}")
     return risultato
