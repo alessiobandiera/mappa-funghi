@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="googlebot" content="noindex, nofollow, noarchive">
+<title>Zone nel bosco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#eef0ea; --panel:#fbfbf8; --fg:#1f251c; --muted:#5d6656; --line:#d6dbcf;
+  --accent:#3d6b2f; --accent-ink:#ffffff; --chip:#e6eadf;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
+  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
+  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
+.app{display:grid;grid-template-columns:380px 1fr;height:100%}
+#map{height:100%;min-height:0;background:var(--bg)}
+.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
+  padding-block:18px 24px;padding-inline:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr;grid-template-rows:55% 45%}
+  .panel{order:2;border-right:0;border-top:1px solid var(--line);padding-inline:16px}
+  #map{order:1}
+}
+h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0}
+.label{font:500 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;
+  padding:6px 12px;font:500 .88rem var(--body);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.chip:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:flex;align-items:center;gap:10px}
+.row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
+.val{font:500 .9rem var(--mono);min-width:8.5em;text-align:right}
+.sl{display:grid;grid-template-columns:6.5em 1fr 6.5em;gap:8px;align-items:center;font-size:.82rem;color:var(--muted)}
+.sl input{accent-color:var(--accent);min-width:0}
+.sl span:last-child{text-align:right}
+.box{padding:10px 12px;border-radius:8px;background:var(--chip);font-size:.88rem}
+.box b{font-weight:600}
+.legend{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.ramp{height:12px;border-radius:3px}
+.ramp-lab{display:flex;justify-content:space-between}
+.note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.note a,.sub a{color:var(--accent)}
+.pop{font:13px/1.4 var(--body);min-width:220px}
+.pop h3{font:700 1rem var(--display);margin:0 0 6px}
+.pop table{border-collapse:collapse;width:100%}
+.pop td{padding:2px 0;vertical-align:top}
+.pop td:last-child{text-align:right;font-family:var(--mono);padding-left:10px}
+.pop .why{color:#5d6656;margin-top:6px;font-size:12px}
+.status{font-size:.85rem;color:var(--muted)}
+.leaflet-image-layer{image-rendering:pixelated}
+.zoomhint{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:500;background:var(--panel);color:var(--fg);
+  border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:500 .88rem var(--body);box-shadow:0 2px 8px rgba(0,0,0,.15);pointer-events:none}
+.mapwrap{position:relative;min-height:0;height:100%}
+@media (max-width:760px){ .mapwrap{order:1} }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel" aria-label="Controlli">
+    <div>
+      <h1>Zone nel bosco</h1>
+      <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle. <a href="./">Torna alla mappa</a></p>
+    </div>
+
+    <div>
+      <p class="label">Specie</p>
+      <div class="chips" id="specie" role="group" aria-label="Specie"></div>
+    </div>
+
+    <div>
+      <p class="label">Giorno</p>
+      <div class="row">
+        <input type="range" id="giorno" min="0" max="0" value="0" aria-label="Giorno" disabled>
+        <span class="val" id="giornolbl">–</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="label">Cosa mostrare</p>
+      <div class="chips" id="viste" role="group" aria-label="Vista">
+        <button class="chip" data-v="terreno" aria-pressed="true">Dove conviene nel bosco</button>
+        <button class="chip" data-v="finale">Indice × terreno</button>
+        <button class="chip" data-v="acqua">Ristagno</button>
+        <button class="chip" data-v="sole">Sole</button>
+        <button class="chip" data-v="riparo">Riparo</button>
+      </div>
+    </div>
+
+    <div class="legend" id="legenda"></div>
+
+    <div>
+      <p class="label">Condizioni usate</p>
+      <div class="chips" id="modo" role="group" aria-label="Condizioni">
+        <button class="chip" data-m="giorno" aria-pressed="true">Meteo del giorno</button>
+        <button class="chip" data-m="scenario">Provo uno scenario</button>
+      </div>
+      <div id="scenario" style="display:none;flex-direction:column;gap:8px;margin-top:10px">
+        <label class="sl"><span>Bagnato</span><input type="range" id="sD" min="0" max="100" value="70" aria-label="Secco o bagnato"><span>Secco</span></label>
+        <label class="sl"><span>Freddo</span><input type="range" id="sT" min="-100" max="100" value="0" aria-label="Freddo o caldo"><span>Caldo</span></label>
+        <label class="sl"><span>Calma</span><input type="range" id="sV" min="0" max="100" value="0" aria-label="Tramontana"><span>Tramontana</span></label>
+      </div>
+      <p class="box" id="stato" style="margin:10px 0 0">Carico i dati…</p>
+    </div>
+
+    <div>
+      <p class="label">Trasparenza</p>
+      <div class="row"><input type="range" id="opac" min="20" max="100" value="75" aria-label="Trasparenza"><span class="val" id="opaclbl" style="min-width:3em">75%</span></div>
+    </div>
+
+    <p class="status" id="status"></p>
+
+    <p class="note"><b>Come leggerla.</b> «Dove conviene nel bosco» dice se un punto, con il meteo di quel giorno, è più o meno favorevole di un punto di bosco tipico della zona: verde scuro = più favorevole, marrone = meno. Non dice se ci sono funghi: per quello conta l'indice, che dipende dal meteo. «Indice × terreno» è l'indice della mappa principale corretto dal terreno, al massimo del 30% in più o in meno.<br><br>
+    <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
+    Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
+  </aside>
+  <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div><div class="zoomhint" id="zoomhint">Avvicinati per vedere le zone a 20 m</div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* regole dell'indice: copiate dalla mappa principale (index.html) */
+const SPECIE = [
+  {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
+   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.5,
+   boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
+  {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
+   suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
+   boschi:{faggeta:1,castagneto:1,querceto:1,abetaia:.9,pineta:.6,pianura:.2,prateria:.15}},
+  {id:"ovolo", nome:"Ovolo buono", attesa:[7,10,16,22], pmin:20, suoloT:[14,17,23,27], notte:[9,13,19,23], secco:[6,14],
+   suoloU:[0,.30,1.01,1.02], quota:[0,200,900,1300], calo:0,
+   boschi:{castagneto:1,querceto:1,faggeta:.3,pineta:.2,abetaia:.1,pianura:.2,prateria:.1}},
+  {id:"chiodino", nome:"Chiodino", attesa:[4,7,14,20], pmin:15, suoloT:[5,8,14,18], notte:[0,4,10,14], secco:[5,12],
+   suoloU:[.05,.40,1.01,1.02], quota:[0,200,1300,1700], calo:.8,
+   boschi:{castagneto:1,querceto:1,faggeta:1,abetaia:.6,pineta:.4,pianura:.25,prateria:.1}},
+];
+const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
+  notti:"temperature notturne", aria:"umidità dell'aria", vento:"vento secco da nord", calo:"calo termico",
+  quota:"quota", bosco:"tipo di bosco", secco:"troppi giorni asciutti di fila"};
+
+/* ---------------- calcolo indice ---------------- */
+function trap(x,a,b,c,d,min=0){
+  let v; if (x<=a||x>=d) v=0; else if (x>=b&&x<=c) v=1; else if (x<b) v=(x-a)/(b-a); else v=(d-x)/(d-c);
+  return min+(1-min)*v;
+}
+const avg=(arr,k)=>arr.reduce((s,g)=>s+g[k],0)/arr.length;
+const tramontana=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
+
+function valuta(D, idx, sp, quota, bosco){
+  const f={}; let best=0, ev=null;
+  for (let j=Math.max(0,idx-sp.attesa[3]); j<=idx; j++){
+    const att=idx-j; let cum=0;
+    for (let k=Math.max(0,j-2); k<=j; k++) cum+=D[k].p;
+    if (cum<sp.pmin*.5) continue;
+    // se dopo questa pioggia c'è stato un periodo secco più lungo di quanto il terreno regge, la sua spinta è esaurita:
+    // una pioggia successiva non la "riaccende", conta solo come pioggia nuova, con i suoi tempi di attesa
+    const tolle=sp.secco[1]+Math.max(0,Math.min(8,(cum-sp.pmin)/20));
+    let st=0, mx=0;
+    for (let k=j+1; k<=idx; k++){ if (D[k].p<3 && D[k].ur<88){ st++; if (st>mx) mx=st; } else st=0; }
+    if (mx>tolle) continue;
+    const v=trap(att,...sp.attesa)*(.4+.6*Math.min(1,cum/(sp.pmin*1.5)));
+    if (v>best){best=v; ev={data:D[j].d, mm:Math.round(cum), att};}
+  }
+  f.pioggia=best;
+  const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
+  // umidità del suolo RELATIVA: 0 = il minimo delle ultime 5 settimane in quel punto, 1 = il massimo.
+  // I modelli assegnano a ogni punto un tipo di suolo diverso: in collina lo strato superficiale scende a 0,04 m³/m³,
+  // in pianura non va sotto 0,2. Le soglie assolute azzeravano proprio le zone di bosco.
+  const fin=D.slice(Math.max(0,idx-32),idx+1).map(g=>g.su), smin=Math.min(...fin), smax=Math.max(...fin);
+  const rel = smax-smin>0.02 ? (avg(u5,"su")-smin)/(smax-smin) : .5;
+  f.suoloU=trap(rel,...sp.suoloU,.15);
+  f.suoloT=trap(avg(u7,"st"),...sp.suoloT);
+  f.notti=trap(avg(u7,"tmin"),...sp.notte,.1);
+  f.aria=trap(avg(u5,"ur"),45,65,100,101,.3);
+  f.vento=Math.max(.2,1-.25*u5.filter(tramontana).length);
+  // giorni asciutti di fila fino al giorno valutato (pioggia sotto 3 mm e aria non satura):
+  // dopo il temporale servono altre piogge o umidità, altrimenti la buttata non parte o si secca
+  let secchi=0;
+  for (let k=idx; k>=Math.max(0,idx-25); k--){ if (D[k].p>=3 || D[k].ur>=88) break; secchi++; }
+  // più è piovuto, più a lungo il terreno resta bagnato: +1 giorno tollerato ogni 20 mm oltre la soglia (max 8)
+  const extra = ev ? Math.max(0,Math.min(8,(ev.mm-sp.pmin)/20)) : 0;
+  f.secco=trap(secchi,-1,0,sp.secco[0]+extra,sp.secco[1]+extra,.1);
+  if (sp.calo){
+    const prec=D.slice(Math.max(0,idx-20),idx-6);
+    if (prec.length>=7){
+      const c=trap(avg(prec,"tmed")-avg(u7,"tmed"),-3,1.5,8,14,.3);
+      f.calo=1-sp.calo*(1-c);
+    }
+  }
+  f.quota=trap(quota,...sp.quota,.05);
+  f.bosco=sp.boschi[bosco] ?? .7;
+  const vals=Object.values(f), mn=Math.min(...vals);
+  let ind=0;
+  if (mn>0){
+    const geo=Math.exp(vals.reduce((s,v)=>s+Math.log(v),0)/vals.length);
+    ind=Math.pow(geo,.6)*Math.pow(mn,.4)*Math.min(1,.5+f.pioggia)*Math.min(1,.5+f.suoloU);
+  }
+  const lim = mn<.95 ? Object.keys(f).reduce((a,b)=>f[a]<=f[b]?a:b) : null;
+  return {i:Math.round(100*ind), f, lim, ev};
+}
+
+function boscoStimato(lat, lon, elev){
+  if (elev<60) return (lon<10.32) ? "pineta" : "pianura";
+  if (elev<450) return "querceto";
+  if (elev<950) return "castagneto";
+  if (elev<1650) return "faggeta";
+  return "prateria";
+}
+
+/* ---------------- dati ---------------- */
+const GRIDW = {lat0:43.72, dlat:0.05, lon0:10.05, dlon:0.07};
+const ZOOM_MIN = 12, MAX_TESSERE = 12, BIN = 25;
+const oggiISO = new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Rome"});
+let IDX=null, celleMap=new Map(), date=[], st={sp:"porcino", g:0, v:"terreno", m:"giorno"};
+const tessere=new Map();          // id -> {meta, A,B,C, calc, overlay, usata}
+const $=id=>document.getElementById(id);
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+
+async function leggiPNG(url){
+  const blob=await (await fetch(url)).blob();
+  const bmp=await createImageBitmap(blob,{colorSpaceConversion:"none",premultiplyAlpha:"none"});
+  const cv=document.createElement("canvas"); cv.width=bmp.width; cv.height=bmp.height;
+  const cx=cv.getContext("2d",{willReadFrequently:true}); cx.drawImage(bmp,0,0);
+  return cx.getImageData(0,0,bmp.width,bmp.height).data;
+}
+
+async function carica(){
+  $("status").textContent="Carico meteo e indice delle tessere…";
+  const [idx, camp, met] = await Promise.all([
+    fetch("terreno/tessere.json",{cache:"no-store"}).then(r=>r.json()),
+    fetch("terreno/campione.json").then(r=>r.ok?r.json():null).catch(()=>null),
+    fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"}).then(r=>r.json())]);
+  IDX=idx; CAMPIONE=camp&&camp.punti;
+  const K=met.campi;
+  met.celle.forEach(x=>{
+    const c={lat:x.lat, lon:x.lon, elev:x.elev, days:x.giorni.map(r=>{ const o={}; K.forEach((k,i)=>o[k]=r[i]); return o; })};
+    celleMap.set(Math.round((c.lat-GRIDW.lat0)/GRIDW.dlat)+","+Math.round((c.lon-GRIDW.lon0)/GRIDW.dlon), c);
+  });
+  date=[...celleMap.values()][0].days.map(g=>g.d);
+  const gi=$("giorno"); gi.min=Math.min(26,date.length-5); gi.max=date.length-1;
+  st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-4;
+  gi.value=st.g; gi.disabled=false;
+  contorni=L.layerGroup(IDX.tessere.map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
+    {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
+  const q=new Date(met.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  $("status").textContent=`Meteo aggiornato ${q}. ${IDX.tessere.length} tessere di bosco a ${IDX.res_m} m.`;
+  aggiornaStato(); visibili();
+}
+
+/* ---------------- meteo: stato e indice per cella, calcolati una volta per giorno e specie ---------------- */
+let cacheCelle=new Map();
+function chiaveCalc(){ return st.sp+"|"+st.g; }
+function infoCella(key){
+  const ck=chiaveCalc()+"|"+key;
+  if (cacheCelle.has(ck)) return cacheCelle.get(ck);
+  const c=celleMap.get(key); if (!c){ cacheCelle.set(ck,null); return null; }
+  const sp=SPECIE.find(s=>s.id===st.sp), idx=st.g, D=c.days;
+  const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
+  const fin=D.slice(Math.max(0,idx-32),idx+1).map(g=>g.su), smin=Math.min(...fin), smax=Math.max(...fin);
+  const rel = smax-smin>0.02 ? (avg(u5,"su")-smin)/(smax-smin) : .5;
+  let secchi=0; for (let k=idx;k>=Math.max(0,idx-25);k--){ if (D[k].p>=3||D[k].ur>=88) break; secchi++; }
+  const stato={ D: clamp(.55*(1-rel)+.45*Math.min(1,secchi/12)), st0: avg(u7,"st")+c.elev*0.0065,
+                V: Math.min(1, u5.filter(tramontana).length/2), secchi };
+  const nb=Math.ceil(2000/BIN)+2, bins={latif:new Float32Array(nb), conif:new Float32Array(nb)};
+  for (let b=0;b<nb;b++){
+    const q=b*BIN, dt=(c.elev-q)*0.0065;
+    const DD=D.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt}));
+    bins.latif[b]=valuta(DD, idx, sp, q, boscoStimato(44, 10.5, q)).i;
+    bins.conif[b]=valuta(DD, idx, sp, q, "abetaia").i;
+  }
+  const iso=date[idx], doy=Math.round((new Date(iso+"T12:00:00")-new Date(iso.slice(0,4)+"-01-01T12:00:00"))/864e5)+1;
+  const [ta,tb,tc,td]=sp.suoloT, stC=stato.st0-c.elev*0.0065;
+  const ref=riferimento(stato.D, clamp((tb-stC)/(tb-ta)), clamp((stC-tc)/(td-tc)), stato.V, doy);
+  const o={stato, bins, ref}; cacheCelle.set(ck,o); return o;
+}
+
+/* ---------------- tessere ---------------- */
+function soleDelGiorno(C, i, doy){
+  if (doy<=258) return C.set[i];
+  if (doy<=288){ const t=(doy-258)/30; return C.set[i]*(1-t)+C.ott[i]*t; }
+  if (doy<=319){ const t=(doy-288)/31; return C.ott[i]*(1-t)+C.nov[i]*t; }
+  return C.nov[i];
+}
+async function caricaTessera(meta){
+  const t={meta, pronta:false, usata:Date.now()}; tessere.set(meta.id, t);
+  try{
+    const [a,b,c]=await Promise.all(["a","b","c"].map(k=>leggiPNG(`terreno/t/${meta.id}_${k}.png`)));
+    const n=meta.righe*meta.colonne;
+    t.A={acqua:new Float32Array(n), riparo:new Float32Array(n)};
+    t.B={quota:new Float32Array(n), bosco:new Uint8Array(n)};
+    t.C={set:new Float32Array(n), ott:new Float32Array(n), nov:new Float32Array(n)};
+    for (let i=0;i<n;i++){ const o=i*4;
+      t.A.acqua[i]=a[o]/255; t.A.riparo[i]=a[o+2]/255;
+      t.B.quota[i]=(b[o]*256+b[o+1])/2; t.B.bosco[i]=b[o+2];
+      t.C.set[i]=c[o]/128; t.C.ott[i]=c[o+1]/128; t.C.nov[i]=c[o+2]/128; }
+    t.canvas=document.createElement("canvas"); t.canvas.width=meta.colonne; t.canvas.height=meta.righe;
+    t.pronta=true; calcolaTessera(t); disegnaTessera(t);
+  }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id); }
+}
+function scenario(){ return st.m==="scenario" ? {D:+$("sD").value/100, T:+$("sT").value/100, V:+$("sV").value/100} : null; }
+// fattore del terreno per un punto (a = ristagno, s = sole rispetto al piano, rp = riparo)
+function fattoriTerreno(a, s, rp, Dv, Cv, Hv, Vv){
+  const aStar=.2+.65*Dv;
+  const fa=1-.8*Math.abs(a-aStar);
+  const sStar=1+.45*Cv-.45*Hv-.3*Dv*(1-Cv);
+  const fs=1-.6*Math.min(1,Math.abs(s-sStar)/.6);
+  const fr=1-(.1+.5*Vv)*(1-rp);
+  return {m:fa*fs*fr, fa, fs, fr};
+}
+// riferimento: la media su un campione di punti di bosco di tutta l'area (docs/terreno/campione.json),
+// così «più favorevole» vuol dire «meglio di un punto di bosco tipico» con lo stesso meteo, senza salti tra tessere
+let CAMPIONE=null;
+function riferimento(Dv, Cv, Hv, Vv, doy){
+  if (!CAMPIONE) return fattoriTerreno(.5, 1, .5, Dv, Cv, Hv, Vv).m;
+  let s=0;
+  for (const [a,ss,so,sn,rp] of CAMPIONE){
+    const sole = doy<=258? ss : doy<=288? ss+(so-ss)*(doy-258)/30 : doy<=319? so+(sn-so)*(doy-288)/31 : sn;
+    s+=fattoriTerreno(a, sole, rp, Dv, Cv, Hv, Vv).m;
+  }
+  return s/CAMPIONE.length;
+}
+function calcolaTessera(t){
+  if (!t.pronta) return;
+  const m=t.meta, n=m.righe*m.colonne, sp=SPECIE.find(s=>s.id===st.sp), iso=date[st.g];
+  const doy=Math.round((new Date(iso+"T12:00:00")-new Date(iso.slice(0,4)+"-01-01T12:00:00"))/864e5)+1;
+  const [ta,tb,tc,td]=sp.suoloT, sc=scenario();
+  const refScen = sc ? riferimento(sc.D, Math.max(0,-sc.T), Math.max(0,sc.T), sc.V, doy) : 0;
+  const K=new Float32Array(n), base=new Float32Array(n), sun=new Float32Array(n), FA=new Float32Array(n), FS=new Float32Array(n), FR=new Float32Array(n);
+  for (let r=0;r<m.righe;r++){
+    const lat=m.nord-(r+.5)*IDX.dlat, fi=(lat-GRIDW.lat0)/GRIDW.dlat, i0=Math.floor(fi), ty=fi-i0;
+    for (let c=0;c<m.colonne;c++){
+      const p=r*m.colonne+c; if (!t.B.bosco[p]) continue;
+      const lon=m.ovest+(c+.5)*IDX.dlon, fj=(lon-GRIDW.lon0)/GRIDW.dlon, j0=Math.floor(fj), tx=fj-j0;
+      const q=t.B.quota[p], bq=Math.min(Math.floor(q/BIN), Math.ceil(2000/BIN)), tq=q/BIN-bq;
+      let w=0, ib=0, sD=0, sS=0, sV=0, sR=0;
+      for (const [di,dj,ww] of [[0,0,(1-ty)*(1-tx)],[0,1,(1-ty)*tx],[1,0,ty*(1-tx)],[1,1,ty*tx]]){
+        if (ww<=0) continue; const o=infoCella((i0+di)+","+(j0+dj)); if (!o) continue;
+        const arr=t.B.bosco[p]===3? o.bins.conif : o.bins.latif;
+        ib+=ww*(arr[bq]*(1-tq)+arr[bq+1]*tq); sD+=ww*o.stato.D; sS+=ww*o.stato.st0; sV+=ww*o.stato.V; sR+=ww*o.ref; w+=ww;
+      }
+      if (!w) continue;
+      ib/=w; sD/=w; sV/=w; let ref=sR/w; const stS=sS/w-q*0.0065;
+      let Dv=sD, Cv=clamp((tb-stS)/(tb-ta)), Hv=clamp((stS-tc)/(td-tc)), Vv=sV;
+      if (sc){ Dv=sc.D; Cv=Math.max(0,-sc.T); Hv=Math.max(0,sc.T); Vv=sc.V; ref=refScen; }
+      const s=soleDelGiorno(t.C,p,doy), f=fattoriTerreno(t.A.acqua[p], s, t.A.riparo[p], Dv, Cv, Hv, Vv);
+      K[p]=clamp(f.m/ref,.4,1.6); base[p]=ib; sun[p]=s; FA[p]=f.fa; FS[p]=f.fs; FR[p]=f.fr;
+    }
+  }
+  t.calc={K, base, sun, FA, FS, FR, sp, chiave:chiaveCalc()+"|"+st.m+"|"+(sc?JSON.stringify(sc):"")};
+}
+
+/* ---------------- colori ---------------- */
+const COLI=[[154,160,147],[216,196,138],[217,154,62],[120,160,72],[44,106,53]];
+const lerp=(c1,c2,t)=>[c1[0]+(c2[0]-c1[0])*t, c1[1]+(c2[1]-c1[1])*t, c1[2]+(c2[2]-c1[2])*t];
+function rampa(stops, t){ t=clamp(t); const n=stops.length-1, k=Math.min(n-1,Math.floor(t*n)); return lerp(stops[k],stops[k+1],t*n-k); }
+const DIV=[[140,81,10],[216,179,101],[245,240,225],[90,174,97],[0,90,50]];
+const SEQ=[[247,244,232],[199,220,170],[110,170,110],[30,110,90],[10,60,90]];
+const SUN=[[40,60,110],[120,140,170],[240,235,215],[240,190,90],[200,110,30]];
+const coloreIndice=v=>COLI[v>=70?4: v>=50?3: v>=30?2: v>=10?1:0];
+const indiceQui=(t,p)=>Math.min(100, t.calc.base[p]*clamp(1+.5*(t.calc.K[p]-1), .7, 1.3));
+const LEGENDE={
+  terreno:{stops:DIV, lab:["meno favorevole","come un bosco tipico","più favorevole"]},
+  finale:{bande:true},
+  acqua:{stops:SEQ, lab:["asciuga (crinali, dossi)","","trattiene acqua (fossi, conche)"]},
+  sole:{stops:SUN, lab:["in ombra","come il piano","molto soleggiato"]},
+  riparo:{stops:SEQ, lab:["esposto alla tramontana","","riparato"]},
+};
+function disegnaTessera(t){
+  if (!t.pronta || !t.calc) return;
+  const m=t.meta, W=m.colonne, H=m.righe, cx=t.canvas.getContext("2d"), img=cx.createImageData(W,H), d=img.data;
+  for (let p=0;p<W*H;p++){
+    if (!t.B.bosco[p] || (!t.calc.base[p] && !t.calc.K[p])) continue;
+    let col;
+    switch(st.v){
+      case "terreno": col=rampa(DIV,(t.calc.K[p]-.55)/.9); break;
+      case "finale": col=coloreIndice(indiceQui(t,p)); break;
+      case "acqua": col=rampa(SEQ,t.A.acqua[p]); break;
+      case "sole": col=rampa(SUN,(t.calc.sun[p]-.3)/1.4); break;
+      case "riparo": col=rampa(SEQ,t.A.riparo[p]); break;
+    }
+    const o=p*4; d[o]=col[0]; d[o+1]=col[1]; d[o+2]=col[2]; d[o+3]=255;
+  }
+  cx.putImageData(img,0,0);
+  const url=t.canvas.toDataURL();
+  if (t.overlay) t.overlay.setUrl(url);
+  else t.overlay=L.imageOverlay(url, [[m.sud,m.ovest],[m.nord,m.est]], {opacity:+$("opac").value/100}).addTo(map);
+}
+function legenda(){
+  const L_=LEGENDE[st.v], el=$("legenda");
+  if (L_.bande){
+    const LAB=["fuori stagione","scarsa","possibile","buona","ottima"];
+    el.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap">`+COLI.map((c,i)=>`<span style="display:inline-flex;gap:5px;align-items:center"><i style="width:12px;height:12px;border-radius:2px;background:rgb(${c})"></i>${LAB[i]}</span>`).join("")+`</div>`;
+    return;
+  }
+  const g=L_.stops.map((c,i)=>`rgb(${c}) ${100*i/(L_.stops.length-1)}%`).join(",");
+  el.innerHTML=`<div class="ramp" style="background:linear-gradient(90deg,${g})"></div><div class="ramp-lab">${L_.lab.map(s=>`<span>${s}</span>`).join("")}</div>`;
+}
+const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
+  return iso===oggiISO? "Oggi" : d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"}); };
+
+// ricalcola le tessere visibili (e il testo dello stato) dopo un cambio di giorno, specie o scenario
+let tmr=null;
+function ricalcola(){
+  clearTimeout(tmr);
+  tmr=setTimeout(()=>{ aggiornaStato(); for (const t of tessere.values()){ calcolaTessera(t); disegnaTessera(t); } },60);
+}
+function ridisegna(){ legenda(); for (const t of tessere.values()) disegnaTessera(t); }
+
+function aggiornaStato(){
+  if (!IDX) return;
+  legenda();
+  const c=map.getCenter(), iso=date[st.g], sp=SPECIE.find(s=>s.id===st.sp);
+  $("giornolbl").textContent=fmtDay(iso,true);
+  const key=Math.round((c.lat-GRIDW.lat0)/GRIDW.dlat)+","+Math.round((c.lng-GRIDW.lon0)/GRIDW.dlon);
+  const o=infoCella(key);
+  if (!o){ $("stato").textContent="Centro della mappa fuori dall'area coperta."; return; }
+  const sc=scenario(), D=sc? sc.D : o.stato.D, V=sc? sc.V : o.stato.V;
+  const cel=celleMap.get(key), stS=o.stato.st0-cel.elev*0.0065, [ta,tb,tc,td]=sp.suoloT;
+  const C=sc? Math.max(0,-sc.T) : clamp((tb-stS)/(tb-ta)), H=sc? Math.max(0,sc.T) : clamp((stS-tc)/(td-tc));
+  const terr = D>.66? "asciutto" : D>.4? "medio" : "bagnato";
+  const temp = C>.25? "freddo per la specie" : H>.25? "caldo per la specie" : "nella fascia giusta";
+  const pref = [ D>.55? "conche, fossi e impluvi" : D<.35? "punti che drenano, dossi e pendii" : "situazioni intermedie",
+                 C>.25? "versanti al sole" : (H>.25||D>.55)? "versanti in ombra" : "esposizioni miste" ];
+  if (V>.3) pref.push("lati riparati dalla tramontana");
+  $("stato").innerHTML=(sc? "<b>Scenario.</b> " : `<b>${fmtDay(iso)}</b>, al centro della mappa: ${o.stato.secchi} giorni senza pioggia, `)+
+    `terreno ${terr}, suolo ${temp}${V>.3?", tramontana":""}. Favoriti: ${pref.join(", ")}.`+
+    `<br>Indice ${sp.nome.toLowerCase()} della zona a ${cel.elev} m: <b>${Math.round(o.bins.latif[Math.round(cel.elev/BIN)])}</b>`+(iso>oggiISO?" · previsione":"");
+}
+
+/* ---------------- mappa ---------------- */
+const h=location.hash.slice(1).split(",").map(Number);
+const map=L.map("map",{zoomControl:true}).setView(h.length===3&&h.every(isFinite)? [h[0],h[1]] : [44.05,10.45], h.length===3&&isFinite(h[2])? h[2] : 10);
+const basi={
+  "Sentieri (OpenTopoMap)":L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",{maxZoom:17,attribution:"© OpenStreetMap, SRTM | © OpenTopoMap (CC-BY-SA)"}),
+  "Topografica (Esri)":L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,attribution:"Tiles © Esri"}),
+  "Satellite (Esri)":L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,attribution:"Tiles © Esri"}),
+};
+basi["Sentieri (OpenTopoMap)"].addTo(map);
+L.control.layers(basi,null,{position:"topright"}).addTo(map);
+L.control.scale({imperial:false}).addTo(map);
+let contorni=null;
+
+function visibili(){
+  if (!IDX) return;
+  const z=map.getZoom();
+  $("zoomhint").style.display = z>=ZOOM_MIN ? "none" : "block";
+  history.replaceState(null,"",`#${map.getCenter().lat.toFixed(4)},${map.getCenter().lng.toFixed(4)},${z}`);
+  if (z<ZOOM_MIN){ for (const t of tessere.values()) if (t.overlay){ map.removeLayer(t.overlay); t.overlay=null; } return; }
+  const b=map.getBounds().pad(.2);
+  const vis=IDX.tessere.filter(t=>t.nord>=b.getSouth()&&t.sud<=b.getNorth()&&t.est>=b.getWest()&&t.ovest<=b.getEast());
+  for (const m of vis){
+    const t=tessere.get(m.id);
+    if (!t) caricaTessera(m);
+    else { t.usata=Date.now(); if (t.pronta && !t.overlay) disegnaTessera(t); }
+  }
+  // memoria: si tengono le tessere usate più di recente
+  if (tessere.size>MAX_TESSERE){
+    const vecchie=[...tessere.values()].filter(t=>!vis.some(v=>v.id===t.meta.id)).sort((a,b)=>a.usata-b.usata);
+    for (const t of vecchie.slice(0, tessere.size-MAX_TESSERE)){ if (t.overlay) map.removeLayer(t.overlay); tessere.delete(t.meta.id); }
+  }
+  aggiornaStato();
+}
+map.on("moveend", visibili);
+
+function esposizione(t,p){
+  const W=t.meta.colonne, r=Math.floor(p/W), c=p%W;
+  if (r<1||c<1||r>=t.meta.righe-1||c>=W-1) return null;
+  const dzE=(t.B.quota[p+1]-t.B.quota[p-1])/(2*IDX.res_m), dzN=(t.B.quota[p-W]-t.B.quota[p+W])/(2*IDX.res_m);
+  const pend=Math.atan(Math.hypot(dzE,dzN))*180/Math.PI, az=(Math.atan2(-dzE,-dzN)*180/Math.PI+360)%360;
+  const nomi=["nord","nord-est","est","sud-est","sud","sud-ovest","ovest","nord-ovest"];
+  return {pend, dir: pend<3? "piano" : nomi[Math.round(az/45)%8]};
+}
+const livello=(v,lo,hi,t)=>v<lo?t[0]:v>hi?t[2]:t[1];
+map.on("click",e=>{
+  const {lat,lng}=e.latlng;
+  const t=[...tessere.values()].find(t=>t.pronta&&t.calc&&lat<=t.meta.nord&&lat>=t.meta.sud&&lng>=t.meta.ovest&&lng<=t.meta.est);
+  if (!t) return;
+  const r=Math.floor((t.meta.nord-lat)/IDX.dlat), c=Math.floor((lng-t.meta.ovest)/IDX.dlon), p=r*t.meta.colonne+c;
+  if (!t.B.bosco[p]){ L.popup().setLatLng(e.latlng).setContent(`<div class="pop"><b>Fuori dal bosco</b> secondo OpenStreetMap.</div>`).openOn(map); return; }
+  const k=t.calc.K[p], fin=Math.round(indiceQui(t,p)), es=esposizione(t,p);
+  const a=t.A.acqua[p], s=t.calc.sun[p], rp=t.A.riparo[p];
+  const giud=f=>f>=.85?"<span style='color:#2c6a35'>adatto</span>":f<.6?"<span style='color:#b4472f'>poco adatto</span>":"così così";
+  const motivi=[
+    livello(a,.35,.7,["asciuga presto","umidità nella media","trattiene acqua"])+": "+giud(t.calc.FA[p]),
+    livello(s,.8,1.15,["in ombra","sole nella media","molto soleggiato"])+": "+giud(t.calc.FS[p]),
+    livello(rp,.35,.65,["esposto alla tramontana","riparo medio","riparato"])+": "+giud(t.calc.FR[p])];
+  L.popup({maxWidth:300}).setLatLng(e.latlng).setContent(`<div class="pop"><h3>${k>=1.15?"Più favorevole del normale":k<=.85?"Meno favorevole del normale":"Nella norma"}</h3>
+    <table>
+      <tr><td>Quota</td><td>${Math.round(t.B.quota[p])} m</td></tr>
+      <tr><td>Esposizione</td><td>${es? es.dir+" · "+Math.round(es.pend)+"°" : "–"}</td></tr>
+      <tr><td>Ristagno</td><td>${Math.round(a*100)}%</td></tr>
+      <tr><td>Sole rispetto al piano</td><td>${Math.round(s*100)}%</td></tr>
+      <tr><td>Riparo tramontana</td><td>${Math.round(rp*100)}%</td></tr>
+      <tr><td>Effetto del terreno</td><td>×${clamp(1+.5*(k-1),.7,1.3).toFixed(2)}</td></tr>
+      <tr><td>Indice ${t.calc.sp.nome.toLowerCase()} della zona</td><td>${Math.round(t.calc.base[p])}</td></tr>
+      <tr><td><b>Indice qui</b></td><td><b>${fin}</b></td></tr>
+    </table><div class="why">${motivi.join("<br>")}</div></div>`).openOn(map);
+});
+
+/* ---------------- controlli ---------------- */
+$("specie").innerHTML=SPECIE.map(s=>`<button class="chip" data-s="${s.id}" aria-pressed="${s.id===st.sp}">${s.nome}</button>`).join("");
+$("specie").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.sp=b.dataset.s;
+  [...$("specie").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); ricalcola(); };
+$("viste").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.v=b.dataset.v;
+  [...$("viste").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); ridisegna(); };
+$("modo").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.m=b.dataset.m;
+  [...$("modo").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
+  $("scenario").style.display=st.m==="scenario"?"flex":"none"; ricalcola(); };
+$("giorno").oninput=e=>{ st.g=+e.target.value; $("giornolbl").textContent=fmtDay(date[st.g],true); ricalcola(); };
+["sD","sT","sV"].forEach(id=>$(id).oninput=ricalcola);
+$("opac").oninput=e=>{ $("opaclbl").textContent=e.target.value+"%"; for (const t of tessere.values()) if (t.overlay) t.overlay.setOpacity(e.target.value/100); };
+
+carica().catch(err=>{ $("status").textContent="Errore nel caricamento: "+err.message; console.error(err); });
+</script>
+</body>
+</html>

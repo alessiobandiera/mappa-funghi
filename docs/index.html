@@ -143,7 +143,7 @@ select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var
       </div>
     </section>
 
-    <p class="hint"><a href="prova-pizzorne.html" style="color:var(--accent);font-weight:600">Novità in prova: zone nel bosco a 20 m alle Pizzorne</a> · dove conviene dentro il bosco in base a sole, ristagno e vento.</p>
+    <p class="hint"><a href="bosco.html" style="color:var(--accent);font-weight:600">Zone nel bosco a 20 m</a> · dove conviene dentro il bosco in base a sole, ristagno e vento, su tutta l'area.</p>
 
     <section id="topbox">
       <p class="label" id="toplbl">I punti migliori</p>
@@ -581,6 +581,7 @@ function renderDetail(){
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
   if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${CLS_TXT[c.cls]}${c.wc?` · meteo del punto a ${c.wc.elev} m, temperature corrette per la quota`:""}</p>`;
+  html+=`<p class="meta"><a href="bosco.html#${c.lat.toFixed(4)},${c.lon.toFixed(4)},15" style="color:var(--accent);font-weight:600">Guarda questa zona a 20 m</a> · dove conviene dentro il bosco</p>`;
   html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;
   if (!c.scores) html+=`<p class="meta">Il meteo di questa zona è ancora in arrivo.</p>`;
   else SPECIE.forEach(sp=>{
