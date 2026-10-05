@@ -1,0 +1,2 @@
+1 200 text/html; charset=utf-8 15780 https://www.cfr.toscana.it/monitoraggio/dettaglio.php?id=TOS03001841&title=TOS03001841_igro&type=igro
+2 200 text/html; charset=utf-8 34018 https://www.cfr.toscana.it/monitoraggio/dettaglio.php?id=TOS03001841&title=TOS03001841_igro&type=pluvio
