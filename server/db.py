@@ -63,10 +63,10 @@ def costruisci(dest: Path) -> dict:
     for nome, (cartella, colonne) in SENSORI.items():
         righe[nome] = tabella_csv(con, nome, cartella, colonne)
 
-    # casi di verifica (data/validazione/casi.json, stesso ordine dei campi del file)
+    # casi di verifica (data/validazione/casi.json): precisione della data g/s/m, esito A abbondante, D discreto, S scarso, N niente
     casi = REPO / "data" / "validazione" / "casi.json"
-    con.execute("""CREATE TABLE casi (data DATE, tipo VARCHAR, lat DOUBLE, lon DOUBLE,
-                   classe VARCHAR, luogo VARCHAR, fonte VARCHAR)""")
+    con.execute("""CREATE TABLE casi (data DATE, precisione VARCHAR, lat DOUBLE, lon DOUBLE,
+                   esito VARCHAR, luogo VARCHAR, fonte VARCHAR)""")
     file_casi = [casi, REPO / "data" / "validazione" / "uscite_locali.json"]
     for f in file_casi:
         if f.exists():
