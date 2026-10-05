@@ -1,0 +1,32 @@
+# Mappa funghi – server dati
+#   docker compose up -d --build        avvia (in prova finché .env ha PUBBLICA=0)
+#   docker compose logs -f              segue i giri
+#   docker compose exec funghi /app/giro.sh leggero    lancia un giro a mano
+services:
+  funghi:
+    build: .
+    image: mappa-funghi-server
+    container_name: mappa-funghi
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      TZ: Europe/Rome
+    volumes:
+      - repo:/repo                      # copia di lavoro del repository (archivio compreso)
+      - ./dati:/dati                    # funghi.duckdb e uscite di prova, leggibili dall'host
+    secrets:
+      - deploy_key
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  # Fase 2, da attivare quando serviranno storico per cella e inserimento delle uscite:
+  # api:          FastAPI in sola lettura su /dati/funghi.duckdb
+  # cloudflared:  tunnel verso api, senza aprire porte sul router
+
+secrets:
+  deploy_key:
+    file: ./deploy_key                  # chiave privata della deploy key GitHub (con permesso di scrittura)
+
+volumes:
+  repo:

@@ -1,0 +1,8 @@
+# aggiorna.py usa solo la libreria standard; il resto serve al database e,
+# se un giorno le sposti qui, agli script del terreno e delle tessere.
+duckdb
+numpy
+scipy
+pillow
+pyproj
+numba
