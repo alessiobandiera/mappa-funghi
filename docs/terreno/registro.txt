@@ -20,3 +20,20 @@
 18:47:10    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
 18:47:42    OSM overpass-api.de: 30 elementi in 17 s
 18:47:47 3_4: bosco 82%, quota 152-1905 m, 5 s, 892 KB
+18:47:49 salvataggio intermedio (29 tessere): ok
+18:47:53    OSM overpass-api.de: 30 elementi in 2 s
+18:47:58 3_5: bosco 87%, quota 280-1733 m, 5 s, 901 KB
+18:48:08    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:48:14    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Time-out
+18:50:19    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
+18:50:41    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:51:46    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Timeout
+18:55:47    OSM overpass.kumi.systems: 36 elementi in 216 s
+18:55:52 3_6: bosco 87%, quota 386-1922 m, 5 s, 886 KB
+18:56:03    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:56:53    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Timeout
+18:58:39    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
+18:59:03    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:59:24    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Time-out
+19:03:50    OSM https://overpass.kumi.systems/api/interpreter: The read operation timed out
+19:04:20 3_7: boschi non disponibili (OpenStreetMap non risponde), salto
