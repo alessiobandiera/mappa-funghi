@@ -75,8 +75,9 @@ def quota(LAT, LON):
 
 
 # ---------------- boschi OpenStreetMap ----------------
-SERVER = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
-          "https://maps.mail.ru/osm/tools/overpass/api/interpreter"]
+# kumi per primo: overpass-api.de da GitHub risponde spesso 504 dopo minuti di attesa
+SERVER = ["https://overpass.kumi.systems/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+          "https://overpass-api.de/api/interpreter"]
 def boschi(S, N, W, E):
     q = f"""[out:json][timeout:180];
 (way["landuse"="forest"]({S},{W},{N},{E}); way["natural"="wood"]({S},{W},{N},{E});
@@ -85,9 +86,12 @@ out geom;"""
     for t in range(6):
         srv = SERVER[t % len(SERVER)]
         try:
-            return json.loads(get(srv, urllib.parse.urlencode({"data": q}).encode(), timeout=240)).get("elements", [])
+            t0 = time.time()
+            el = json.loads(get(srv, urllib.parse.urlencode({"data": q}).encode(), timeout=100)).get("elements", [])
+            log(f"   OSM {srv.split('/')[2]}: {len(el)} elementi in {time.time()-t0:.0f} s")
+            return el
         except Exception as e:
-            log(f"   OSM {srv}: {e}"); time.sleep(10 + 10 * t)
+            log(f"   OSM {srv}: {e}"); time.sleep(5 + 5 * t)
     raise RuntimeError("OpenStreetMap non risponde")
 
 def anelli(ways):
@@ -262,7 +266,7 @@ def fattori(z):
 
 # ---------------- salvataggi intermedi (su GitHub Actions): si vede l'avanzamento e non si perde nulla ----------------
 _ultimo_salvataggio = [time.time()]
-def salva_parziale(n, ogni_s=900):
+def salva_parziale(n, ogni_s=600):
     if not os.environ.get("GITHUB_ACTIONS") or time.time() - _ultimo_salvataggio[0] < ogni_s:
         return
     _ultimo_salvataggio[0] = time.time()
