@@ -1,0 +1,19 @@
+{
+ "zona": "pizzorne",
+ "sud": 43.88,
+ "nord": 43.99,
+ "ovest": 10.5,
+ "est": 10.67,
+ "res_m": 20.0,
+ "righe": 612,
+ "colonne": 681,
+ "dlat": 0.00017966223499820338,
+ "dlon": 0.0002494867358896306,
+ "fonte_quota": "Terrarium (AWS, dati EU-DEM/SRTM)",
+ "fonte_boschi": "OpenStreetMap (ODbL)",
+ "quota": [
+  23.288292904522137,
+  1048.3503849542328
+ ],
+ "note": "a: R ristagno, G forma (128 piano), B riparo tramontana | b: quota=(R*256+G)/2 m, B bosco 0/1/2/3 | c: sole/piano*128 set-ott-nov"
+}
