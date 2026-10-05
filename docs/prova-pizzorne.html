@@ -255,8 +255,8 @@ async function carica(){
   celle=met.celle.map(x=>({lat:x.lat, lon:x.lon, elev:x.elev,
     days:x.giorni.map(r=>{ const o={}; K.forEach((k,i)=>o[k]=r[i]); return o; })}));
   const D0=celle[0].days; date=D0.map(g=>g.d);
-  const gi=$("giorno"); gi.min=12; gi.max=date.length-1;
-  st.g=Math.max(12, date.indexOf(oggiISO)); if (st.g<12) st.g=date.length-4;
+  const gi=$("giorno"); gi.min=Math.min(26,date.length-5); gi.max=date.length-1;
+  st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-4;
   gi.value=st.g; gi.disabled=false;
   overlay=L.imageOverlay(canvas.toDataURL(), [[T.sud,T.ovest],[T.nord,T.est]], {opacity:.75, interactive:false}).addTo(map);
   const q=new Date(met.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
