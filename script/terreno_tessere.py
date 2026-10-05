@@ -82,8 +82,9 @@ def quota(LAT, LON):
 
 
 # ---------------- boschi OpenStreetMap ----------------
-SERVER = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
-          "https://maps.mail.ru/osm/tools/overpass/api/interpreter"]
+# ordine scelto dai tempi osservati da GitHub: overpass-api.de spesso risponde in 2-3 s, mail.ru in 15-20 s, kumi è lento
+SERVER = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+          "https://overpass.kumi.systems/api/interpreter"]
 def boschi(S, N, W, E):
     q = f"""[out:json][timeout:180];
 (way["landuse"="forest"]({S},{W},{N},{E}); way["natural"="wood"]({S},{W},{N},{E});
