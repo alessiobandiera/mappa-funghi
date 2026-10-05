@@ -1,0 +1,20 @@
+18:17:16 altimetria: 24x27 tessere Terrarium
+18:18:34 mosaico (6912, 6144), quota -9-2141 m
+18:18:34 griglia 3897x3600 a 20 m, 8x8 tessere
+18:18:37    OSM overpass-api.de: 200 elementi in 3 s
+18:18:44 1_5: bosco 58%, quota 390-1613 m, 7 s, 703 KB
+18:18:55    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:20:55    OSM overpass.kumi.systems: 142 elementi in 116 s
+18:21:01 1_6: bosco 51%, quota 249-989 m, 5 s, 639 KB
+18:21:05    OSM overpass-api.de: 47 elementi in 2 s
+18:21:07 1_7: bosco 57%, quota 247-1068 m, 2 s, 150 KB
+18:21:11    OSM overpass-api.de: 21 elementi in 2 s
+18:21:17 2_0: bosco 79%, quota 108-1461 m, 5 s, 870 KB
+18:21:26    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:25:31    OSM https://overpass.kumi.systems/api/interpreter: The read operation timed out
+18:26:01    OSM maps.mail.ru: 43 elementi in 20 s
+18:26:06 2_1: bosco 75%, quota 300-1893 m, 5 s, 793 KB
+18:26:15    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:28:06    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
+18:28:32    OSM maps.mail.ru: 60 elementi in 15 s
+18:28:37 2_2: bosco 67%, quota 281-1678 m, 5 s, 733 KB
