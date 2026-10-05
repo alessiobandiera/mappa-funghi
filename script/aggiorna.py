@@ -249,81 +249,109 @@ def letture_cfr(tipo: str, ident: str):
     return out
 
 
+def _righe_da(tipo: str, ident: str, validi) -> list[str]:
+    if tipo == "igro":
+        return [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi]
+    if tipo == "anemo":
+        out = []
+        for t, v, d in validi:
+            med, _, raf = v.partition("/")
+            out.append(f"{ident},{t:%Y-%m-%dT%H:%M},{med},{raf},{d}")
+        return out
+    if tipo == "pluvio":
+        # solo le letture con pioggia: le altre valgono 0 (quante letture ci sono lo dice copertura)
+        return [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi if num(v) not in (None, 0.0)]
+    ore = {}   # temperatura ogni 5 minuti: media, minimo e massimo di ogni ora
+    for t, v, _ in validi:
+        x = num(v)
+        if x is not None and -40 < x < 50:
+            ore.setdefault(t.replace(minute=0), []).append(x)
+    return [f"{ident},{h:%Y-%m-%dT%H:%M},{sum(v)/len(v):.1f},{min(v):.1f},{max(v):.1f},{len(v)}" for h, v in sorted(ore.items())]
+
+
+def _leggi(p: Path) -> list[str]:
+    return p.read_text(encoding="utf-8").splitlines()[1:] if p.exists() else []
+
+
+def _scrivi_csv(p: Path, intest: str, righe) -> None:
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(intest + "\n" + "".join(r + "\n" for r in sorted(set(righe))), encoding="utf-8")
+
+
 def archivia_db(oggi: date, budget_s: float = 420) -> dict:
-    """Archivia la giornata di ieri. Al massimo budget_s secondi: quello che non finisce si riprende al giro dopo."""
+    """Archivia la giornata di ieri, a tempo limitato. Il CFR risponde lentamente: quello che non si finisce resta
+    in data/db/_in_corso e il giro successivo scarica solo le stazioni mancanti. Un sensore passa nell'archivio
+    definitivo quando ha risposto almeno il 90% delle stazioni, o comunque il giorno dopo (con quello che c'è)."""
     t0 = time.monotonic()
     giorno = oggi - timedelta(days=1)
-    mancanti = [t for t in TIPI_DB if not (DB / t / f"{giorno.year}" / f"{giorno.isoformat()}.csv").exists()]
+    corso = DB / "_in_corso"
+    finale = lambda tp, g: DB / tp / g[:4] / f"{g}.csv"
+    cop_p = lambda g: DB / "copertura" / g[:4] / f"{g}.csv"
+    chiusi = []
+
+    def chiudi(tp: str, g: str):
+        _scrivi_csv(finale(tp, g), INTESTAZIONI[tp], _leggi(corso / f"{g}-{tp}.csv"))
+        (corso / f"{g}-{tp}.csv").unlink(missing_ok=True)
+        chiusi.append(f"{g} {tp}")
+
+    # giorni precedenti rimasti a metà: si chiudono con quello che c'è (il CFR non li mostra più)
+    if corso.exists():
+        for p in sorted(corso.glob("*.csv")):
+            g, tp = p.stem[:10], p.stem[11:]
+            if g < giorno.isoformat() and tp in INTESTAZIONI:
+                chiudi(tp, g)
+    mancanti = [t for t in TIPI_DB if not finale(t, giorno.isoformat()).exists()]
     if not mancanti:
-        return {"giorno": giorno.isoformat(), "stato": "già archiviato"}
+        return {"giorno": giorno.isoformat(), "stato": "già archiviato", "chiusi": chiusi}
+
     elenco = json.loads(scarica("https://www.cfr.toscana.it/monitoraggio/actions.php?action=list&rt=0&type_gauge=pluvio"))
     anag = {f["IDStazione"]: f for f in elenco["features"]}
     s, w, n, e = BBOX
     dentro = lambda i: i in anag and s <= float(anag[i]["Lat"]) <= n and w <= float(anag[i]["Lon"]) <= e
-    sensori, lavori = {}, []
+    sensori, previste = {}, {}
     for tipo in TIPI_DB:
-        ids = sorted({r[0] for r in righe_cfr(tipo)} if tipo != "pluvio" else {r[0] for r in righe_cfr("pluvio_men")})
-        ids = [i for i in ids if dentro(i)]
+        ids = [i for i in sorted({r[0] for r in righe_cfr("pluvio_men" if tipo == "pluvio" else tipo)}) if dentro(i)]
+        previste[tipo] = ids
         for i in ids:
             sensori.setdefault(i, []).append(tipo)
-        if tipo in mancanti:
-            lavori += [(tipo, i) for i in ids]
-    log(f"Archivio stazioni: {len(lavori)} serie da scaricare per il {giorno.isoformat()}")
+
+    g = giorno.isoformat()
+    copertura = {tuple(r.split(",")[:2]): r for r in _leggi(cop_p(g))}
+    fatte = lambda tp, i: (tp, i) in copertura and int(copertura[(tp, i)].split(",")[2]) > 0
+    lavori = [(tp, i) for tp in mancanti for i in previste[tp] if not fatte(tp, i)]
+    log(f"Archivio stazioni: {len(lavori)} serie da scaricare per il {g}")
 
     def una(job):
         if time.monotonic() - t0 > budget_s:
-            return job, TimeoutError("tempo esaurito")
+            return job, None
         try:
             return job, [x for x in letture_cfr(*job) if x[0].date() == giorno]
         except Exception as ex:
             return job, ex
-    righe = {t: [] for t in mancanti}
-    copertura = []
-    falliti = {t: 0 for t in mancanti}
-    totali = {t: 0 for t in mancanti}
+    nuove = {t: [] for t in mancanti}
     with ThreadPoolExecutor(max_workers=4) as ex:
         for (tipo, ident), dati in ex.map(una, lavori):
-            totali[tipo] += 1
+            if dati is None:
+                continue                                   # tempo finito: resta da fare
             if isinstance(dati, Exception):
-                falliti[tipo] += 1
-                copertura.append(f"{tipo},{ident},0,{type(dati).__name__}")
+                copertura.setdefault((tipo, ident), f"{tipo},{ident},0,{type(dati).__name__}")
                 continue
             validi = [d for d in dati if d[1] not in ("", "-", "@")]
-            copertura.append(f"{tipo},{ident},{len(validi)},")
-            if tipo == "igro":
-                righe[tipo] += [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi]
-            elif tipo == "anemo":
-                for t, v, d in validi:
-                    med, _, raf = v.partition("/")
-                    righe[tipo].append(f"{ident},{t:%Y-%m-%dT%H:%M},{med},{raf},{d}")
-            elif tipo == "pluvio":
-                # solo le letture con pioggia: le altre valgono 0 (quante letture ci sono lo dice copertura.csv)
-                righe[tipo] += [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi if num(v) not in (None, 0.0)]
-            else:   # temperatura ogni 5 minuti: si tengono media, minimo e massimo di ogni ora
-                ore = {}
-                for t, v, _ in validi:
-                    x = num(v)
-                    if x is not None and -40 < x < 50:
-                        ore.setdefault(t.replace(minute=0), []).append(x)
-                righe[tipo] += [f"{ident},{h:%Y-%m-%dT%H:%M},{sum(v)/len(v):.1f},{min(v):.1f},{max(v):.1f},{len(v)}"
-                                for h, v in sorted(ore.items())]
-    # un sensore si scrive solo se quasi tutte le stazioni hanno risposto, altrimenti si ritenta al prossimo giro
-    scritti = [tp for tp in mancanti if totali[tp] and falliti[tp] <= 0.1 * totali[tp]]
-    for tipo in scritti:
-        p = DB / tipo / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
-        p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(INTESTAZIONI[tipo] + "\n" + "\n".join(sorted(righe[tipo])) + "\n", encoding="utf-8")
-    p = DB / "copertura" / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
-    p.parent.mkdir(parents=True, exist_ok=True)
-    if p.exists():      # giro precedente parziale: si aggiungono le righe nuove
-        migliore = {}
-        for r in list(p.read_text().splitlines()[1:]) + copertura:
-            k = tuple(r.split(",")[:2])
-            if k not in migliore or int(r.split(",")[2]) > int(migliore[k].split(",")[2]):
-                migliore[k] = r
-        copertura = sorted(migliore.values())
-    p.write_text("tipo,stazione,letture,nota\n" + "\n".join(sorted(copertura)) + "\n", encoding="utf-8")
-    # anagrafica: riscritta ogni volta (piccola)
+            copertura[(tipo, ident)] = f"{tipo},{ident},{len(validi)},"
+            nuove[tipo] += _righe_da(tipo, ident, validi)
+    corso.mkdir(parents=True, exist_ok=True)
+    stato = {}
+    for tipo in mancanti:
+        p = corso / f"{g}-{tipo}.csv"
+        if nuove[tipo] or p.exists():
+            _scrivi_csv(p, INTESTAZIONI[tipo], _leggi(p) + nuove[tipo])
+        ok = sum(1 for i in previste[tipo] if fatte(tipo, i))
+        stato[tipo] = f"{ok}/{len(previste[tipo])}"
+        if previste[tipo] and ok >= 0.9 * len(previste[tipo]):
+            if not p.exists():
+                _scrivi_csv(p, INTESTAZIONI[tipo], [])
+            chiudi(tipo, g)
+    _scrivi_csv(cop_p(g), "tipo,stazione,letture,nota", copertura.values())
     with open(DB / "stazioni.csv", "w", encoding="utf-8", newline="") as f:
         wr = csv.writer(f)
         wr.writerow(["stazione", "nome", "comune", "provincia", "lat", "lon", "sensori"])
@@ -331,10 +359,10 @@ def archivia_db(oggi: date, budget_s: float = 420) -> dict:
             a = anag[i]
             wr.writerow([i, a.get("Nome", ""), a.get("Comune", ""), a.get("Provincia", ""),
                          round(float(a["Lat"]), 5), round(float(a["Lon"]), 5), " ".join(sensori[i])])
-    esito = {"giorno": giorno.isoformat(), "scritti": scritti, "righe": {t: len(righe[t]) for t in scritti},
-             "falliti": falliti, "totali": totali, "secondi": round(time.monotonic() - t0)}
+    esito = {"giorno": g, "stazioni_pronte": stato, "chiusi": chiusi, "secondi": round(time.monotonic() - t0)}
     (DB / "ultimo_giro.json").write_text(json.dumps(dict(esito, quando=datetime.now(ROMA).isoformat(timespec="minutes")), indent=1))
     return esito
+
 
 
 # --------------------------------------------------------------------------- Open-Meteo
