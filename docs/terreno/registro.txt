@@ -18,3 +18,17 @@
 18:28:06    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
 18:28:32    OSM maps.mail.ru: 60 elementi in 15 s
 18:28:37 2_2: bosco 67%, quota 281-1678 m, 5 s, 733 KB
+18:28:39 salvataggio intermedio (19 tessere): ok
+18:28:44    OSM overpass-api.de: 61 elementi in 3 s
+18:28:49 2_3: bosco 88%, quota 272-1745 m, 5 s, 952 KB
+18:28:58    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:30:42    OSM overpass.kumi.systems: 193 elementi in 99 s
+18:30:47 2_4: bosco 76%, quota 730-1970 m, 5 s, 833 KB
+18:30:53    OSM overpass-api.de: 190 elementi in 3 s
+18:30:58 2_5: bosco 70%, quota 513-2141 m, 5 s, 777 KB
+18:31:03    OSM overpass-api.de: 120 elementi in 3 s
+18:31:08 2_6: bosco 76%, quota 423-1919 m, 5 s, 842 KB
+18:31:21    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+18:33:14    OSM overpass.kumi.systems: 40 elementi in 108 s
+18:33:16 2_7: bosco 54%, quota 367-1268 m, 2 s, 130 KB
+18:33:32    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
