@@ -25,6 +25,7 @@ Solo libreria standard.
 from __future__ import annotations
 
 import argparse
+import csv
 import html
 import json
 import math
@@ -222,6 +223,101 @@ def riepilogo_cfr() -> dict:
     return out
 
 
+# --------------------------------------------------------------------------- archivio stazioni (data/db)
+# Le pagine di dettaglio del CFR mostrano solo da ieri a mezzanotte a ora: ogni giorno salviamo la giornata di ieri,
+# un file per giorno e per sensore, mai riscritto (lo storico di git resta leggero). Schema in data/db/README.md.
+DB = RADICE / "data" / "db"
+TIPI_DB = ("igro", "anemo", "termo", "pluvio")
+INTESTAZIONI = {
+    "igro": "stazione,ora,umidita",
+    "anemo": "stazione,ora,vento_medio_ms,raffica_ms,direzione",
+    "termo": "stazione,ora,t_media,t_min,t_max,letture",
+    "pluvio": "stazione,ora,mm",
+}
+
+
+def letture_cfr(tipo: str, ident: str):
+    h = scarica(f"https://www.cfr.toscana.it/monitoraggio/dettaglio.php?id={ident}&title={ident}_{tipo}&type={tipo}",
+                tentativi=3, attesa=3, timeout=40).decode("utf-8", "replace")
+    out = []
+    for m in re.finditer(r'new Array\("\d+","(\d\d/\d\d/\d{4} \d\d\.\d\d)","([^"]*)","([^"]*)"\)', h):
+        try:
+            t = datetime.strptime(m.group(1), "%d/%m/%Y %H.%M")
+        except ValueError:
+            continue
+        out.append((t, m.group(2).strip(), m.group(3).strip()))
+    return out
+
+
+def archivia_db(oggi: date) -> dict:
+    giorno = oggi - timedelta(days=1)
+    mancanti = [t for t in TIPI_DB if not (DB / t / f"{giorno.year}" / f"{giorno.isoformat()}.csv").exists()]
+    if not mancanti:
+        return {"giorno": giorno.isoformat(), "stato": "già archiviato"}
+    elenco = json.loads(scarica("https://www.cfr.toscana.it/monitoraggio/actions.php?action=list&rt=0&type_gauge=pluvio"))
+    anag = {f["IDStazione"]: f for f in elenco["features"]}
+    s, w, n, e = BBOX
+    dentro = lambda i: i in anag and s <= float(anag[i]["Lat"]) <= n and w <= float(anag[i]["Lon"]) <= e
+    sensori, lavori = {}, []
+    for tipo in TIPI_DB:
+        ids = sorted({r[0] for r in righe_cfr(tipo)} if tipo != "pluvio" else {r[0] for r in righe_cfr("pluvio_men")})
+        ids = [i for i in ids if dentro(i)]
+        for i in ids:
+            sensori.setdefault(i, []).append(tipo)
+        if tipo in mancanti:
+            lavori += [(tipo, i) for i in ids]
+    log(f"Archivio stazioni: {len(lavori)} serie da scaricare per il {giorno.isoformat()}")
+
+    def una(job):
+        try:
+            return job, [x for x in letture_cfr(*job) if x[0].date() == giorno]
+        except Exception as ex:
+            return job, ex
+    righe = {t: [] for t in mancanti}
+    copertura = []
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for (tipo, ident), dati in ex.map(una, lavori):
+            if isinstance(dati, Exception):
+                copertura.append(f"{tipo},{ident},0,errore")
+                continue
+            validi = [d for d in dati if d[1] not in ("", "-", "@")]
+            copertura.append(f"{tipo},{ident},{len(validi)},")
+            if tipo == "igro":
+                righe[tipo] += [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi]
+            elif tipo == "anemo":
+                for t, v, d in validi:
+                    med, _, raf = v.partition("/")
+                    righe[tipo].append(f"{ident},{t:%Y-%m-%dT%H:%M},{med},{raf},{d}")
+            elif tipo == "pluvio":
+                # solo le letture con pioggia: le altre valgono 0 (quante letture ci sono lo dice copertura.csv)
+                righe[tipo] += [f"{ident},{t:%Y-%m-%dT%H:%M},{v}" for t, v, _ in validi if num(v) not in (None, 0.0)]
+            else:   # temperatura ogni 5 minuti: si tengono media, minimo e massimo di ogni ora
+                ore = {}
+                for t, v, _ in validi:
+                    x = num(v)
+                    if x is not None and -40 < x < 50:
+                        ore.setdefault(t.replace(minute=0), []).append(x)
+                righe[tipo] += [f"{ident},{h:%Y-%m-%dT%H:%M},{sum(v)/len(v):.1f},{min(v):.1f},{max(v):.1f},{len(v)}"
+                                for h, v in sorted(ore.items())]
+    for tipo in mancanti:
+        p = DB / tipo / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(INTESTAZIONI[tipo] + "\n" + "\n".join(sorted(righe[tipo])) + "\n", encoding="utf-8")
+    p = DB / "copertura" / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text("tipo,stazione,letture,nota\n" + "\n".join(sorted(copertura)) + "\n", encoding="utf-8")
+    # anagrafica: riscritta ogni volta (piccola)
+    with open(DB / "stazioni.csv", "w", encoding="utf-8", newline="") as f:
+        wr = csv.writer(f)
+        wr.writerow(["stazione", "nome", "comune", "provincia", "lat", "lon", "sensori"])
+        for i in sorted(sensori):
+            a = anag[i]
+            wr.writerow([i, a.get("Nome", ""), a.get("Comune", ""), a.get("Provincia", ""),
+                         round(float(a["Lat"]), 5), round(float(a["Lon"]), 5), " ".join(sensori[i])])
+    return {"giorno": giorno.isoformat(), "righe": {t: len(v) for t, v in righe.items()},
+            "errori": sum(1 for c in copertura if c.endswith("errore"))}
+
+
 # --------------------------------------------------------------------------- Open-Meteo
 DAILY = ["precipitation_sum", "temperature_2m_min", "temperature_2m_max", "temperature_2m_mean",
          "relative_humidity_2m_mean", "wind_direction_10m_dominant", "wind_speed_10m_max"]
@@ -356,6 +452,12 @@ def main():
                compatto=False)
     else:
         sir = json.loads(cache_sir.read_text()) if cache_sir.exists() else {}
+
+    # archivio delle stazioni: anche negli aggiornamenti leggeri, così una mattina saltata si recupera in giornata
+    try:
+        log("Archivio stazioni:", archivia_db(oggi))
+    except Exception as e:
+        log("Archivio stazioni non riuscito:", e)
 
     celle = open_meteo(punti_griglia())
     statistiche = fondi(celle, sir, oggi)
