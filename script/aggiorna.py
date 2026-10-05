@@ -238,7 +238,7 @@ INTESTAZIONI = {
 
 def letture_cfr(tipo: str, ident: str):
     h = scarica(f"https://www.cfr.toscana.it/monitoraggio/dettaglio.php?id={ident}&title={ident}_{tipo}&type={tipo}",
-                tentativi=3, attesa=3, timeout=40).decode("utf-8", "replace")
+                tentativi=2, attesa=2, timeout=20).decode("utf-8", "replace")
     out = []
     for m in re.finditer(r'new Array\("\d+","(\d\d/\d\d/\d{4} \d\d\.\d\d)","([^"]*)","([^"]*)"\)', h):
         try:
@@ -249,7 +249,9 @@ def letture_cfr(tipo: str, ident: str):
     return out
 
 
-def archivia_db(oggi: date) -> dict:
+def archivia_db(oggi: date, budget_s: float = 420) -> dict:
+    """Archivia la giornata di ieri. Al massimo budget_s secondi: quello che non finisce si riprende al giro dopo."""
+    t0 = time.monotonic()
     giorno = oggi - timedelta(days=1)
     mancanti = [t for t in TIPI_DB if not (DB / t / f"{giorno.year}" / f"{giorno.isoformat()}.csv").exists()]
     if not mancanti:
@@ -269,16 +271,22 @@ def archivia_db(oggi: date) -> dict:
     log(f"Archivio stazioni: {len(lavori)} serie da scaricare per il {giorno.isoformat()}")
 
     def una(job):
+        if time.monotonic() - t0 > budget_s:
+            return job, TimeoutError("tempo esaurito")
         try:
             return job, [x for x in letture_cfr(*job) if x[0].date() == giorno]
         except Exception as ex:
             return job, ex
     righe = {t: [] for t in mancanti}
     copertura = []
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    falliti = {t: 0 for t in mancanti}
+    totali = {t: 0 for t in mancanti}
+    with ThreadPoolExecutor(max_workers=4) as ex:
         for (tipo, ident), dati in ex.map(una, lavori):
+            totali[tipo] += 1
             if isinstance(dati, Exception):
-                copertura.append(f"{tipo},{ident},0,errore")
+                falliti[tipo] += 1
+                copertura.append(f"{tipo},{ident},0,{type(dati).__name__}")
                 continue
             validi = [d for d in dati if d[1] not in ("", "-", "@")]
             copertura.append(f"{tipo},{ident},{len(validi)},")
@@ -299,12 +307,21 @@ def archivia_db(oggi: date) -> dict:
                         ore.setdefault(t.replace(minute=0), []).append(x)
                 righe[tipo] += [f"{ident},{h:%Y-%m-%dT%H:%M},{sum(v)/len(v):.1f},{min(v):.1f},{max(v):.1f},{len(v)}"
                                 for h, v in sorted(ore.items())]
-    for tipo in mancanti:
+    # un sensore si scrive solo se quasi tutte le stazioni hanno risposto, altrimenti si ritenta al prossimo giro
+    scritti = [tp for tp in mancanti if totali[tp] and falliti[tp] <= 0.1 * totali[tp]]
+    for tipo in scritti:
         p = DB / tipo / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(INTESTAZIONI[tipo] + "\n" + "\n".join(sorted(righe[tipo])) + "\n", encoding="utf-8")
     p = DB / "copertura" / f"{giorno.year}" / f"{giorno.isoformat()}.csv"
     p.parent.mkdir(parents=True, exist_ok=True)
+    if p.exists():      # giro precedente parziale: si aggiungono le righe nuove
+        migliore = {}
+        for r in list(p.read_text().splitlines()[1:]) + copertura:
+            k = tuple(r.split(",")[:2])
+            if k not in migliore or int(r.split(",")[2]) > int(migliore[k].split(",")[2]):
+                migliore[k] = r
+        copertura = sorted(migliore.values())
     p.write_text("tipo,stazione,letture,nota\n" + "\n".join(sorted(copertura)) + "\n", encoding="utf-8")
     # anagrafica: riscritta ogni volta (piccola)
     with open(DB / "stazioni.csv", "w", encoding="utf-8", newline="") as f:
@@ -314,8 +331,10 @@ def archivia_db(oggi: date) -> dict:
             a = anag[i]
             wr.writerow([i, a.get("Nome", ""), a.get("Comune", ""), a.get("Provincia", ""),
                          round(float(a["Lat"]), 5), round(float(a["Lon"]), 5), " ".join(sensori[i])])
-    return {"giorno": giorno.isoformat(), "righe": {t: len(v) for t, v in righe.items()},
-            "errori": sum(1 for c in copertura if c.endswith("errore"))}
+    esito = {"giorno": giorno.isoformat(), "scritti": scritti, "righe": {t: len(righe[t]) for t in scritti},
+             "falliti": falliti, "totali": totali, "secondi": round(time.monotonic() - t0)}
+    (DB / "ultimo_giro.json").write_text(json.dumps(dict(esito, quando=datetime.now(ROMA).isoformat(timespec="minutes")), indent=1))
+    return esito
 
 
 # --------------------------------------------------------------------------- Open-Meteo
@@ -453,11 +472,6 @@ def main():
     else:
         sir = json.loads(cache_sir.read_text()) if cache_sir.exists() else {}
 
-    # archivio delle stazioni: anche negli aggiornamenti leggeri, così una mattina saltata si recupera in giornata
-    try:
-        log("Archivio stazioni:", archivia_db(oggi))
-    except Exception as e:
-        log("Archivio stazioni non riuscito:", e)
 
     celle = open_meteo(punti_griglia())
     statistiche = fondi(celle, sir, oggi)
@@ -468,6 +482,13 @@ def main():
                 fonti="Pioggia e temperature misurate: SIR/CFR Regione Toscana. Modello e previsione: Open-Meteo.com (CC BY 4.0).")
     scrivi(DOCS / "meteo.json", compatta(celle, meta))
     log("Scritto docs/dati/meteo.json")
+
+    # archivio delle stazioni, per ultimo e a tempo limitato: anche negli aggiornamenti leggeri,
+    # così quello che non finisce (o una mattina saltata) si recupera nel giro successivo
+    try:
+        log("Archivio stazioni:", archivia_db(oggi))
+    except Exception as e:
+        log("Archivio stazioni non riuscito:", e)
 
 
 if __name__ == "__main__":
