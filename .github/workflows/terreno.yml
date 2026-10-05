@@ -1,0 +1,31 @@
+name: Scarica dati del terreno (prova)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: terreno
+  cancel-in-progress: false
+
+jobs:
+  terreno:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q numpy pillow pyproj
+      - name: Scarica altimetria e boschi
+        run: python script/terreno_scarica.py
+      - name: Salva nel repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/terreno
+          git commit -q -m "Dati grezzi del terreno (prova Pizzorne)" || exit 0
+          git pull -q --rebase origin main && git push -q origin HEAD:main
