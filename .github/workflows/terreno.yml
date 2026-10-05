@@ -1,11 +1,10 @@
-name: Calcola il terreno a 20 m (tutta la zona)
+name: Scarica dati del terreno (prova)
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
-  actions: write
 
 concurrency:
   group: terreno
@@ -14,25 +13,19 @@ concurrency:
 jobs:
   terreno:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: pip install -q numpy scipy pillow numba
-      - name: Scarica quota e boschi e calcola i tasselli
-        run: python script/terreno_zona.py
+      - run: pip install -q numpy pillow pyproj
+      - name: Scarica altimetria e boschi
+        run: python script/terreno_scarica.py
       - name: Salva nel repository
-        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/terreno data/terreno/zona_resoconto.json data/terreno/zona_anteprima.png || true
-          git commit -q -m "Terreno a 20 m: tasselli di tutta la zona [skip ci]" || exit 0
+          git add data/terreno
+          git commit -q -m "Dati grezzi del terreno (prova Pizzorne)" || exit 0
           git pull -q --rebase origin main && git push -q origin HEAD:main
-      - name: Pubblica la pagina
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh workflow run aggiorna.yml -f modo=leggero
