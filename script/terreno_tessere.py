@@ -133,21 +133,48 @@ def shift(a, dr, dc, fill):
     if r1 > r0 and c1 > c0: out[r0:r1, c0:c1] = a[r0 + dr:r1 + dr, c0 + dc:c1 + dc]
     return out
 
-NB = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-def riempi(zz):
-    h, w = zz.shape; zf = zz.copy(); done = np.zeros((h, w), bool); pq = []
+@njit(cache=True)
+def _push(hk, hi, size, k, i):
+    j = size; hk[j] = k; hi[j] = i; size += 1
+    while j > 0:
+        p = (j - 1) // 2
+        if hk[p] <= hk[j]: break
+        hk[p], hk[j] = hk[j], hk[p]; hi[p], hi[j] = hi[j], hi[p]; j = p
+    return size
+
+
+@njit(cache=True)
+def riempi(z):
+    """Priority-flood con heap su array (numba): nessuna depressione chiusa."""
+    h, w = z.shape
+    zf = z.astype(np.float64).copy(); n = h * w
+    hk = np.empty(n, np.float64); hi = np.empty(n, np.int64); size = 0
+    done = np.zeros(n, np.bool_)
     for r in range(h):
-        for c in (0, w - 1): heapq.heappush(pq, (zf[r, c], r, c)); done[r, c] = True
-    for c in range(1, w - 1):
-        for r in (0, h - 1): heapq.heappush(pq, (zf[r, c], r, c)); done[r, c] = True
-    while pq:
-        v, r, c = heapq.heappop(pq)
-        for dr, dc in NB:
-            rr, cc = r + dr, c + dc
-            if 0 <= rr < h and 0 <= cc < w and not done[rr, cc]:
-                done[rr, cc] = True
-                if zf[rr, cc] <= v: zf[rr, cc] = v + 1e-3
-                heapq.heappush(pq, (zf[rr, cc], rr, cc))
+        for c in range(w):
+            if r == 0 or c == 0 or r == h - 1 or c == w - 1:
+                i = r * w + c; done[i] = True; size = _push(hk, hi, size, zf[r, c], i)
+    while size > 0:
+        v = hk[0]; i = hi[0]
+        size -= 1; hk[0] = hk[size]; hi[0] = hi[size]
+        j = 0
+        while True:
+            l = 2 * j + 1; rr = l + 1; m = j
+            if l < size and hk[l] < hk[m]: m = l
+            if rr < size and hk[rr] < hk[m]: m = rr
+            if m == j: break
+            hk[m], hk[j] = hk[j], hk[m]; hi[m], hi[j] = hi[j], hi[m]; j = m
+        r = i // w; c = i % w
+        for dr in range(-1, 2):
+            for dc in range(-1, 2):
+                if dr == 0 and dc == 0: continue
+                r2 = r + dr; c2 = c + dc
+                if r2 < 0 or r2 >= h or c2 < 0 or c2 >= w: continue
+                i2 = r2 * w + c2
+                if done[i2]: continue
+                done[i2] = True
+                if zf[r2, c2] <= v: zf[r2, c2] = v + 1e-3
+                size = _push(hk, hi, size, zf[r2, c2], i2)
     return zf
 
 @njit(cache=True)
@@ -243,10 +270,21 @@ def main():
               "fonte_quota": "Terrarium/Mapzen (EU-DEM e SRTM, ~30 m)", "fonte_boschi": "OpenStreetMap (ODbL)", "tessere": []}
     solo = os.environ.get("SOLO_TESSERE")                    # per prove: "3_4,3_5"
     t_inizio = time.time()
+    # ripresa: le tessere già calcolate (presenti nell'indice e su disco) non si rifanno, salvo RIFAI=1
+    vecchio = {}
+    if os.path.exists("docs/terreno/tessere.json") and not os.environ.get("RIFAI"):
+        for x in json.load(open("docs/terreno/tessere.json")).get("tessere", []):
+            if all(os.path.exists(f"{OUT}/{x['id']}_{k}.png") for k in "abc"):
+                vecchio[x["id"]] = x
+    indice["tessere"] = list(vecchio.values())
+    limite = float(os.environ.get("MINUTI_MAX", "100")) * 60     # oltre, si salva e si riprende al prossimo avvio
     for i in range(NI):
         for j in range(NJ):
             tid = f"{i}_{j}"
             if solo and tid not in solo.split(","): continue
+            if tid in vecchio: continue
+            if time.time() - t_inizio > limite:
+                log(f"tempo finito: mi fermo prima di {tid}, si riprende al prossimo avvio"); break
             r0, c0 = i * TR, j * TC
             r1, c1 = min(NYG, r0 + TR), min(NXG, c0 + TC)
             R0, C0 = r0 - MARG, c0 - MARG                     # con il margine
