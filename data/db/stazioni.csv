@@ -1,0 +1,144 @@
+stazione,nome,comune,provincia,lat,lon,sensori
+TOS01000025,Vara,Carrara,MS,44.08376,10.12965,igro termo pluvio
+TOS01000056,Pian della Fioba,Massa,MS,44.05702,10.20694,igro termo pluvio
+TOS01001151,Cantagallo,Cantagallo,PO,44.02161,11.07948,pluvio
+TOS01001161,Gavigno,Cantagallo,PO,44.06965,11.09253,pluvio
+TOS01001205,Prato Università,Prato,PO,43.88556,11.09921,igro anemo termo pluvio
+TOS01001253,Montagnana,Marliana,PT,43.95367,10.82304,pluvio
+TOS01001263,Baggio,Pistoia,PT,43.99124,10.96416,igro termo pluvio
+TOS01001269,La Ferruccia,Agliana,PT,43.88455,11.00385,igro anemo termo pluvio
+TOS01001273,Fattoria Iavello,Montemurlo,PO,43.95908,11.07002,pluvio
+TOS01001371,Vinci,Vinci,FI,43.78579,10.95952,pluvio
+TOS01001561,Serra Pistoiese,Marliana,PT,43.97231,10.75596,pluvio
+TOS01001601,Montecatini Terme,Montecatini Terme,PT,43.89332,10.77203,pluvio
+TOS01001629,Castelmartini,Larciano,PT,43.82056,10.82544,termo pluvio
+TOS01001634,S. Baronto,Quarrata,PT,43.84511,10.90624,pluvio
+TOS01001831,Coltano,Pisa,PI,43.63796,10.39091,termo pluvio
+TOS01001889,Orentano,Castelfranco di Sotto,PI,43.77442,10.65708,termo pluvio
+TOS01004007,Avenza,Carrara,MS,44.04516,10.06013,igro anemo termo pluvio
+TOS01004811,Ponte a Signa,Signa,FI,43.77305,11.09295,pluvio
+TOS01004839,Pontelungo valle,Pistoia,PT,43.91981,10.89593,termo pluvio
+TOS01004915,Montespertoli,Montespertoli,FI,43.65,11.09236,igro termo pluvio
+TOS01004921,Turbone,Montelupo Fiorentino,FI,43.71861,11.03591,pluvio
+TOS01004941,Empoli,Empoli,FI,43.72403,10.94622,termo pluvio
+TOS01004971,Castelfiorentino,Castelfiorentino,FI,43.60448,10.9684,igro anemo termo pluvio
+TOS01005005,Fornacino,San Miniato,PI,43.63155,10.84985,pluvio
+TOS01005131,Capannoli,Capannoli,PI,43.59228,10.68442,igro termo pluvio
+TOS01005181,Pontedera,Pontedera,PI,43.66533,10.63124,termo pluvio
+TOS01005191,S. Giovanni alla Vena valle,Vicopisano,PI,43.68459,10.58534,termo pluvio
+TOS01005251,Bocca d'Arno,Pisa,PI,43.68073,10.28035,igro anemo termo pluvio
+TOS01005262,Gello,Pontedera,PI,43.65162,10.58797,pluvio
+TOS01005342,Stagno,Collesalvetti,LI,43.59997,10.35213,pluvio
+TOS02000047,Vergheto,Massa,MS,44.09449,10.17068,pluvio
+TOS02000064,Terrinca,Stazzema,LU,44.02854,10.27563,pluvio
+TOS02000075,Pomezzana,Stazzema,LU,43.9853,10.31477,pluvio
+TOS02000077,Cardoso,Stazzema,LU,44.00979,10.31898,igro termo pluvio
+TOS02000078,Gallena,Stazzema,LU,43.99206,10.25179,pluvio
+TOS02000079,Retignano,Stazzema,LU,44.00503,10.2715,pluvio
+TOS02000081,Cervaiole,Seravezza,LU,44.03926,10.24561,igro termo pluvio
+TOS02000083,Azzano,Seravezza,LU,44.02352,10.22863,igro termo pluvio
+TOS02000088,Cerreto,Montignoso,MS,44.03014,10.17188,pluvio
+TOS02000108,Vallelunga,Camaiore,LU,43.96902,10.33614,igro anemo termo pluvio
+TOS02000155,Passo Pradarena,Sillano Giuncugnano,LU,44.28452,10.30105,pluvio
+TOS02000161,Capanne di Sillano,Sillano Giuncugnano,LU,44.25599,10.30967,pluvio
+TOS02000171,Monte Castellino,Sillano Giuncugnano,LU,44.23509,10.3327,pluvio
+TOS02000177,Orto di Donna,Minucciano,LU,44.13464,10.19736,igro termo pluvio
+TOS02000191,Vagli di Sotto,Vagli Sotto,LU,44.10855,10.28943,pluvio
+TOS02000203,Villacollemandina,Villa Collemandina,LU,44.15934,10.38613,pluvio
+TOS02000221,Casone di Profecchia,Castiglione di Garfagnana,LU,44.21044,10.44725,igro termo pluvio
+TOS02000241,Campagrina,Stazzema,LU,44.05872,10.25949,igro termo pluvio
+TOS02000275,Monte Romecchio,Barga,LU,44.16352,10.52079,anemo pluvio
+TOS02000281,Fornovolasco,Fabbriche di Vergemoli,LU,44.02896,10.36055,igro termo pluvio
+TOS02000299,Gallicano,Gallicano,LU,44.06412,10.44298,pluvio
+TOS02000329,Palagnana,Stazzema,LU,43.99643,10.36314,igro anemo termo pluvio
+TOS02000332,Fabbriche di Vallico,Fabbriche di Vergemoli,LU,43.9996,10.43214,igro anemo termo pluvio
+TOS02000339,Tereglio,Coreglia Antelminelli,LU,44.05985,10.56779,pluvio
+TOS02000351,Boscolungo,Abetone Cutigliano,PT,44.13909,10.67354,igro termo pluvio
+TOS02000359,Melo,Abetone Cutigliano,PT,44.13272,10.74317,igro termo pluvio
+TOS02000372,Croce Arcana,Abetone Cutigliano,PT,44.12988,10.78154,igro anemo termo pluvio
+TOS02000401,Selva dei Porci,San Marcello Piteglio,PT,44.07209,10.7942,pluvio
+TOS02000421,Monte Oppio,San Marcello Piteglio,PT,44.04182,10.83273,pluvio
+TOS02000431,S. Marcello Pistoiese,San Marcello Piteglio,PT,44.05538,10.78856,igro termo pluvio
+TOS02000441,Prunetta,San Marcello Piteglio,PT,44.00848,10.80401,pluvio
+TOS02000483,Convalle,Pescaglia,LU,43.95243,10.42259,pluvio
+TOS02000494,Gombitelli,Camaiore,LU,43.92008,10.37013,pluvio
+TOS02000515,Chiatri,Lucca,LU,43.87355,10.37883,pluvio
+TOS02004011,Canevara,Massa,MS,44.05829,10.16812,pluvio
+TOS02004045,Ponte Tavole,Seravezza,LU,43.97257,10.18492,igro termo pluvio
+TOS02004059,Camaiore,Camaiore,LU,43.93373,10.28103,igro anemo termo pluvio
+TOS02004081,Torre del Lago,Viareggio,LU,43.83182,10.30683,igro anemo termo pluvio
+TOS02004091,Viareggio 1,Viareggio,LU,43.86767,10.25948,pluvio
+TOS02004115,Camporgiano,Camporgiano,LU,44.16294,10.33842,igro termo pluvio
+TOS02004165,Ponte di Campia,Barga,LU,44.09005,10.45282,pluvio
+TOS02004195,Calavorno,Coreglia Antelminelli,LU,44.01975,10.5351,pluvio
+TOS02004215,Casotti di Cutigliano,Abetone Cutigliano,PT,44.0982,10.7517,igro termo pluvio
+TOS02004231,Ponte di Lucchio,Bagni di Lucca,LU,44.04359,10.7198,igro termo pluvio
+TOS02004255,Chifenti,Borgo a Mozzano,LU,44.002,10.55751,igro termo pluvio
+TOS02004271,Borgo a Mozzano,Borgo a Mozzano,LU,43.97988,10.55151,pluvio
+TOS02004284,Piaggione,Lucca,LU,43.92935,10.51428,pluvio
+TOS02004286,Mutigliano,Lucca,LU,43.88176,10.48419,pluvio
+TOS02004305,Ponte Guido,Lucca,LU,43.86504,10.43317,pluvio
+TOS02004311,Ripafratta,San Giuliano Terme,PI,43.81886,10.41426,igro anemo termo pluvio
+TOS02004315,Pontetetto,Lucca,LU,43.82965,10.46976,pluvio
+TOS02004365,Vecchiano,Vecchiano,PI,43.78051,10.39889,pluvio
+TOS02004369,Bocca di Serchio,San Giuliano Terme,PI,43.78136,10.26973,pluvio
+TOS03000091,Pietrasanta,Pietrasanta,LU,43.93665,10.22805,igro anemo termo pluvio
+TOS03000109,Soliera,Fivizzano,MS,44.20232,10.0625,pluvio
+TOS03000278,Renaio,Barga,LU,44.10879,10.52682,igro anemo termo pluvio
+TOS03000335,Foce a Giovo,Coreglia Antelminelli,LU,44.11826,10.60926,igro anemo termo pluvio
+TOS03000481,Viareggio Lungomare,Viareggio,LU,43.87184,10.24034,igro anemo termo pluvio
+TOS03000513,Capannori,Capannori,LU,43.83029,10.55726,igro anemo termo pluvio
+TOS03001241,Sammommè,Pistoia,PT,44.03692,10.92043,igro anemo termo pluvio
+TOS03001580,Pescia,Pescia,PT,43.89653,10.69502,termo pluvio
+TOS03001802,Cimone - Monte Serra,Calci,PI,43.73067,10.55333,pluvio
+TOS03001841,Pizzorne,Villa Basilica,LU,43.93443,10.58463,igro anemo termo pluvio
+TOS03001963,Corbolone,Livorno,LI,43.55533,10.39957,igro anemo termo
+TOS03004003,Torano,Carrara,MS,44.09104,10.10333,pluvio
+TOS09000015,Bagnone,Bagnone,MS,44.30966,9.98412,pluvio
+TOS09000021,Licciana Nardi,Licciana Nardi,MS,44.24239,10.00331,termo pluvio
+TOS09001053,Passo della Cisa,Pontremoli,MS,44.46639,9.92036,pluvio
+TOS09001088,Rocca Sigillina,Filattiera,MS,44.36635,9.95641,pluvio
+TOS09001120,Villafranca,Villafranca in Lunigiana,MS,44.29114,9.94859,termo pluvio
+TOS09001130,Iera,Bagnone,MS,44.33329,10.03361,termo pluvio
+TOS09001143,Comano,Comano,MS,44.30385,10.11961,termo pluvio
+TOS09001160,Passo del Cerreto,Fivizzano,MS,44.30427,10.21676,termo pluvio
+TOS09001180,Turano,Fivizzano,MS,44.24644,10.15168,termo pluvio
+TOS09001200,Mazzola,Fivizzano,MS,44.21112,10.11688,termo pluvio
+TOS09001210,Minucciano,Minucciano,LU,44.17097,10.20815,pluvio
+TOS09001220,Equi Terme,Fivizzano,MS,44.16928,10.1501,termo pluvio
+TOS09001230,Tendola,Fosdinovo,MS,44.15601,10.03381,termo pluvio
+TOS11000001,Metato,San Giuliano Terme,PI,43.77094,10.38378,igro anemo termo pluvio
+TOS11000011,Lido di Camaiore,Camaiore,LU,43.89768,10.24294,igro anemo termo pluvio
+TOS11000020,Monte Serra,Calci,PI,43.74707,10.55446,igro anemo termo pluvio
+TOS11000027,Candia Scurtarola,Massa,MS,44.04778,10.10957,igro anemo termo pluvio
+TOS11000029,Campocecina,Carrara,MS,44.11642,10.10391,igro anemo termo pluvio
+TOS11000031,Montecarlo,Montecarlo,LU,43.84286,10.65396,igro anemo termo pluvio
+TOS11000032,S. Pietro a Marcigliano,Capannori,LU,43.90595,10.59299,igro anemo termo pluvio
+TOS11000033,Pieve di Compito,Capannori,LU,43.78002,10.58941,igro anemo termo pluvio
+TOS11000034,Piazza al Serchio,Piazza al Serchio,LU,44.19231,10.29164,igro anemo termo pluvio
+TOS11000036,Collesalvetti,Collesalvetti,LI,43.58384,10.46672,igro anemo termo pluvio
+TOS11000045,S. Miniato Poggio al Pino,San Miniato,PI,43.6795,10.89355,igro anemo termo pluvio
+TOS11000046,Montopoli,Montopoli in Val d&acute;Arno,PI,43.66784,10.74572,igro anemo termo pluvio
+TOS11000048,Barga,Barga,LU,44.06996,10.4588,igro anemo termo pluvio
+TOS11000049,Aquilea,Lucca,LU,43.91368,10.50197,igro termo pluvio
+TOS11000063,Siberia,Crespina Lorenzana,PI,43.59164,10.54375,igro anemo termo pluvio
+TOS11000071,Cerreto Guidi,Cerreto Guidi,FI,43.74198,10.89366,igro anemo termo pluvio
+TOS11000076,Artimino,Carmignano,PO,43.76771,11.04835,igro anemo termo pluvio
+TOS11000077,Albano,Monsummano Terme,PT,43.87653,10.85953,igro anemo termo pluvio
+TOS11000091,Sorana,Pescia,PT,43.96909,10.71639,igro anemo termo pluvio
+TOS11000092,Bagni di Lucca,Bagni di Lucca,LU,44.03424,10.60018,igro termo pluvio
+TOS11000093,Santomato,Pistoia,PT,43.94706,10.98773,igro termo pluvio
+TOS11000094,Acquerino,Sambuca Pistoiese,PT,44.02327,11.02527,igro termo pluvio
+TOS11000096,Careggine,Careggine,LU,44.10439,10.33695,igro anemo termo pluvio
+TOS11000097,Orecchiella,San Romano in Garfagnana,LU,44.20036,10.35987,igro termo pluvio
+TOS11000100,Villafranca,Villafranca in Lunigiana,MS,44.25032,9.9689,igro anemo termo pluvio
+TOS11000102,Strettoia,Pietrasanta,LU,43.99305,10.20934,igro anemo termo pluvio
+TOS11000106,Passo Radici,Castiglione di Garfagnana,LU,44.19708,10.4867,igro anemo termo pluvio
+TOS11000504,Monteboro,Empoli,FI,43.6926,10.923,igro anemo termo pluvio
+TOS11000505,Casa Sartori,Montespertoli,FI,43.66727,11.04185,igro anemo termo pluvio
+TOS11000507,Legoli,Peccioli,PI,43.56523,10.80064,igro anemo termo pluvio
+TOS11000512,Monte Pisano Nord,Capannori,LU,43.79401,10.52239,igro anemo termo pluvio
+TOS30150800,Pracchia,Pistoia,PT,44.05549,10.90671,termo pluvio
+TOS30209600,Lago Paduli,Comano,MS,44.33833,10.1375,pluvio
+TOS30290700,Treppio,Sambuca Pistoiese,PT,44.075,11.03483,termo pluvio
+TOS30355400,Passo Radici,Castiglione di Garfagnana,LU,44.21011,10.48871,pluvio

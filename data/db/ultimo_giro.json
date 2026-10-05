@@ -1,0 +1,23 @@
+{
+ "giorno": "2026-10-04",
+ "scritti": [
+  "igro"
+ ],
+ "righe": {
+  "igro": 6772
+ },
+ "falliti": {
+  "igro": 0,
+  "anemo": 14,
+  "termo": 90,
+  "pluvio": 142
+ },
+ "totali": {
+  "igro": 71,
+  "anemo": 47,
+  "termo": 90,
+  "pluvio": 142
+ },
+ "secondi": 433,
+ "quando": "2026-10-05T16:39+02:00"
+}
