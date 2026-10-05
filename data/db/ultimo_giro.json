@@ -1,23 +1,13 @@
 {
  "giorno": "2026-10-04",
- "scritti": [
-  "igro"
+ "stazioni_pronte": {
+  "anemo": "47/47",
+  "termo": "57/90",
+  "pluvio": "0/142"
+ },
+ "chiusi": [
+  "2026-10-04 anemo"
  ],
- "righe": {
-  "igro": 6772
- },
- "falliti": {
-  "igro": 0,
-  "anemo": 14,
-  "termo": 90,
-  "pluvio": 142
- },
- "totali": {
-  "igro": 71,
-  "anemo": 47,
-  "termo": 90,
-  "pluvio": 142
- },
  "secondi": 433,
- "quando": "2026-10-05T16:39+02:00"
+ "quando": "2026-10-05T17:07+02:00"
 }
