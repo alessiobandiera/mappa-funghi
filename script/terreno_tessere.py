@@ -32,8 +32,15 @@ os.makedirs(OUT, exist_ok=True)
 UA = {"User-Agent": "mappa-funghi (github.com/alessiobandiera/mappa-funghi)"}
 
 
+REGISTRO = []
 def log(*a):
-    print(*a, flush=True)
+    s = time.strftime("%H:%M:%S ") + " ".join(str(x) for x in a)
+    print(s, flush=True); REGISTRO.append(s)
+    try:
+        os.makedirs("docs/terreno", exist_ok=True)
+        open("docs/terreno/registro.txt", "w").write("\n".join(REGISTRO[-400:]) + "\n")
+    except Exception:
+        pass
 
 
 def get(url, data=None, timeout=120):
@@ -75,9 +82,8 @@ def quota(LAT, LON):
 
 
 # ---------------- boschi OpenStreetMap ----------------
-# kumi per primo: overpass-api.de da GitHub risponde spesso 504 dopo minuti di attesa
-SERVER = ["https://overpass.kumi.systems/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
-          "https://overpass-api.de/api/interpreter"]
+SERVER = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter",
+          "https://maps.mail.ru/osm/tools/overpass/api/interpreter"]
 def boschi(S, N, W, E):
     q = f"""[out:json][timeout:180];
 (way["landuse"="forest"]({S},{W},{N},{E}); way["natural"="wood"]({S},{W},{N},{E});
@@ -87,7 +93,7 @@ out geom;"""
         srv = SERVER[t % len(SERVER)]
         try:
             t0 = time.time()
-            el = json.loads(get(srv, urllib.parse.urlencode({"data": q}).encode(), timeout=100)).get("elements", [])
+            el = json.loads(get(srv, urllib.parse.urlencode({"data": q}).encode(), timeout=240)).get("elements", [])
             log(f"   OSM {srv.split('/')[2]}: {len(el)} elementi in {time.time()-t0:.0f} s")
             return el
         except Exception as e:
@@ -314,7 +320,7 @@ def main():
             try:
                 els = boschi(Sc, Nc, Wc, Ec)
             except Exception as e:
-                log(f"{tid}: boschi non disponibili ({e}), salto"); continue
+                log(f"{tid}: boschi non disponibili ({e}), salto"); salva_parziale(len(indice["tessere"])); continue
             bosco = raster_boschi(els, Nc, Wc, r1 - r0, c1 - c0)
             if (bosco > 0).mean() < 0.005:
                 log(f"{tid}: niente bosco"); continue
