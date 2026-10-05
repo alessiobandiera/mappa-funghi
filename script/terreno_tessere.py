@@ -260,6 +260,20 @@ def fattori(z):
     return twi, forma, sx, SOLE
 
 
+# ---------------- salvataggi intermedi (su GitHub Actions): si vede l'avanzamento e non si perde nulla ----------------
+_ultimo_salvataggio = [time.time()]
+def salva_parziale(n, ogni_s=900):
+    if not os.environ.get("GITHUB_ACTIONS") or time.time() - _ultimo_salvataggio[0] < ogni_s:
+        return
+    _ultimo_salvataggio[0] = time.time()
+    import subprocess
+    cmd = ('git config user.name "github-actions[bot]" && git config user.email "41898282+github-actions[bot]@users.noreply.github.com" && '
+           f'git add docs/terreno && git commit -q -m "Terreno a 20 m: {n} tessere finora [skip ci]" && '
+           'git pull -q --rebase origin main && git push -q origin HEAD:main')
+    r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    log(f"salvataggio intermedio ({n} tessere): {'ok' if r.returncode == 0 else r.stderr[-300:]}")
+
+
 # ---------------- tessere ----------------
 def main():
     prepara_mosaico()
@@ -322,6 +336,7 @@ def main():
             kb = sum(os.path.getsize(f"{OUT}/{tid}_{k}.png") for k in "abc") // 1024
             log(f"{tid}: bosco {100*m.mean():.0f}%, quota {z[core].min():.0f}-{z[core].max():.0f} m, {time.time()-t0:.0f} s, {kb} KB")
             json.dump(indice, open("docs/terreno/tessere.json", "w"), indent=1)
+            salva_parziale(len(indice["tessere"]))
             time.sleep(2)                                    # rispetto per Overpass
     log(f"fatto: {len(indice['tessere'])} tessere in {time.time()-t_inizio:.0f} s")
     json.dump(indice, open("docs/terreno/tessere.json", "w"), indent=1)
