@@ -1,0 +1,38 @@
+name: Calcola il terreno a 20 m (tutta l'area)
+
+on:
+  workflow_dispatch:
+    inputs:
+      solo:
+        description: "Solo alcune tessere (es. 4_4,4_5); vuoto = tutte"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tessere
+  cancel-in-progress: false
+
+jobs:
+  tessere:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q numpy scipy pillow numba
+      - name: Calcola le tessere
+        env:
+          SOLO_TESSERE: ${{ inputs.solo }}
+        run: python script/terreno_tessere.py
+      - name: Salva nel repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/terreno
+          git commit -q -m "Terreno a 20 m: tessere calcolate [skip ci]" || exit 0
+          git pull -q --rebase origin main && git push -q origin HEAD:main
