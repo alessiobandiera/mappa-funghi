@@ -16,7 +16,13 @@ data/db/
   termo/AAAA/AAAA-MM-GG.csv        temperatura, aggregata per ora (le letture originali sono ogni 5 minuti)
   pluvio/AAAA/AAAA-MM-GG.csv       pioggia ogni 5 minuti, SOLO le letture diverse da zero
   copertura/AAAA/AAAA-MM-GG.csv    quante letture valide ha ogni stazione per ogni sensore quel giorno
+  _in_corso/                       giornate non ancora complete (il CFR è lento: si finiscono nei giri successivi)
+  ultimo_giro.json                 esito dell'ultimo aggiornamento dell'archivio
 ```
+
+Il CFR risponde lentamente (circa 15 secondi a pagina, 360 pagine al giorno): ogni aggiornamento lavora al massimo
+7 minuti e il successivo riprende dalle stazioni mancanti. Un sensore passa nell'archivio quando ha risposto almeno
+il 90% delle stazioni, oppure il giorno dopo con quello che c'è. Di norma la giornata di ieri è completa entro sera.
 
 | file | colonne |
 |---|---|
