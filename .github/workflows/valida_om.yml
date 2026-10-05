@@ -1,0 +1,33 @@
+name: Meteo storico dei casi (Open-Meteo)
+
+# Gira solo sul branch dei casi: scarica il meteo e lo salva in data/validazione/serie_om.json sullo stesso branch.
+on:
+  push:
+    branches: [casi-nuovi]
+    paths: ["script/valida_scarica_om.py", ".github/workflows/valida_om.yml", "data/validazione/casi.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: valida-om
+  cancel-in-progress: true
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python script/valida_scarica_om.py
+      - name: Salva sul branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/validazione/serie_om.json
+          git commit -q -m "Meteo storico dei casi (Open-Meteo) [skip ci]" || exit 0
+          git pull -q --rebase origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }}
