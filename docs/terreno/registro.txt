@@ -37,3 +37,38 @@
 18:59:24    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Time-out
 19:03:50    OSM https://overpass.kumi.systems/api/interpreter: The read operation timed out
 19:04:20 3_7: boschi non disponibili (OpenStreetMap non risponde), salto
+19:04:21 salvataggio intermedio (31 tessere): ok
+19:04:29    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+19:04:56    OSM maps.mail.ru: 92 elementi in 22 s
+19:05:00 4_0: bosco 2%, quota -2-282 m, 4 s, 37 KB
+19:05:10    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+19:05:38    OSM maps.mail.ru: 55 elementi in 23 s
+19:05:43 4_1: bosco 40%, quota -1-1092 m, 4 s, 472 KB
+19:05:56    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+19:06:51    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Timeout
+19:08:51    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
+19:09:16    OSM overpass-api.de: 90 elementi in 11 s
+19:09:21 4_2: bosco 77%, quota 30-1284 m, 5 s, 863 KB
+19:09:26    OSM overpass-api.de: 37 elementi in 3 s
+19:09:31 4_3: bosco 79%, quota 42-1077 m, 5 s, 834 KB
+19:09:36    OSM overpass-api.de: 13 elementi in 3 s
+19:09:42 4_4: bosco 92%, quota 78-1090 m, 5 s, 904 KB
+19:09:46    OSM overpass-api.de: 16 elementi in 2 s
+19:09:51 4_5: bosco 87%, quota 101-1117 m, 5 s, 861 KB
+19:10:06    OSM https://overpass-api.de/api/interpreter: HTTP Error 429: Too Many Requests
+19:10:34    OSM maps.mail.ru: 51 elementi in 23 s
+19:10:39 4_6: bosco 61%, quota 54-1144 m, 5 s, 669 KB
+19:10:55    OSM https://overpass-api.de/api/interpreter: HTTP Error 504: Gateway Timeout
+19:11:01    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Time-out
+19:12:58    OSM https://overpass.kumi.systems/api/interpreter: HTTP Error 504: Gateway Timeout
+19:13:18    OSM overpass-api.de: 17 elementi in 5 s
+19:13:20 4_7: bosco 44%, quota 50-1134 m, 2 s, 96 KB
+19:13:31    OSM overpass-api.de: 0 elementi in 9 s
+19:13:31 5_0: niente bosco
+19:13:35    OSM overpass-api.de: 87 elementi in 4 s
+19:13:40 5_1: bosco 7%, quota -5-353 m, 4 s, 86 KB
+19:13:57    OSM https://overpass-api.de/api/interpreter: HTTP Error 429: Too Many Requests
+19:14:03    OSM https://maps.mail.ru/osm/tools/overpass/api/interpreter: HTTP Error 504: Gateway Time-out
+19:18:13    OSM https://overpass.kumi.systems/api/interpreter: The read operation timed out
+19:18:38    OSM overpass-api.de: 151 elementi in 10 s
+19:18:43 5_2: bosco 46%, quota -6-515 m, 5 s, 540 KB
