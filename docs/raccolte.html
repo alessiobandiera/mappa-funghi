@@ -45,9 +45,16 @@ button{font:inherit;color:inherit}
 main{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 16px}
 .vista{display:none;flex-direction:column;gap:16px}
 .vista.on{display:flex}
-nav{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);background:var(--panel);
+main.piena{padding:0;overflow:hidden}
+#v-previsioni{height:100%;position:relative}
+#previsioni{border:0;width:100%;height:100%;display:block;background:var(--bg)}
+#centra{position:absolute;left:10px;top:106px;z-index:5;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);
+  background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:#1d6fd8}
+#centra svg{width:24px;height:24px}
+.senzarete{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:30px;text-align:center;color:var(--muted)}
+nav{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:var(--panel);
   padding-bottom:env(safe-area-inset-bottom)}
-nav button{background:none;border:0;padding:10px 4px 12px;font-size:13px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button{background:none;border:0;padding:10px 2px 12px;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
 nav button svg{width:22px;height:22px}
 nav button.on{color:var(--accent);font-weight:600}
 
@@ -132,6 +139,11 @@ textarea{min-height:64px;resize:vertical}
     <div id="oggi"></div>
   </section>
 
+  <!-- PREVISIONI: la mappa del sito, con sopra la mia posizione e i miei ritrovamenti -->
+  <section class="vista" id="v-previsioni">
+    <button id="centra" type="button" aria-label="Centra sulla mia posizione"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+  </section>
+
   <!-- ELENCO -->
   <section class="vista" id="v-elenco"><div id="elenco"></div></section>
 
@@ -178,8 +190,9 @@ textarea{min-height:64px;resize:vertical}
 
 <nav>
   <button class="on" data-v="segna" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg>Segna</button>
+  <button data-v="previsioni" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17.3 9 4.5 4.5 0 0 1 17 18H7z"/><path d="M9 21l1-2M13 21l1-2"/></svg>Previsioni</button>
   <button data-v="elenco" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>Elenco</button>
-  <button data-v="mappa" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Mappa</button>
+  <button data-v="mappa" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>Punti</button>
   <button data-v="dati" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg>Dati</button>
 </nav>
 
@@ -218,6 +231,7 @@ const $ = s => document.querySelector(s);
 let ultimaPos = null;
 function mostraGps(p, msg) {
   if (msg) { $("#gps").innerHTML = msg; return; }
+  if (frame) disegnaSopra();
   const q = p.coords.altitude != null ? ` · <b>${Math.round(p.coords.altitude)} m</b>` : "";
   $("#gps").innerHTML = `GPS ±<b>${Math.round(p.coords.accuracy)} m</b>${q}`;
 }
@@ -357,7 +371,9 @@ async function riduci(file, max = 1600) {
 function vai(nome) {
   document.querySelectorAll(".vista").forEach(s => s.classList.toggle("on", s.id === "v-" + nome));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.v === nome));
+  document.querySelector("main").classList.toggle("piena", nome === "previsioni");
   if (nome === "mappa") apriMappa();
+  if (nome === "previsioni") apriPrevisioni();
 }
 document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => vai(b.dataset.v)));
 
@@ -404,6 +420,7 @@ function disegna() {
     <div><b>${new Set(VOCI.map(v => new Date(v.t).toDateString())).size}</b><span>giornate</span></div>
     <div><b>${giri.filter(v => v.esito === "niente").length}</b><span>giri a vuoto</span></div>`;
   if (mappa) puntiMappa();
+  if (frame) disegnaSopra();
 }
 
 // ---------------------------------------------------------------- mappa (Leaflet, caricata solo quando serve)
@@ -451,6 +468,46 @@ function aggiornaNotaMappa() {
   $("#aggiungi-mappa").textContent = modoSegna ? "Annulla" : "Segna un punto sulla mappa";
 }
 $("#aggiungi-mappa").onclick = () => { modoSegna = modoSegna ? null : "nuovo"; aggiornaNotaMappa(); };
+
+// ---------------------------------------------------------------- previsioni (pagina del sito in un riquadro, stessa origine)
+let frame = null, sopra = null, primaVolta = true;
+function apriPrevisioni() {
+  if (frame) { disegnaSopra(); return; }
+  if (!navigator.onLine) {
+    const d = document.createElement("div"); d.className = "senzarete"; d.textContent = "Previsioni non disponibili senza rete. Il pulsante «Fungo trovato» funziona lo stesso.";
+    $("#v-previsioni").prepend(d); addEventListener("online", () => { d.remove(); apriPrevisioni(); }, { once: true }); return;
+  }
+  frame = document.createElement("iframe"); frame.id = "previsioni"; frame.title = "Previsioni buttate";
+  frame.src = "./"; $("#v-previsioni").prepend(frame);
+  frame.addEventListener("load", () => { sopra = null; primaVolta = true; aspettaMappa(0); });
+}
+// la mappa della pagina (variabile «map» di index.html e bosco.html) è pronta dopo il caricamento di Leaflet
+function aspettaMappa(n) {
+  const w = frame && frame.contentWindow; let m = null;
+  try { m = w.eval("typeof map !== 'undefined' ? map : null"); } catch {}
+  if (m && w.L) disegnaSopra(); else if (n < 40) setTimeout(() => aspettaMappa(n + 1), 250);
+}
+function mappaFrame() { try { const w = frame.contentWindow; return { w, m: w.eval("typeof map !== 'undefined' ? map : null") }; } catch { return {}; } }
+function disegnaSopra() {
+  const { w, m } = mappaFrame(); if (!m || !w.L) return;
+  if (!sopra || !m.hasLayer(sopra)) sopra = w.L.layerGroup().addTo(m);
+  sopra.clearLayers();
+  VOCI.filter(v => v.tipo === "fungo" && v.lat != null).forEach(v =>
+    w.L.circleMarker([v.lat, v.lon], { radius: 6, color: "#5b3a1e", weight: 2, fillColor: "#c8873e", fillOpacity: .95, pane: "markerPane" })
+      .bindTooltip(`${new Date(v.t).toLocaleDateString("it-IT")} · ${descr(v)}`).on("click", () => apri(v.id)).addTo(sopra));
+  if (ultimaPos) {
+    const c = ultimaPos.coords;
+    w.L.circle([c.latitude, c.longitude], { radius: c.accuracy, color: "#1d6fd8", weight: 1, fillOpacity: .08, interactive: false }).addTo(sopra);
+    w.L.circleMarker([c.latitude, c.longitude], { radius: 7, color: "#ffffff", weight: 2, fillColor: "#1d6fd8", fillOpacity: 1, interactive: false, pane: "markerPane" }).addTo(sopra);
+    if (primaVolta) { primaVolta = false; centra(false); }
+  }
+}
+function centra(avvisa = true) {
+  const { m } = mappaFrame();
+  if (!ultimaPos) { if (avvisa) avviso("Cerco il GPS…"); posizione(20000).then(p => p && (disegnaSopra(), centra(false))); return; }
+  if (m) m.setView([ultimaPos.coords.latitude, ultimaPos.coords.longitude], Math.max(m.getZoom(), frame.contentWindow.location.pathname.endsWith("bosco.html") ? 15 : 12));
+}
+$("#centra").onclick = () => centra(true);
 
 // ---------------------------------------------------------------- esporta / importa
 const csvCampo = x => { const s = String(x ?? ""); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
