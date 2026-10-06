@@ -110,12 +110,14 @@ def adatta(k):
 print("\n3) MODELLO (regressione logistica condizionata), validato su dati mai visti")
 paesi = [p for p in ["IT", "FR", "CH", "AT", "ES"] if ((paese == p) & (Y == 1)).sum() >= 20]
 pr = np.full(len(S), np.nan)
-for p in paesi:
+for p in (paesi if len(paesi) >= 2 else []):
     w = adatta(paese != p); pr[paese == p] = Z[paese == p] @ w
     print(f"  addestrato senza {p}, verificato su {p}: modello {auc_strato(Z @ w, paese == p)[0]:.3f}   indice {auc_strato(R[:, col.index('indice_quota_neutra')], paese == p)[0]:.3f}")
+if len(paesi) < 2: print("  (un solo paese con dati: niente verifica per paese)")
 anni_v = anno >= 2022
-w = adatta(~anni_v)
-print(f"  addestrato fino al 2021, verificato 2022-2026: modello {auc_strato(Z @ w, anni_v)[0]:.3f}   indice {auc_strato(R[:, col.index('indice_quota_neutra')], anni_v)[0]:.3f}")
+if (Y[anni_v] == 1).sum() >= 20 and (Y[~anni_v] == 1).sum() >= 50:
+    w = adatta(~anni_v)
+    print(f"  addestrato fino al 2021, verificato 2022-2026: modello {auc_strato(Z @ w, anni_v)[0]:.3f}   indice {auc_strato(R[:, col.index('indice_quota_neutra')], anni_v)[0]:.3f}")
 
 w = adatta(np.ones(len(S), bool))
 print("\n4) PESI DEL MODELLO SU TUTTI I DATI (variabili standardizzate; + = più probabile trovarli)")
