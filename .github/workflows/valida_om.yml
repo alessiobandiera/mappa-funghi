@@ -1,10 +1,8 @@
 name: Meteo storico dei casi (Open-Meteo)
 
-# Gira solo sul branch dei casi: scarica il meteo e lo salva in data/validazione/serie_om.json sullo stesso branch.
+# Solo a mano (Actions > Meteo storico dei casi > Run workflow): scarica il meteo dei casi di verifica
+# e lo salva in data/validazione/serie_om.json. Non tocca la mappa.
 on:
-  push:
-    branches: [casi-nuovi]
-    paths: ["script/valida_scarica_om.py", ".github/workflows/valida_om.yml", "data/validazione/casi.json"]
   workflow_dispatch:
 
 permissions:
