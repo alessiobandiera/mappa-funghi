@@ -1,0 +1,7 @@
+# Orari in ora italiana (TZ=Europe/Rome): niente più slittamento tra ora legale e solare.
+# Aggiornamento completo ogni mattina
+45 6 * * *       /app/giro.sh completo
+# Solo previsione, ogni 3 ore di giorno
+15 9-21/3 * * *  /app/giro.sh leggero
+# Archivio stazioni CFR: ogni ora riprende le stazioni mancanti di ieri (esce subito se è già completo)
+5 * * * *        /app/giro.sh archivio

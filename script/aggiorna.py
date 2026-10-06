@@ -29,6 +29,7 @@ import csv
 import html
 import json
 import math
+import os
 import re
 import sys
 import time
@@ -514,7 +515,8 @@ def main():
     # archivio delle stazioni, per ultimo e a tempo limitato: anche negli aggiornamenti leggeri,
     # così quello che non finisce (o una mattina saltata) si recupera nel giro successivo
     try:
-        log("Archivio stazioni:", archivia_db(oggi))
+        # su GitHub Actions 7 minuti; sul server di casa si può alzare (variabile BUDGET_ARCHIVIO_S)
+        log("Archivio stazioni:", archivia_db(oggi, budget_s=float(os.environ.get("BUDGET_ARCHIVIO_S", 420))))
     except Exception as e:
         log("Archivio stazioni non riuscito:", e)
 
