@@ -67,6 +67,13 @@ const sOM = punt(C.om, ML.ATTUALE);
 riga("pioggia Open-Meteo (rianalisi)", sOM);
 riga("pioggia SIR (come la mappa)", punt(C.sir, ML.ATTUALE), sOM);
 riga("pioggia e temperature SIR", punt(C.sirT, ML.ATTUALE), sOM);
+console.log("\nQUOTA NEUTRA (le coordinate dei casi sono spesso il paese citato, non il bosco: si verifica il QUANDO, non il DOVE)");
+const QN = { ...ML.ATTUALE, senza: ["quota"] };
+const sQ = punt(C.om, QN);
+riga("quota neutra, pioggia Open-Meteo", sQ);
+riga("quota neutra, pioggia SIR", punt(C.sir, QN), sQ);
+riga("quota neutra, pioggia SIR, almeno 60 mm in 10 g", punt(C.sir, { ...QN, cluster: 10, totmin: 60 }), sQ);
+riga("quota neutra, pioggia SIR, senza temperatura suolo", punt(C.sir, { ...QN, senza: ["quota", "suoloT"] }), sQ);
 riga("Fungaiolo, pioggia Open-Meteo", C.om.map(ML.punteggioF));
 riga("Fungaiolo, pioggia SIR", C.sir.map(ML.punteggioF));
 
@@ -78,12 +85,13 @@ console.log("\n(stessa regola sulla pioggia Open-Meteo, per confronto)");
 for (const mm of [40, 60]) riga(`Open-Meteo, almeno ${mm} mm in 10 giorni`, punt(C.om, { ...ML.ATTUALE, cluster: 10, totmin: mm }));
 
 console.log("\nPER ZONA (indice attuale)");
-const zone = [["Lucchesia, Garfagnana, Lunigiana, Abetone", c => c.lat >= 43.7 && c.lat <= 44.45 && c.lon >= 9.85 && c.lon <= 11]];
+const zone = [["Lucchesia, Garfagnana, Lunigiana, Abetone", c => c.lat >= 43.7 && c.lat <= 44.45 && c.lon >= 9.85 && c.lon <= 11],
+               ["Val Taro e Parma ovest", c => c.lat > 44.36 && c.lon < 10]];
 for (const [nome, f] of zone) {
   const kk = C.om.map(f), yy = y.filter((_, i) => kk[i]);
   if (yy.some(v => v) && !yy.every(v => v)) {
-    const s1 = sOM.filter((_, i) => kk[i]), s2 = sSir.filter((_, i) => kk[i]);
-    console.log(`  ${nome} n=${yy.length}: Open-Meteo ${ML.auc(s1, yy).toFixed(3)}, SIR ${ML.auc(s2, yy).toFixed(3)}`);
+    const f = s => ML.auc(s.filter((_, i) => kk[i]), yy).toFixed(3), sQS = punt(C.sir, QN);
+    console.log(`  ${nome} n=${yy.length}: Open-Meteo ${f(sOM)}, SIR ${f(sSir)}, SIR quota neutra ${f(sQS)}, Fungaiolo SIR ${f(C.sir.map(ML.punteggioF))}`);
   }
 }
 return righeOut.join("\n");

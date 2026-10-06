@@ -42,6 +42,7 @@ function valuta(D, idx, P, quota){
   f.secco=trap(secchi,-1,0,P.secco[0]+extra,P.secco[1]+extra,.1);
   if (P.calo){ const prec=D.slice(Math.max(0,idx-20),idx-6); if (prec.length>=7){ const c=trap(avg(prec,"tmed")-avg(u7,"tmed"),-3,1.5,8,14,.3); f.calo=1-P.calo*(1-c); } }
   f.quota=trap(quota,...P.quota,.05);
+  if (P.senza) for (const x of P.senza) delete f[x];   // prove: fattori esclusi (es. 'quota': nei casi il punto è il paese, non il bosco)
   const vals=Object.values(f), mn=Math.min(...vals); let ind=0;
   if (mn>0){ const geo=Math.exp(vals.reduce((s,v)=>s+Math.log(v),0)/vals.length); ind=Math.pow(geo,.6)*Math.pow(mn,.4)*Math.min(1,.5+f.pioggia)*Math.min(1,.5+f.suoloU); }
   return 100*ind;
