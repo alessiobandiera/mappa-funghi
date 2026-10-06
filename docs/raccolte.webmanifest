@@ -1,0 +1,15 @@
+{
+  "name": "Raccolte funghi",
+  "short_name": "Raccolte",
+  "description": "Diario delle raccolte: data, ora e posizione GPS di ogni fungo trovato. I dati restano sul telefono.",
+  "lang": "it",
+  "start_url": "raccolte.html",
+  "scope": "./raccolte",
+  "display": "standalone",
+  "background_color": "#eef0ea",
+  "theme_color": "#3d6b2f",
+  "icons": [
+    { "src": "raccolte-icona-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "raccolte-icona-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
