@@ -8,6 +8,8 @@ const tram=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
 const ATTUALE={attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13], suoloU:[0,.35,1.01,1.02],
   quota:[150,500,1600,2000], calo:.5, extra:20, esaurita:1};
 // versione di stamattina: niente giorni asciutti, suolo 12-18
+// proposta dal confronto sui 292 casi (ottobre 2026): serve pioggia vera, almeno 60 mm in 10 giorni
+const PIOGGIA60={...ATTUALE, cluster:10, totmin:60};
 const MATTINA={...ATTUALE, suoloT:[8,12,18,23], notte:[3,8,15,20], secco:[100,200], esaurita:0};
 
 function valuta(D, idx, P, quota){
@@ -17,12 +19,13 @@ function valuta(D, idx, P, quota){
     if (cum<P.pmin*.5) continue;
     // pioggia totale del periodo piovoso (P.cluster giorni fino all'evento): un agosto con 80 mm in più temporali regge più a lungo
     let tot=cum; if (P.cluster){ tot=0; for (let k=Math.max(0,j-P.cluster+1); k<=j; k++) tot+=D[k].p; }
+    if (P.totmin && tot<P.totmin) continue;           // pioggia minima sull'intero periodo (con P.cluster): es. 60 mm in 10 giorni
     if (P.esaurita){
       const tolle=P.secco[1]+Math.max(0,Math.min(P.maxextra||8,(tot-P.pmin)/P.extra)); let st=0, mx=0;
       for (let k=j+1;k<=idx;k++){ if (D[k].p<3&&D[k].ur<88){ st++; if(st>mx) mx=st; } else st=0; }
       if (mx>tolle) continue;
     }
-    const v=trap(att,...P.attesa)*(.4+.6*Math.min(1,cum/(P.pieno||P.pmin*1.5)));
+    const v=trap(att,...P.attesa)*(.4+.6*Math.min(1,(P.cluster?tot:cum)/(P.pieno||P.pmin*1.5)));
     if (v>best){best=v; ev={mm:tot,att};}
   }
   f.pioggia=best;
@@ -92,5 +95,5 @@ function tara(casi,P0,iter){
   }
   return {P:best, auc:bv};
 }
-window.ML={trap,valuta,fungaiolo,prepara,punteggio,punteggioF,auc,acc,migliorSoglia,tara,ATTUALE,MATTINA};
+window.ML={trap,valuta,fungaiolo,prepara,punteggio,punteggioF,auc,acc,migliorSoglia,tara,ATTUALE,MATTINA,PIOGGIA60};
 })();
