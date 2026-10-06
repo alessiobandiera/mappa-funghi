@@ -96,8 +96,8 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
     <div>
       <p class="label">Cosa mostrare</p>
       <div class="chips" id="viste" role="group" aria-label="Vista">
-        <button class="chip" data-v="terreno" aria-pressed="true">Dove conviene nel bosco</button>
-        <button class="chip" data-v="finale">Indice × terreno</button>
+        <button class="chip" data-v="finale" aria-pressed="true">Possibilità oggi</button>
+        <button class="chip" data-v="terreno">Dove guardare nel bosco</button>
         <button class="chip" data-v="acqua">Ristagno</button>
         <button class="chip" data-v="sole">Sole</button>
         <button class="chip" data-v="riparo">Riparo</button>
@@ -127,7 +127,7 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 
     <p class="status" id="status"></p>
 
-    <p class="note"><b>Come leggerla.</b> «Dove conviene nel bosco» dice se un punto, con il meteo di quel giorno, è più o meno favorevole di un punto di bosco tipico della zona: verde scuro = più favorevole, marrone = meno. Non dice se ci sono funghi: per quello conta l'indice, che dipende dal meteo. «Indice × terreno» è l'indice della mappa principale corretto dal terreno, al massimo del 30% in più o in meno.<br><br>
+    <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: verde scuro = più favorevole di un bosco tipico, marrone = meno. Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
     <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
     Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
   </aside>
@@ -228,7 +228,7 @@ function boscoStimato(lat, lon, elev){
 const GRIDW = {lat0:43.72, dlat:0.05, lon0:10.05, dlon:0.07};
 const ZOOM_MIN = 12, MAX_TESSERE = 12, BIN = 25;
 const oggiISO = new Date().toLocaleDateString("sv-SE",{timeZone:"Europe/Rome"});
-let IDX=null, celleMap=new Map(), date=[], st={sp:"porcino", g:0, v:"terreno", m:"giorno"};
+let IDX=null, celleMap=new Map(), date=[], st={sp:"porcino", g:0, v:"finale", m:"giorno"};
 const tessere=new Map();          // id -> {meta, A,B,C, calc, overlay, usata}
 const $=id=>document.getElementById(id);
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
@@ -389,7 +389,11 @@ function disegnaTessera(t){
     if (!t.B.bosco[p] || (!t.calc.base[p] && !t.calc.K[p])) continue;
     let col;
     switch(st.v){
-      case "terreno": col=rampa(DIV,(t.calc.K[p]-.55)/.9); break;
+      case "terreno": {
+        // il terreno conta solo se la zona ha una possibilità: con l'indice basso il colore si spegne verso il grigio
+        col=rampa(DIV,(t.calc.K[p]-.55)/.9);
+        const peso=clamp((t.calc.base[p]-5)/25, .12, 1);
+        col=lerp([200,200,195], col, peso); break; }
       case "finale": col=coloreIndice(indiceQui(t,p)); break;
       case "acqua": col=rampa(SEQ,t.A.acqua[p]); break;
       case "sole": col=rampa(SUN,(t.calc.sun[p]-.3)/1.4); break;
