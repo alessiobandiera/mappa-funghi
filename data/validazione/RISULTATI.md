@@ -1,6 +1,30 @@
 # Confronto indice / casi reali
 
 Metrica: AUC (0,5 = come tirare a caso, 1 = separa perfettamente i giorni buoni dai cattivi).
+
+## 6 ottobre 2026 (sera) — ritrovamenti pubblici GBIF / iNaturalist, Italia
+
+7.531 osservazioni di porcini con data e GPS in Europa centro-meridionale (data/gbif/porcini.json); meteo ERA5-Land per cella
+di 0,1° e anno (data/gbif/meteo/, in scaricamento: prima l'Italia). Sono solo ritrovamenti, quindi il confronto è nello stesso punto:
+**il giorno del ritrovamento contro gli stessi giorni della settimana 1-4 settimane prima e dopo, a coppie simmetriche**
+(si annullano luogo, persona, fine settimana e andamento della stagione: il giorno dell'anno risulta 0,500, come deve).
+
+Italia, 455 ritrovamenti (2.812 giorni di confronto), quota neutra:
+
+| | AUC di strato |
+|---|---|
+| **indice della mappa** | **0,565** (0,54-0,59 al 90%) |
+| Fungaiolo | 0,546 |
+| modello statistico (regressione condizionata), addestrato fino al 2021 e verificato 2022-2026 | 0,588 (indice 0,570) |
+
+- Conta soprattutto la **pioggia di 8-21 giorni prima** (0,58 e 0,56); quella degli ultimi 7 giorni no: l'attesa dell'indice è giusta.
+- **Il fattore «calo di temperatura» peggiora l'indice**: senza, 0,576 sui ritrovamenti (meglio sia negli anni pari sia nei dispari)
+  e 0,746 invece di 0,739 sui casi della Lucchesia con pioggia SIR. È l'unico cambiamento che regge su entrambe le fonti.
+- Soglia di pioggia 30-35 mm invece di 20: meglio sui ritrovamenti (0,585-0,592) ma peggio in Lucchesia con i pluviometri
+  (0,706): le soglie dipendono dalla fonte della pioggia, non si cambiano.
+- Script: script/gbif_scarica.py, gbif_meteo.py (workflow «Porcini da GBIF», riprende da solo ogni 6 ore),
+  gbif_confronti.js + gbif_analisi.py (analisi), gbif_tara.js (taratura con verifica su dati tenuti fuori).
+
 Casi: data/validazione/casi.json (292: 156 positivi A+D, 136 negativi S+N).
 
 ## 6 ottobre 2026 — pioggia misurata dalle stazioni SIR

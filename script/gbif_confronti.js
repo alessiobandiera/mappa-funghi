@@ -54,11 +54,13 @@ for (const c of casi.values()) {
   const D = cacheD[c.g] || (cacheD[c.g] = serie(m));
   const i0 = D.findIndex(x => x.d === c.d); if (i0 < 38) { saltati++; continue; }
   const rif = [];
-  for (const w of [-4, -3, -2, -1, 1, 2, 3, 4]) {
-    const i = i0 + 7 * w;
-    if (i < 38 || i >= D.length) continue;
-    if (giorniOss.get(c.g).has(D[i].d)) continue;              // anche quel giorno qualcuno ha trovato porcini: non è un confronto
-    rif.push(i);
+  // coppie simmetriche (stesso numero di settimane prima e dopo): così l'andamento della stagione (es. il fresco che arriva)
+  // non sposta il confronto. Se un giorno della coppia manca o è anch'esso un ritrovamento, si scarta tutta la coppia.
+  for (const w of [1, 2, 3, 4]) {
+    const a = i0 - 7 * w, b = i0 + 7 * w;
+    if (a < 38 || b >= D.length) continue;
+    if (giorniOss.get(c.g).has(D[a].d) || giorniOss.get(c.g).has(D[b].d)) continue;
+    rif.push(a, b);
   }
   if (rif.length < 2) { saltati++; continue; }
   strato++; strati.push([c.d, c.paese, c.sp, c.la, c.lo, m.el]);

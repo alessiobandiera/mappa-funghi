@@ -28,7 +28,9 @@ for (const [d, la, lo, , paese] of oss) {
   if (visti.has(g + d) || !METEO[g]) continue; visti.add(g + d);
   const D = cacheD[g] || (cacheD[g] = serie(METEO[g])), i0 = D.findIndex(x => x.d === d);
   if (i0 < 38) continue;
-  const rif = [-4, -3, -2, -1, 1, 2, 3, 4].map(w => i0 + 7 * w).filter(i => i >= 38 && i < D.length && !giorni.get(g).has(D[i].d));
+  const rif = [];                                               // coppie simmetriche, come in gbif_confronti.js
+  for (const w of [1, 2, 3, 4]) { const a = i0 - 7 * w, b = i0 + 7 * w;
+    if (a >= 38 && b < D.length && !giorni.get(g).has(D[a].d) && !giorni.get(g).has(D[b].d)) rif.push(a, b); }
   if (rif.length >= 2) strati.push({ D, idx: [i0, ...rif], paese, anno: +d.slice(0, 4) });
 }
 function aucStrati(ss, P) {
