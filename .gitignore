@@ -1,2 +1,3 @@
 __pycache__/
 data/validazione/uscite_locali.json
+data/gbif/confronti.json
