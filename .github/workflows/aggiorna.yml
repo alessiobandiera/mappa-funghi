@@ -53,7 +53,12 @@ jobs:
           git add docs/dati data
           if git diff --cached --quiet; then echo "Nessuna novità"; exit 0; fi
           git commit -q -m "Dati del $(TZ=Europe/Rome date '+%Y-%m-%d %H:%M') (${{ steps.modo.outputs.modo }})"
-          git pull -q --rebase origin main && git push -q origin HEAD:main
+          # se nel frattempo un altro aggiornamento ha salvato dati, nei conflitti vincono quelli di questo giro (più recenti)
+          for t in 1 2 3; do
+            git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0
+            git rebase --abort 2>/dev/null; sleep 10
+          done
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:
