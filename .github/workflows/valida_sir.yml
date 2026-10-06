@@ -1,0 +1,31 @@
+name: Pioggia delle stazioni SIR per i casi
+
+# Solo a mano: scarica dall'archivio SIR Toscana pioggia e temperature misurate attorno a ogni caso di verifica
+# e le salva in data/validazione/serie_sir.json. Non tocca la mappa.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: valida-sir
+  cancel-in-progress: true
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python script/valida_scarica_sir.py
+      - name: Salva
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/validazione/serie_sir.json
+          git commit -q -m "Validazione: pioggia e temperature SIR per i casi [skip ci]" || exit 0
+          git pull -q --rebase origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }}
