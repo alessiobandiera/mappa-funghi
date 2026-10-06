@@ -8,7 +8,8 @@ const tram=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
 const ATTUALE={attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13], suoloU:[0,.35,1.01,1.02],
   quota:[150,500,1600,2000], calo:.5, extra:20, esaurita:1};
 // versione di stamattina: niente giorni asciutti, suolo 12-18
-// proposta dal confronto sui 292 casi (ottobre 2026): serve pioggia vera, almeno 60 mm in 10 giorni
+// proposta dal confronto sui 292 casi con pioggia Open-Meteo (5 ottobre 2026): almeno 60 mm in 10 giorni.
+// NON confermata con la pioggia misurata SIR e la quota neutra (6 ottobre): resta solo per le prove.
 const PIOGGIA60={...ATTUALE, cluster:10, totmin:60};
 const MATTINA={...ATTUALE, suoloT:[8,12,18,23], notte:[3,8,15,20], secco:[100,200], esaurita:0};
 
