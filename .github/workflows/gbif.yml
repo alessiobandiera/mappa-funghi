@@ -1,0 +1,49 @@
+name: Porcini da GBIF e meteo dei punti
+
+# Solo a mano. passo=osservazioni: scarica le osservazioni da GBIF. passo=meteo: scarica il meteo dei punti (riprende da dove era).
+on:
+  workflow_dispatch:
+    inputs:
+      passo:
+        description: "osservazioni oppure meteo"
+        default: "osservazioni"
+      minuti:
+        description: "minuti massimi per il meteo"
+        default: "300"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gbif
+  cancel-in-progress: false
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Osservazioni
+        if: inputs.passo == 'osservazioni'
+        run: python script/gbif_scarica.py
+      - name: Meteo
+        if: inputs.passo == 'meteo'
+        env:
+          MINUTI: ${{ inputs.minuti }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python script/gbif_meteo.py
+      - name: Salva
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/gbif
+          git commit -q -m "Porcini GBIF: ${{ inputs.passo }} [skip ci]" || exit 0
+          for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null; sleep 10; done
+          exit 1
