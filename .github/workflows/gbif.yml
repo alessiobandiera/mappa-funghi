@@ -2,6 +2,9 @@ name: Porcini da GBIF e meteo dei punti
 
 # Solo a mano. passo=osservazioni: scarica le osservazioni da GBIF. passo=meteo: scarica il meteo dei punti (riprende da dove era).
 on:
+  # ogni 6 ore riprende il meteo dei punti finché non è completo (se è già tutto scaricato finisce subito)
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       passo:
@@ -28,12 +31,12 @@ jobs:
         with:
           python-version: "3.12"
       - name: Osservazioni
-        if: inputs.passo == 'osservazioni'
+        if: github.event_name == 'workflow_dispatch' && inputs.passo == 'osservazioni'
         run: python script/gbif_scarica.py
       - name: Meteo
-        if: inputs.passo == 'meteo'
+        if: github.event_name == 'schedule' || inputs.passo == 'meteo'
         env:
-          MINUTI: ${{ inputs.minuti }}
+          MINUTI: ${{ inputs.minuti || '320' }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -44,6 +47,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/gbif
-          git commit -q -m "Porcini GBIF: ${{ inputs.passo }} [skip ci]" || exit 0
+          git commit -q -m "Porcini GBIF: ${{ inputs.passo || 'meteo' }} [skip ci]" || exit 0
           for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null; sleep 10; done
           exit 1
