@@ -1,6 +1,6 @@
 // Fa funzionare la pagina delle raccolte anche senza rete (nel bosco). Riguarda solo raccolte.* e Leaflet, non la mappa.
-const CACHE = "raccolte-v4";
-const BASE = ["raccolte.html", "raccolte.webmanifest", "raccolte-icona-180.png", "raccolte-icona-512.png"];
+const CACHE = "raccolte-v5";
+const BASE = ["raccolte.html", "raccolte.webmanifest", "raccolte-icona-180.png", "raccolte-icona-512.png", "mappa-piena.js"];
 const LEAFLET = ["https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js",
                  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"];
 self.addEventListener("install", e => {
@@ -13,7 +13,7 @@ self.addEventListener("activate", e => {
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);
   if (e.request.method !== "GET") return;
-  const nostra = u.origin === location.origin && /\/raccolte[^/]*$/.test(u.pathname);
+  const nostra = u.origin === location.origin && /\/(raccolte[^/]*|mappa-piena\.js)$/.test(u.pathname);
   if (nostra) {
     // prima la rete (versione aggiornata), senza rete la copia salvata
     e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(k => k.put(e.request, c)); return r; })

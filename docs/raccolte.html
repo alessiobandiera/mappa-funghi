@@ -48,7 +48,7 @@ main{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 16px}
 main.piena{padding:0;overflow:hidden}
 #v-previsioni{height:100%;position:relative}
 #previsioni{border:0;width:100%;height:100%;display:block;background:var(--bg)}
-#centra{position:absolute;left:10px;top:106px;z-index:5;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);
+#centra{position:absolute;left:10px;top:134px;z-index:5;width:48px;height:48px;border-radius:50%;border:1px solid var(--line);
   background:var(--panel);box-shadow:0 2px 10px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;color:#1d6fd8}
 #centra svg{width:24px;height:24px}
 .senzarete{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:30px;text-align:center;color:var(--muted)}
@@ -126,6 +126,10 @@ textarea{min-height:64px;resize:vertical}
 .toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);
   padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
+.toast{z-index:2000}
+/* mappe a schermo intero (pulsante sulle mappe) */
+html.previsioni-piena .top, html.previsioni-piena nav{display:none}
+html.mappa-piena #mappa{position:fixed!important;inset:env(safe-area-inset-top) 0 0 0;z-index:1500;height:auto;min-height:0;border:0;border-radius:0}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 </style>
 </head>
@@ -206,6 +210,7 @@ textarea{min-height:64px;resize:vertical}
 <dialog id="foglio"><form method="dialog" class="foglio" id="modulo"></form></dialog>
 <div class="toast" id="toast"></div>
 
+<script src="mappa-piena.js"></script>
 <script>
 "use strict";
 // ---------------------------------------------------------------- archivio (IndexedDB, solo sul telefono)
@@ -464,6 +469,7 @@ async function apriMappa() {
   mappa = L.map("mappa", { zoomControl: true }).setView([44.05, 10.5], 10);
   L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, attribution: "© OpenStreetMap, © OpenTopoMap" }).addTo(mappa);
   strato = L.layerGroup().addTo(mappa);
+  if (window.MappaPiena) MappaPiena(mappa);
   mappa.on("click", async e => {
     if (!modoSegna) { L.popup().setLatLng(e.latlng).setContent(portamiQui(e.latlng.lat, e.latlng.lng)).openOn(mappa); return; }
     let v;
@@ -507,8 +513,23 @@ function apriPrevisioni() {
   }
   frame = document.createElement("iframe"); frame.id = "previsioni"; frame.title = "Previsioni buttate";
   frame.src = "./"; $("#v-previsioni").prepend(frame);
-  frame.addEventListener("load", () => { sopra = null; primaVolta = true; aspettaMappa(0); });
+  frame.addEventListener("load", () => { sopra = null; primaVolta = true; pienaPrevisioni(false); aspettaMappa(0); });
 }
+// la mappa nel riquadro chiede lo schermo intero: via le barre dell'app (e schermo intero vero dove il browser lo permette)
+let fsPrevisioni = false;
+function pienaPrevisioni(on) {
+  document.documentElement.classList.toggle("previsioni-piena", on);
+  const r = document.documentElement, fs = document.fullscreenElement || document.webkitFullscreenElement;
+  if (on && !fs) { const f = r.requestFullscreen || r.webkitRequestFullscreen; if (f) try { const p = f.call(r); fsPrevisioni = true; if (p && p.catch) p.catch(() => { fsPrevisioni = false; }); } catch {} }
+  if (!on && fsPrevisioni) { fsPrevisioni = false; if (fs) { const f = document.exitFullscreen || document.webkitExitFullscreen; try { const p = f.call(document); if (p && p.catch) p.catch(() => {}); } catch {} } }
+}
+addEventListener("message", e => { if (frame && e.source === frame.contentWindow && e.data && e.data.tipo === "mappa-piena") pienaPrevisioni(!!e.data.on); });
+const finitoFS = () => {
+  if (document.fullscreenElement || document.webkitFullscreenElement || !fsPrevisioni) return;
+  fsPrevisioni = false; document.documentElement.classList.remove("previsioni-piena");
+  try { frame.contentWindow.postMessage({ tipo: "mappa-piena-esci" }, location.origin); } catch {}
+};
+document.addEventListener("fullscreenchange", finitoFS); document.addEventListener("webkitfullscreenchange", finitoFS);
 // la mappa della pagina (variabile «map» di index.html e bosco.html) è pronta dopo il caricamento di Leaflet
 function aspettaMappa(n) {
   const w = frame && frame.contentWindow; let m = null;

@@ -80,6 +80,9 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
   border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:500 .88rem var(--body);box-shadow:0 2px 8px rgba(0,0,0,.15);pointer-events:none}
 .mapwrap{position:relative;min-height:0;height:100%}
 @media (max-width:760px){ .mapwrap{order:1} }
+/* mappa a schermo intero (pulsante sulla mappa): sparisce il pannello */
+html.mappa-piena .app{grid-template-columns:1fr;grid-template-rows:1fr}
+html.mappa-piena .panel{display:none}
 </style>
 </head>
 <body>
@@ -162,6 +165,7 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="mappa-piena.js"></script>
 <script>
 /* regole dell'indice: copiate dalla mappa principale (index.html) */
 const SPECIE = [
@@ -496,6 +500,8 @@ const basi={
 basi["Sentieri (OpenTopoMap)"].addTo(map);
 L.control.layers(basi,null,{position:"topright"}).addTo(map);
 L.control.scale({imperial:false}).addTo(map);
+// schermo intero: senza pannello, con specie, vista e giorno in una barretta in basso
+MappaPiena(map,{gruppi:[{sel:"#specie",nome:"Specie"},{sel:"#viste",nome:"Cosa mostrare"}], giorno:"#giorno", etichetta:"#giornolbl"});
 let contorni=null;
 
 function visibili(){

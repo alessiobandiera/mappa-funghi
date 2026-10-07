@@ -111,6 +111,15 @@ select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var
 .hint{margin:0;font-size:.88rem;padding:8px 10px;border-radius:6px;background:var(--chip);color:var(--fg)}
 .leaflet-tooltip.cell-tip{font:500 .8rem var(--body);padding:4px 8px}
 @media (prefers-reduced-motion: reduce){ .bar i{transition:none} }
+/* mappa a schermo intero (pulsante sulla mappa): sparisce il pannello */
+html.mappa-piena .app{grid-template-columns:1fr;grid-template-rows:1fr}
+html.mappa-piena .panel{display:none}
+.pp{display:flex;flex-direction:column;gap:6px;font:14px/1.35 var(--body);color:#1f251c;min-width:190px}
+.pp .pp-m{color:#5d6656;font-size:12px}
+.pp-r{display:grid;grid-template-columns:1fr 2.4em;gap:8px;align-items:center}
+.pp-r b{font:500 14px var(--mono);text-align:center;border-radius:4px;padding:1px 0;color:#fff}
+.pp .nav-qui a{color:#3d6b2f}
+.pp-det{align-self:flex-start;margin-top:2px;font:600 13px var(--body);padding:6px 10px;border-radius:8px;border:1px solid #d6dbcf;background:#e6eadf;color:#1f251c;cursor:pointer}
 </style>
 </head>
 <body>
@@ -173,6 +182,7 @@ select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="mappa-piena.js"></script>
 <script>
 "use strict";
 /* ---------------- configurazione ---------------- */
@@ -520,6 +530,8 @@ layers["Topografica (Esri)"].on("tileload",()=>tileOk++).on("tileerror",()=>{
 const gridLayer=L.layerGroup().addTo(map);
 const stazioniLayer=L.layerGroup().addTo(map);
 L.control.layers(null,{"Stazioni della Regione":stazioniLayer},{collapsed:false,position:"topright"}).addTo(map);
+// schermo intero: senza pannello, con specie e giorno in una barretta in basso e il dettaglio in un fumetto sulla mappa
+const MP=MappaPiena(map,{gruppi:[{sel:"#chips",nome:"Specie"}], giorno:"#day", etichetta:"#daylbl"});
 async function caricaStazioni(){
   if (location.protocol==="file:") return;
   try{
@@ -611,11 +623,29 @@ function select(c, fly){
   selMarker=L.circleMarker([state.punto.lat,state.punto.lon],{radius:7,color:"#111",weight:2,fillColor:"#fff",fillOpacity:1,interactive:false}).addTo(map);
   if (fly) map.flyTo([c.lat,c.lon], Math.max(map.getZoom(), c.forest?14:12), {duration: matchMedia("(prefers-reduced-motion: reduce)").matches?0:.6});
   renderDetail();
+  if (MP.attiva()){ popupPieno(); return; }
   // sul telefono il dettaglio sta in fondo al pannello sotto la mappa: lo porto in vista, così si vede subito «Portami qui»
   if (matchMedia("(max-width:760px)").matches){
     const det=document.getElementById("detail"), pan=det.closest(".panel");
     if (pan) pan.scrollTo({top: det.offsetTop - pan.offsetTop - 8, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
+}
+
+// a schermo intero il pannello non c'è: indice delle specie e «Portami qui» in un fumetto sul punto toccato
+let ppAperto=null;
+function popupPieno(){
+  const c=state.sel; if (!c) return;
+  const P=state.punto||{lat:c.lat,lon:c.lon};
+  let h=`<div class="pp"><b>${c.forest?"Bosco · ":""}${c.elev} m · ${BOSCHI[c.bosco]}</b><span class="pp-m">${dayDates.length?fmtDay(dayDates[state.day]):""}</span>`;
+  if (c.scores) h+=SPECIE.map(sp=>{ const s=c.scores[sp.id][state.day]; return `<div class="pp-r"><span>${sp.nome}</span><b style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }).join("");
+  else h+=`<span class="pp-m">Il meteo di questa zona è ancora in arrivo.</span>`;
+  h+=portamiQui(P.lat,P.lon)+`<button type="button" class="pp-det">Tutti i dettagli</button></div>`;
+  if (ppAperto && map.hasLayer(ppAperto)) ppAperto.setLatLng([P.lat,P.lon]).setContent(h);
+  else ppAperto=L.popup({maxWidth:260, autoPanPaddingTopLeft:[50,10], autoPanPaddingBottomRight:[10,90]}).setLatLng([P.lat,P.lon]).setContent(h).openOn(map);
+  const b=ppAperto.getElement()&&ppAperto.getElement().querySelector(".pp-det");
+  if (b) b.onclick=()=>{ map.closePopup(); MP.imposta(false);
+    setTimeout(()=>{ const det=document.getElementById("detail"), pan=det.closest(".panel");
+      if (pan) pan.scrollTo({top: det.offsetTop - pan.offsetTop - 8}); }, 60); };
 }
 
 function renderDetail(){
@@ -745,6 +775,7 @@ function render(){
   disegnaFasce(fz);
   if (vistaBoschi()) renderForest(); else renderGrid();
   renderTop(); renderDetail();
+  if (ppAperto && map.hasLayer(ppAperto) && MP.attiva()) popupPieno();
 }
 
 document.getElementById("day").addEventListener("input",e=>{ if (!dayDates.length) return; state.day=+e.target.value; render(); });
