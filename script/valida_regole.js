@@ -21,12 +21,14 @@ function valuta(D, idx, P, quota){
     // pioggia totale del periodo piovoso (P.cluster giorni fino all'evento): un agosto con 80 mm in più temporali regge più a lungo
     let tot=cum; if (P.cluster){ tot=0; for (let k=Math.max(0,j-P.cluster+1); k<=j; k++) tot+=D[k].p; }
     if (P.totmin && tot<P.totmin) continue;           // pioggia minima sull'intero periodo (con P.cluster): es. 60 mm in 10 giorni
+    let esaur=1;
     if (P.esaurita){
       const tolle=P.secco[1]+Math.max(0,Math.min(P.maxextra||8,(tot-P.pmin)/P.extra)); let st=0, mx=0;
       for (let k=j+1;k<=idx;k++){ if (D[k].p<3&&D[k].ur<88){ st++; if(st>mx) mx=st; } else st=0; }
-      if (mx>tolle) continue;
+      // troppo secco dopo la pioggia: buttata esaurita. Con esauritaMin non si azzera: cala in esauritaGiorni giorni fino al minimo
+      if (mx>tolle){ if (!P.esauritaMin) continue; esaur=Math.max(P.esauritaMin, 1-(mx-tolle)/(P.esauritaGiorni||10)); }
     }
-    const v=trap(att,...P.attesa)*(.4+.6*Math.min(1,(P.cluster?tot:cum)/(P.pieno||P.pmin*1.5)));
+    const v=esaur*trap(att,...P.attesa)*(.4+.6*Math.min(1,(P.cluster?tot:cum)/(P.pieno||P.pmin*1.5)));
     if (v>best){best=v; ev={mm:tot,att};}
   }
   f.pioggia=best;
