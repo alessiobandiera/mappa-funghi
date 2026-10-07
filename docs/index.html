@@ -80,8 +80,8 @@ button.btn{border:1px solid var(--line);background:transparent;color:var(--fg);b
 .det header{display:flex;justify-content:space-between;align-items:start;gap:8px}
 .det h2{font:700 1.15rem/1.2 var(--display);margin:0}
 .meta{color:var(--muted);font-size:.85rem}
-.nav-qui{display:inline-block;font-size:.9rem;padding:6px 0}
-.nav-qui a{color:var(--accent);font-weight:600}
+.nav-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.9rem;padding:6px 0}
+.nav-qui a{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);font-weight:600;text-decoration:none}
 
 .sp{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
 .sp .n{font-weight:600}
@@ -541,7 +541,7 @@ let selMarker=null, ultimoTocco=null;
 // «Portami qui»: apre il navigatore del telefono (Apple Mappe o Google Maps) con il percorso fino al punto
 function portamiQui(lat, lon){
   const d=`${(+lat).toFixed(6)},${(+lon).toFixed(6)}`;
-  return `<span class="nav-qui"><b>Portami qui:</b> <a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a> · <a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></span>`;
+  return `<span class="nav-qui"><b>Portami qui:</b> <a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a> <a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></span>`;
 }
 
 const vistaBoschi=()=>map.getZoom()>=FZ;
@@ -608,9 +608,14 @@ function select(c, fly){
   state.sel=c;
   state.punto = !fly && ultimoTocco ? {lat:ultimoTocco.lat, lon:ultimoTocco.lng} : {lat:c.lat, lon:c.lon};
   if (selMarker) map.removeLayer(selMarker);
-  selMarker=L.circleMarker([c.lat,c.lon],{radius:7,color:"#111",weight:2,fillColor:"#fff",fillOpacity:1,interactive:false}).addTo(map);
+  selMarker=L.circleMarker([state.punto.lat,state.punto.lon],{radius:7,color:"#111",weight:2,fillColor:"#fff",fillOpacity:1,interactive:false}).addTo(map);
   if (fly) map.flyTo([c.lat,c.lon], Math.max(map.getZoom(), c.forest?14:12), {duration: matchMedia("(prefers-reduced-motion: reduce)").matches?0:.6});
   renderDetail();
+  // sul telefono il dettaglio sta in fondo al pannello sotto la mappa: lo porto in vista, così si vede subito «Portami qui»
+  if (matchMedia("(max-width:760px)").matches){
+    const det=document.getElementById("detail"), pan=det.closest(".panel");
+    if (pan) pan.scrollTo({top: det.offsetTop - pan.offsetTop - 8, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  }
 }
 
 function renderDetail(){
@@ -627,7 +632,7 @@ function renderDetail(){
     if (DATI_SITO) html+=`<div class="meta">${stz.pioggia&&stz.pioggia.length?`Pioggia misurata (${stz.pioggia.join(", ")}) in ${giorniMis} giorni su ${giorniPass}`:"Nessun pluviometro entro 12 km: pioggia stimata dal modello"}${stz.temperatura&&stz.temperatura.length?` · temperature da ${stz.temperatura[0]}`:""}. Previsione: Open-Meteo.</div>`;
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
-  { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<p class="meta" style="margin:0">${portamiQui(P.lat,P.lon)} <span>(il punto toccato; l'auto arriva alla strada più vicina)</span></p>`; }
+  { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<div class="meta" style="margin:0">${portamiQui(P.lat,P.lon)}<span>Al punto toccato; in auto fino alla strada più vicina.</span></div>`; }
   if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${CLS_TXT[c.cls]}${c.wc?` · meteo del punto a ${c.wc.elev} m, temperature corrette per la quota`:""}</p>`;
   html+=`<p class="meta"><a href="bosco.html#${c.lat.toFixed(4)},${c.lon.toFixed(4)},15" style="color:var(--accent);font-weight:600">Guarda questa zona a 20 m</a> · dove conviene dentro il bosco</p>`;
   html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;

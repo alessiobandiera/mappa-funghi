@@ -59,8 +59,8 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 .note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
 .note a,.sub a{color:var(--accent)}
 .pop{font:13px/1.4 var(--body);min-width:220px}
-.nav-qui{display:inline-block;font-size:.9rem;padding:6px 0}
-.nav-qui a{color:var(--accent);font-weight:600}
+.nav-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.9rem;padding:6px 0}
+.nav-qui a{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);font-weight:600;text-decoration:none}
 
 .pop h3{font:700 1rem var(--display);margin:0 0 6px}
 .pop table{border-collapse:collapse;width:100%}
@@ -509,7 +509,7 @@ const livello=(v,lo,hi,t)=>v<lo?t[0]:v>hi?t[2]:t[1];
 // «Portami qui»: apre il navigatore del telefono (Apple Mappe o Google Maps) con il percorso fino al punto
 function portamiQui(lat, lon){
   const d=`${(+lat).toFixed(6)},${(+lon).toFixed(6)}`;
-  return `<span class="nav-qui"><b>Portami qui:</b> <a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a> · <a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></span>`;
+  return `<span class="nav-qui"><b>Portami qui:</b> <a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a> <a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></span>`;
 }
 map.on("click",e=>{
   const {lat,lng}=e.latlng;
