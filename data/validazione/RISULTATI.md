@@ -2,6 +2,25 @@
 
 Metrica: AUC (0,5 = come tirare a caso, 1 = separa perfettamente i giorni buoni dai cattivi).
 
+## 7 ottobre 2026 — ritrovamenti GBIF in Europa (4.100, stesso metodo)
+
+Meteo completo per Italia, Svizzera, Austria, Slovenia, Croazia e quasi tutta la Francia (Spagna e altri in scaricamento).
+
+| AUC di strato | tutti (4.100) | Italia (502) | Francia (711) | Svizzera (211) | Austria (2.582) |
+|---|---|---|---|---|---|
+| indice della mappa | 0,577 | 0,570 | 0,604 | 0,569 | 0,569 |
+| **indice senza «calo termico»** | **0,587** | **0,582** | **0,613** | **0,592** | **0,578** |
+| Fungaiolo | 0,548 | 0,545 | 0,546 | 0,566 | 0,548 |
+| modello statistico addestrato senza quel paese | — | 0,621 | 0,645 | 0,663 | 0,622 |
+
+- **Togliere il calo termico migliora in ogni paese** (tutti: +0,006…+0,014 al 90%, meglio nel 100% dei ricampionamenti) e anche
+  in Lucchesia con pioggia SIR (0,746 invece di 0,739). Proposta: `calo:0` per il porcino in docs/index.html e docs/bosco.html.
+- Gli altri fattori (suolo, notti, aria, vento, secco, esaurita, attesa) spostano meno di ±0,003: restano come sono.
+- Il **modello statistico** è migliore dell'indice sui ritrovamenti di paesi mai visti (+0,05/+0,09), ma sui 71 casi della
+  Lucchesia con pioggia SIR no (0,689 contro 0,739; media dei due 0,744). Pesa soprattutto l'umidità del suolo 7-28 cm
+  (valore assoluto ERA5, che nella mappa viene da un altro modello) e la temperatura del suolo con un ottimo verso 14 °C.
+  Per ora non sostituisce l'indice: i casi propri dall'app diranno se aggiungerlo come secondo parere.
+
 ## 6 ottobre 2026 (sera) — ritrovamenti pubblici GBIF / iNaturalist, Italia
 
 7.531 osservazioni di porcini con data e GPS in Europa centro-meridionale (data/gbif/porcini.json); meteo ERA5-Land per cella
