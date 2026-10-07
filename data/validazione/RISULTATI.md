@@ -14,7 +14,20 @@ Meteo completo per Italia, Svizzera, Austria, Slovenia, Croazia e quasi tutta la
 | modello statistico addestrato senza quel paese | — | 0,621 | 0,645 | 0,663 | 0,622 |
 
 - **Togliere il calo termico migliora in ogni paese** (tutti: +0,006…+0,014 al 90%, meglio nel 100% dei ricampionamenti) e anche
-  in Lucchesia con pioggia SIR (0,746 invece di 0,739). Proposta: `calo:0` per il porcino in docs/index.html e docs/bosco.html.
+  in Lucchesia con pioggia SIR (0,746 invece di 0,739). **Ma togliendolo del tutto l'indice arriva a 100 molto più spesso**
+  (15% dei giorni invece del 3,4%; 41% dei casi della Lucchesia invece del 14%): più pareggi in cima, meno distinzione tra
+  giorni buoni e ottimi. **Con peso ridotto il guadagno resta senza questo difetto**:
+
+  | peso del calo | AUC ritrovamenti | confronti decisi vinti | giorni a 100 | AUC Lucchesia (SIR) |
+  |---|---|---|---|---|
+  | 0,5 (attuale) | 0,577 | 58,3% | 3,4% | 0,739 |
+  | 0,25 | 0,583 | 59,0% | 3,5% | 0,752 |
+  | **0,15** | **0,585** | **59,2%** | **3,6%** | **0,754** |
+  | 0 | 0,587 | 59,9% | 15,0% | 0,746 |
+
+  Proposta: `calo:.15` per il porcino in docs/index.html e docs/bosco.html.
+- Lettiera di foglie (prova del 7 ottobre): far trattenere alle foglie 1-5 mm di pioggia al giorno o rendere la temperatura del
+  suolo più lenta e più calda dell'aria cambia l'AUC di ±0,005, dentro l'errore. Serve il tipo di bosco del ritrovamento (app).
 - Gli altri fattori (suolo, notti, aria, vento, secco, esaurita, attesa) spostano meno di ±0,003: restano come sono.
 - Il **modello statistico** è migliore dell'indice sui ritrovamenti di paesi mai visti (+0,05/+0,09), ma sui 71 casi della
   Lucchesia con pioggia SIR no (0,689 contro 0,739; media dei due 0,744). Pesa soprattutto l'umidità del suolo 7-28 cm
