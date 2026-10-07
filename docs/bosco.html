@@ -91,6 +91,7 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
         <input type="range" id="giorno" min="0" max="0" value="0" aria-label="Giorno" disabled>
         <span class="val" id="giornolbl">–</span>
       </div>
+      <p class="sub" id="giornonota" style="margin:6px 0 0"></p>
     </div>
 
     <div>
@@ -139,7 +140,7 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 /* regole dell'indice: copiate dalla mappa principale (index.html) */
 const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
-   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.5,
+   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
   {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
    suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
@@ -255,7 +256,7 @@ async function carica(){
   });
   date=[...celleMap.values()][0].days.map(g=>g.d);
   const gi=$("giorno"); gi.min=Math.min(26,date.length-5); gi.max=date.length-1;
-  st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-4;
+  st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-8;
   gi.value=st.g; gi.disabled=false;
   contorni=L.layerGroup(IDX.tessere.map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
     {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
@@ -418,6 +419,13 @@ function legenda(){
 }
 const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
   return iso===oggiISO? "Oggi" : d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"}); };
+// giorni passati: meteo misurato; 1-3 giorni avanti: previsione; dal 4° al 7°: tendenza (solo previsioni meteo)
+function etichettaGiorno(iso){
+  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5);
+  $("giornolbl").textContent=fmtDay(iso,true)+(k>3?" (tendenza)":k>0?" (previsione)":"");
+  $("giornonota").textContent = k<=0 ? "" : k<=3 ? `Previsione a ${k} giorn${k===1?"o":"i"}: pioggia già caduta più previsioni meteo.`
+    : `Tendenza a ${k} giorni: dal 4° giorno l'indice usa le previsioni meteo, meno affidabili.`;
+}
 
 // ricalcola le tessere visibili (e il testo dello stato) dopo un cambio di giorno, specie o scenario
 let tmr=null;
@@ -431,7 +439,7 @@ function aggiornaStato(){
   if (!IDX) return;
   legenda();
   const c=map.getCenter(), iso=date[st.g], sp=SPECIE.find(s=>s.id===st.sp);
-  $("giornolbl").textContent=fmtDay(iso,true);
+  etichettaGiorno(iso);
   const key=Math.round((c.lat-GRIDW.lat0)/GRIDW.dlat)+","+Math.round((c.lng-GRIDW.lon0)/GRIDW.dlon);
   const o=infoCella(key);
   if (!o){ $("stato").textContent="Centro della mappa fuori dall'area coperta."; return; }
@@ -527,7 +535,7 @@ $("viste").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.v=
 $("modo").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.m=b.dataset.m;
   [...$("modo").children].forEach(x=>x.setAttribute("aria-pressed",x===b));
   $("scenario").style.display=st.m==="scenario"?"flex":"none"; ricalcola(); };
-$("giorno").oninput=e=>{ st.g=+e.target.value; $("giornolbl").textContent=fmtDay(date[st.g],true); ricalcola(); };
+$("giorno").oninput=e=>{ st.g=+e.target.value; etichettaGiorno(date[st.g]); ricalcola(); };
 ["sD","sT","sV"].forEach(id=>$(id).oninput=ricalcola);
 $("opac").oninput=e=>{ $("opaclbl").textContent=e.target.value+"%"; for (const t of tessere.values()) if (t.overlay) t.overlay.setOpacity(e.target.value/100); };
 

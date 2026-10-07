@@ -49,7 +49,7 @@ UA = "mappa-funghi/1.0 (+https://github.com/alessiobandiera/mappa-funghi)"
 
 # stessa griglia della mappa
 GRID = dict(lat0=43.72, lat1=44.36, dlat=0.05, lon0=10.05, lon1=10.95, dlon=0.07)
-PAST, FUT = 60, 4          # 60 giorni: basta anche per rivedere le uscite passate
+PAST, FUT = 60, 8          # 60 giorni passati (anche per rivedere le uscite); oggi e 7 giorni di previsione
 BBOX = (43.55, 9.90, 44.50, 11.10)            # zona delle stazioni (sud, ovest, nord, est)
 RAGGIO_PIOGGIA_KM, RAGGIO_TEMP_KM = 12.0, 15.0
 GIORNI_SIR = 66

@@ -48,9 +48,19 @@ h1{font:700 1.6rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
   padding:6px 12px;font:500 .9rem var(--body);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .chip:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.dayrow{display:flex;align-items:center;gap:10px}
-.dayrow input{flex:1;accent-color:var(--accent)}
-.daylbl{font:500 .95rem var(--mono);min-width:9.5em;text-align:right}
+.dayrow{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.dayrow input{width:100%;margin:0;accent-color:var(--accent)}
+.daylbl{font:500 .95rem var(--mono);order:-1}
+/* fasce dei giorni sotto la barra: misurati, previsione 1-3 giorni, tendenza 4-7 giorni */
+.dayzone{display:flex;gap:2px;margin-top:6px;font-size:.72rem;color:var(--muted);line-height:1.2}
+.dayzone div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.dayzone i{display:block;height:5px;border-radius:3px;background:var(--accent)}
+.dayzone .z1 i{background:color-mix(in srgb,var(--accent) 55%,transparent)}
+.dayzone .z2 i{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 45%,transparent) 0 4px,transparent 4px 7px);
+  outline:1px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-1px}
+.dayzone span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.daynote{margin:6px 0 0;font-size:.8rem;color:var(--muted)}
+.daynote.tend{color:var(--fg);background:var(--chip);padding:6px 8px;border-radius:6px}
 .status{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;flex-basis:100%}
 .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
@@ -77,6 +87,7 @@ button.btn{border:1px solid var(--line);background:transparent;color:var(--fg);b
 .spark{grid-column:1/-1;display:flex;gap:3px;align-items:flex-end;height:30px;margin-top:4px}
 .spark div{flex:1;border-radius:2px 2px 0 0;min-height:2px;position:relative}
 .spark div.fc{opacity:.5}
+.spark div.fc2{opacity:.28;outline:1px dashed currentColor;outline-offset:-1px}
 .spark div.cur{outline:2px solid var(--fg);outline-offset:1px}
 select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
 .note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
@@ -118,6 +129,8 @@ select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var
         <input type="range" id="day" min="0" max="9" value="6" aria-label="Giorno" disabled>
         <span class="daylbl" id="daylbl">–</span>
       </div>
+      <div class="dayzone" id="dayzone" aria-hidden="true"></div>
+      <p class="daynote" id="daynote"></p>
     </div>
 
     <div class="status" id="statusbox">
@@ -161,8 +174,9 @@ select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var
 "use strict";
 /* ---------------- configurazione ---------------- */
 const GRID = {lat0:43.72, lat1:44.36, dlat:0.05, lon0:10.05, lon1:10.95, dlon:0.07};
-const PAST = 33, FUT = 4, SPAN = 10;           // 33 giorni passati + oggi e 3 di previsione; 10 mostrati
-const CACHE_KEY = "funghi-lucca-v3", CACHE_H = 3;
+const PAST = 33, FUT = 8, SPAN = 14;           // 33 giorni passati + oggi e 7 di previsione; 14 mostrati (6 passati, oggi, 7 futuri)
+const AFFIDABILI = 3;                          // fino a 3 giorni avanti: previsione; dal 4° al 7°: tendenza (solo modello meteo)
+const CACHE_KEY = "funghi-lucca-v4", CACHE_H = 3;
 const DAILY = ["precipitation_sum","temperature_2m_min","temperature_2m_max","temperature_2m_mean",
   "relative_humidity_2m_mean","wind_direction_10m_dominant","wind_speed_10m_max"];
 // poche variabili e pochi giorni: Open-Meteo pesa ogni punto in base a variabili e giorni richiesti
@@ -174,7 +188,7 @@ const BOSCHI = {
 };
 const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
-   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.5,
+   suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
   {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
    suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
@@ -344,7 +358,7 @@ async function loadData(force){
     let res;
     try{ res=await fetchChunk(part); }
     catch(e){
-      // limite giornaliero raggiunto: si usa l'ultimo meteo salvato, che contiene anche 3 giorni di previsione
+      // limite giornaliero raggiunto: si usa l'ultimo meteo salvato, che contiene anche 7 giorni di previsione
       if (e.giornaliero && salvato && Date.now()-salvato.t < 4*864e5){
         setStatus(`${e.message} Uso il meteo salvato ${ora(salvato.t)}.`, 1);
         return salvato.cells;
@@ -457,6 +471,24 @@ const band=i=> i>=70?4: i>=50?3: i>=30?2: i>=10?1:0;
 const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
   const s=d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"});
   return iso===oggiISO? "Oggi" : s; };
+// a che tipo di dato appartiene un giorno: 0 passato (misurato), 1 oggi, 2 previsione (1-3 giorni), 3 tendenza (4-7 giorni)
+function fase(iso){
+  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5);
+  return {k, n: k<0?0 : k===0?1 : k<=AFFIDABILI?2 : 3};
+}
+function disegnaFasce(fz){
+  const z=document.getElementById("dayzone"), nota=document.getElementById("daynote"); if (!z) return;
+  const n=[0,0,0,0]; dayDates.forEach(d=>n[fase(d).n]++);
+  const passati=n[0]+n[1];
+  z.innerHTML=[[passati,"z0","misurati"],[n[2],"z1","previsione"],[n[3],"z2","tendenza"]].filter(x=>x[0])
+    .map(([q,c,t])=>`<div class="${c}" style="flex:${q}"><i></i><span>${t}</span></div>`).join("");
+  const testi=[
+    "Giorno passato: pioggia e temperature misurate dalle stazioni della Regione.",
+    "Oggi: pioggia misurata fino a ieri, il resto dalla previsione di oggi.",
+    `Previsione a ${fz.k} giorn${fz.k===1?"o":"i"}: pioggia già caduta (misurata) più le previsioni meteo dei prossimi giorni. Abbastanza affidabile: la buttata dipende soprattutto dalla pioggia di 1-3 settimane prima, già caduta.`,
+    `Tendenza a ${fz.k} giorni: dal 4° giorno in avanti l'indice usa le previsioni meteo, meno affidabili. Pesa ancora la pioggia già caduta, ma temperature e piogge future possono cambiare.`];
+  nota.textContent=testi[fz.n]; nota.classList.toggle("tend", fz.n===3);
+}
 const spName=id=>id==="best"?"Migliore":SPECIE.find(s=>s.id===id).nome;
 
 function setStatus(t,p){ document.getElementById("status").textContent=t; if (p!=null) document.getElementById("prog").style.width=(100*p)+"%"; }
@@ -590,11 +622,11 @@ function renderDetail(){
     if (s.ev) why.push(`${s.ev.mm} mm ${fmtDay(s.ev.data,true).toLowerCase()==="oggi"?"oggi":"il "+fmtDay(s.ev.data,true).toLowerCase()}, ${s.ev.att} giorni prima`);
     else why.push("nessuna pioggia utile nella finestra di attesa");
     if (s.lim) why.push(`limita: ${FATTORI[s.lim]}`);
-    const spark=c.scores[sp.id].map((x,k)=>`<div class="${dayDates[k]>oggiISO?"fc":""}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
+    const spark=c.scores[sp.id].map((x,k)=>`<div class="${["","","fc","fc2"][fase(dayDates[k]).n]}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
     html+=`<div class="sp"><span class="n">${sp.nome}</span><span class="v">${s.i} <span class="meta">${LAB[band(s.i)]}</span></span>
       <span class="why">${why.join(" · ")}</span><div class="spark" aria-hidden="true">${spark}</div></div>`;
   });
-  html+=`<p class="meta">Barre: ultimi 7 giorni e 3 di previsione (più chiari). <a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
+  html+=`<p class="meta">Barre: ultimi 7 giorni, poi 3 di previsione (più chiare) e 4 di tendenza (tratteggiate: solo previsioni meteo). <a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
   const oggiOSel = dayDates[state.day] && dayDates[state.day]<=oggiISO ? dayDates[state.day] : oggiISO;
   const spDef = state.sp==="best" ? "porcino" : state.sp;
   html+=`<form class="diario-form" id="diarioForm">
@@ -687,7 +719,9 @@ document.getElementById("diarioImporta").onchange=e=>{
 function render(){
   renderModo();
   if (!dayDates.length || !cells.length) return;   // niente meteo: niente da colorare
-  document.getElementById("daylbl").textContent=fmtDay(dayDates[state.day]) + (dayDates[state.day]>oggiISO?" (prev.)":"");
+  const fz=fase(dayDates[state.day]);
+  document.getElementById("daylbl").textContent=fmtDay(dayDates[state.day]) + ["",""," (previsione)"," (tendenza)"][fz.n];
+  disegnaFasce(fz);
   if (vistaBoschi()) renderForest(); else renderGrid();
   renderTop(); renderDetail();
 }
