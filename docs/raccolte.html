@@ -116,6 +116,10 @@ textarea{min-height:64px;resize:vertical}
 .foto img{width:72px;height:72px;object-fit:cover;border-radius:10px}
 .foto label{width:72px;height:72px;border-radius:10px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--muted)}
 .avviso{font-size:13px;color:var(--warn)}
+.confronto{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.confronto label,.confronto div{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.confronto input{font:600 20px var(--display);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
+.confronto b{font:700 24px var(--display);color:var(--fg);padding:6px 0}
 .toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--fg);color:var(--bg);
   padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
@@ -313,6 +317,12 @@ async function apri(id) {
     <div class="campo"><span>Foto</span><div class="foto" id="foto"></div></div>` : `
     <div class="campo"><span>Com'è andata</span>${chips("esito", ESITO, v.esito)}</div>
     <div class="campo"><span>Bosco principale</span>${chips("bosco", BOSCO, v.bosco)}</div>
+    <div class="campo"><span>Confronto degli indici per oggi, qui</span>
+      <div class="confronto">
+        <label>Fungaiolo diceva<input type="number" id="fung" min="0" max="100" inputmode="numeric" placeholder="es. 82" value="${v.fungaiolo ?? ""}"></label>
+        <div>La nostra mappa<b id="mappaval">${v.indice_mappa ?? "…"}</b></div>
+      </div>
+      <p class="nota" style="text-align:left;margin:0" id="mappanota">${v.indice_mappa != null ? "Porcino, cella della mappa più vicina al punto di partenza." : ""}</p></div>
     ${!v.fine ? `<p class="avviso">Giro ancora aperto.</p>` : ""}`}
     <div class="campo"><label for="nota">Nota</label><textarea id="nota" placeholder="${fungo ? "es. sotto il faggio grande, versante nord" : "es. terreno secco, tanta gente"}">${esc(v.nota)}</textarea></div>
     <div class="campo"><label for="quando">Data e ora</label><input type="datetime-local" id="quando" value="${locale(v.t)}"></div>
@@ -331,6 +341,13 @@ async function apri(id) {
     const n = Math.max(1, (v.n || 1) + +b.dataset.n); $("#n").value = n; $("#n").textContent = n; agg({ n });
   }));
   $("#nota").addEventListener("change", e => agg({ nota: e.target.value }));
+  const fu = $("#fung"); if (fu) fu.addEventListener("change", e => { const x = e.target.value === "" ? null : Math.max(0, Math.min(100, Math.round(+e.target.value))); agg({ fungaiolo: x }); });
+  if (!fungo && v.indice_mappa == null) indicePerGiro(v).then(x => {
+    const el = $("#mappaval"), nt = $("#mappanota"); if (!el) return;
+    el.textContent = x == null ? "—" : x;
+    nt.textContent = x == null ? (v.lat == null ? "Serve la posizione del giro." : "Non disponibile ora (senza rete o giorno fuori dalla mappa): si ricava dopo dall'archivio.")
+      : "Porcino, cella della mappa più vicina al punto di partenza.";
+  });
   $("#quando").addEventListener("change", e => { if (e.target.value) agg({ t: new Date(e.target.value).toISOString() }); });
   $("#elimina").addEventListener("click", async () => {
     if (!confirm(fungo ? "Eliminare questo fungo?" : "Eliminare questo giro? I funghi restano.")) return;
@@ -380,7 +397,8 @@ document.querySelectorAll("nav button").forEach(b => b.addEventListener("click",
 const descr = v => v.tipo === "giro"
   ? `Giro${v.fine ? "" : " in corso"}${v.esito ? " · " + (ESITO.find(e => e[0] === v.esito) || [, v.esito])[1] : ""}`
   : `${v.n > 1 ? v.n + " × " : ""}${v.specie || "Porcino"}${v.stato ? " · " + v.stato.toLowerCase() : ""}`;
-const sotto = v => [v.bosco, v.quota != null ? v.quota + " m" : null, v.lat == null ? "senza posizione" : v.manuale ? "posizione a mano" : v.prec > 30 ? "±" + v.prec + " m" : null]
+const sotto = v => [v.tipo === "giro" && (v.fungaiolo != null || v.indice_mappa != null)
+    ? `Fungaiolo ${v.fungaiolo ?? "?"} · mappa ${v.indice_mappa ?? "?"}` : null, v.bosco, v.quota != null ? v.quota + " m" : null, v.lat == null ? "senza posizione" : v.manuale ? "posizione a mano" : v.prec > 30 ? "±" + v.prec + " m" : null]
   .filter(Boolean).join(" · ");
 function riga(v) {
   return `<button type="button" class="voce${v.tipo === "giro" ? " g" : ""}" data-id="${v.id}"><span class="ora">${ora(v.t)}</span>
@@ -509,6 +527,33 @@ function centra(avvisa = true) {
 }
 $("#centra").onclick = () => centra(true);
 
+// indice della nostra mappa (porcino) nella cella più vicina, per il giorno del giro: lo legge dalla pagina della mappa
+// (la stessa delle Previsioni). Se non c'è rete o il giorno non è più tra quelli mostrati, resta vuoto: si ricava dopo
+// dall'archivio dei dati (meteo.json è salvato ogni giorno nel repository).
+async function indicePerGiro(v) {
+  if (v.lat == null || !navigator.onLine) return null;
+  const giorno = locale(v.t).slice(0, 10);
+  if (!frame) apriPrevisioni();
+  for (let n = 0; n < 80; n++) {                      // fino a 20 secondi per il caricamento della mappa
+    try {
+      const w = frame.contentWindow;
+      const pronto = w.eval("typeof cells !== 'undefined' && cells.length && dayDates.length && cells[0].scores ? 1 : 0");
+      if (pronto) {
+        const cells = w.eval("cells"), dd = w.eval("dayDates"), k = dd.indexOf(giorno);
+        if (k < 0) return null;
+        let c = null, bd = 1e9;
+        for (const x of cells) { const d = (x.lat - v.lat) ** 2 + ((x.lon - v.lon) * Math.cos(v.lat * Math.PI / 180)) ** 2; if (d < bd) { bd = d; c = x; } }
+        if (!c || !c.scores || !c.scores.porcino || Math.sqrt(bd) * 111 > 6) return null;   // fuori dall'area della mappa
+        const x = c.scores.porcino[k].i;
+        await aggiorna(v.id, y => { y.indice_mappa = x; y.indice_mappa_cella = `${c.lat},${c.lon}`; y.indice_mappa_ora = new Date().toISOString(); });
+        return x;
+      }
+    } catch {}
+    await new Promise(r => setTimeout(r, 250));
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------- esporta / importa
 const csvCampo = x => { const s = String(x ?? ""); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
 function esporta(tipo) {
@@ -519,9 +564,9 @@ function esporta(tipo) {
     testo = JSON.stringify({ formato: "raccolte-funghi 1", esportato: new Date().toISOString(), voci: pulite }, null, 1);
   } else if (tipo === "csv") {
     nome = `raccolte-${oggi}.csv`; mime = "text/csv";
-    const col = ["id", "tipo", "data", "ora", "fine", "lat", "lon", "precisione_m", "quota_m", "specie", "quanti", "stato", "bosco", "esito", "giro", "nota", "posizione_a_mano"];
+    const col = ["id", "tipo", "data", "ora", "fine", "lat", "lon", "precisione_m", "quota_m", "specie", "quanti", "stato", "bosco", "esito", "giro", "nota", "posizione_a_mano", "fungaiolo", "indice_mappa"];
     testo = "﻿" + col.join(";") + "\n" + pulite.slice().reverse().map(v => [v.id, v.tipo, locale(v.t).slice(0, 10), locale(v.t).slice(11), v.fine ? locale(v.fine).slice(11) : "",
-      v.lat, v.lon, v.prec, v.quota, v.specie, v.tipo === "fungo" ? v.n : "", v.stato, v.bosco, v.esito, v.giro, v.nota, v.manuale ? "si" : ""].map(csvCampo).join(";")).join("\n");
+      v.lat, v.lon, v.prec, v.quota, v.specie, v.tipo === "fungo" ? v.n : "", v.stato, v.bosco, v.esito, v.giro, v.nota, v.manuale ? "si" : "", v.fungaiolo, v.indice_mappa].map(csvCampo).join(";")).join("\n");
   } else {
     nome = `raccolte-${oggi}.gpx`; mime = "application/gpx+xml";
     testo = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Raccolte funghi" xmlns="http://www.topografix.com/GPX/1/1">\n` +
