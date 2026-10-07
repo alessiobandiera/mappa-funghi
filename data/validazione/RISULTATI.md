@@ -2,6 +2,24 @@
 
 Metrica: AUC (0,5 = come tirare a caso, 1 = separa perfettamente i giorni buoni dai cattivi).
 
+## 7 ottobre 2026 — confronto con Fungaiolo e «buttata esaurita» graduale
+
+Fungaiolo (app vera, 7/10) dà 82-85 a Monti di Villa, Gallicano 1065 m e Camaiore 932 m; la nostra mappa 0. Pioggia vera:
+10-11 settembre ~50 mm, 17-20 settembre 12-31 mm, poi 17 giorni di secco. Fungaiolo conta la pioggia stimata dal modello
+(145 mm in 5 settimane a Monti di Villa contro 57 mm dei pluviometri SIR) e non considera il secco successivo. Tabella del Consorzio
+di Borgotaro del 6/10: «2/5 nascita scarsa» ovunque.
+
+Dopo troppo secco la nostra mappa azzera la buttata. Prova: ridurla gradualmente fino a un minimo invece di azzerarla.
+
+| | ritrovamenti europei | Italia | Lucchesia (SIR) | indice oggi: Monti di Villa / Gallicano / Camaiore / Pizzorne / Castiglione |
+|---|---|---|---|---|
+| azzera (attuale) | 0,586 | 0,581 | 0,754 | 0 / 0 / 0 / 0 / 0 |
+| **minimo 0,2, in 5 giorni** | **0,589** | **0,582** | **0,763** | 7 / 14 / 43 / 20 / 49 |
+| minimo 0,2, in 10 giorni | 0,588 | 0,582 | 0,759 | 9 / 20 / 68 / 31 / 49 |
+
+Il minimo conta poco; la velocità sì per il risultato di oggi (in 10 giorni una pioggerella dopo il secco riporta l'indice a 70-76).
+Proposta: `esauritaMin:.2, esauritaGiorni:5` nella mappa.
+
 ## 7 ottobre 2026 — ritrovamenti GBIF in Europa (4.100, stesso metodo)
 
 Meteo completo per Italia, Svizzera, Austria, Slovenia, Croazia e quasi tutta la Francia (Spagna e altri in scaricamento).
