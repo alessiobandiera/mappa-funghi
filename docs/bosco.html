@@ -59,6 +59,13 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 .note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
 .note a,.sub a{color:var(--accent)}
 .pop{font:13px/1.4 var(--body);min-width:220px}
+.acc-pop h3{font-size:.95rem;margin-bottom:4px}
+.acc-pop div{margin:2px 0}
+.leg-perc{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:.8rem;color:var(--muted)}
+.leg-perc span{display:inline-flex;align-items:center;gap:5px}
+.leg-perc i{display:inline-block;width:18px;height:3px;border-radius:2px}
+.leg-perc i.tr{background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 8px)}
+.leg-perc b.acc{display:inline-block;width:12px;height:12px;border-radius:50%;background:#78a048;border:2px solid #1f251c}
 .nav-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.9rem;padding:6px 0}
 .nav-qui a{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);font-weight:600;text-decoration:none}
 
@@ -109,6 +116,22 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
     </div>
 
     <div class="legend" id="legenda"></div>
+
+    <div>
+      <p class="label">Sentieri e accessi</p>
+      <div class="chips" id="percorsi" role="group" aria-label="Sentieri e accessi">
+        <button class="chip" data-p="si" aria-pressed="true">Mostra</button>
+        <button class="chip" data-p="no" aria-pressed="false">Nascondi</button>
+      </div>
+      <div class="leg-perc">
+        <span><i style="background:#c62828"></i>sentiero segnato (CAI)</span>
+        <span><i style="background:#6d4c41"></i>forestale in auto</span>
+        <span><i class="tr" style="--c:#8d6e63"></i>forestale chiusa / carrareccia</span>
+        <span><i class="tr" style="--c:#555"></i>sentiero</span>
+        <span><b class="acc"></b>accesso al bosco</span>
+      </div>
+      <p class="sub" style="margin:6px 0 0">Accessi: dove un sentiero o una forestale entra nel bosco, entro 1 km da una strada o da un parcheggio. Il colore è quello della zona migliore raggiungibile a piedi entro 400 m. Si vedono da vicino (zoom 13).</p>
+    </div>
 
     <div>
       <p class="label">Condizioni usate</p>
@@ -268,7 +291,7 @@ async function carica(){
     {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
   const q=new Date(met.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
   $("status").textContent=`Meteo aggiornato ${q}. ${IDX.tessere.length} tessere di bosco a ${IDX.res_m} m.`;
-  aggiornaStato(); visibili();
+  aggiornaStato(); visibili(); if (typeof mostraSentieri==="function") mostraSentieri();
 }
 
 /* ---------------- meteo: stato e indice per cella, calcolati una volta per giorno e specie ---------------- */
@@ -318,7 +341,7 @@ async function caricaTessera(meta){
       t.B.quota[i]=(b[o]*256+b[o+1])/2; t.B.bosco[i]=b[o+2];
       t.C.set[i]=c[o]/128; t.C.ott[i]=c[o+1]/128; t.C.nov[i]=c[o+2]/128; }
     t.canvas=document.createElement("canvas"); t.canvas.width=meta.colonne; t.canvas.height=meta.righe;
-    t.pronta=true; calcolaTessera(t); disegnaTessera(t);
+    t.pronta=true; calcolaTessera(t); disegnaTessera(t); coloraAccessi(meta.id);
   }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id); }
 }
 function scenario(){ return st.m==="scenario" ? {D:+$("sD").value/100, T:+$("sT").value/100, V:+$("sV").value/100} : null; }
@@ -437,7 +460,7 @@ function etichettaGiorno(iso){
 let tmr=null;
 function ricalcola(){
   clearTimeout(tmr);
-  tmr=setTimeout(()=>{ aggiornaStato(); for (const t of tessere.values()){ calcolaTessera(t); disegnaTessera(t); } },60);
+  tmr=setTimeout(()=>{ aggiornaStato(); for (const t of tessere.values()){ calcolaTessera(t); disegnaTessera(t); coloraAccessi(t.meta.id); } },60);
 }
 function ridisegna(){ legenda(); for (const t of tessere.values()) disegnaTessera(t); }
 
@@ -537,6 +560,80 @@ map.on("click",e=>{
     </table><div class="why">${motivi.join("<br>")}</div>${portamiQui(lat,lng)}</div>`).openOn(map);
 });
 
+/* ---------------- sentieri e accessi (docs/terreno/s/<id>.json, da OpenStreetMap) ---------------- */
+const ZOOM_PERC = 13, RAGGIO_ZONA = 400;
+const SENT = new Map();                      // id tessera -> {stato, d, layer, acc:[{a, mk}]}
+map.createPane("percorsi"); map.getPane("percorsi").style.zIndex = 450;     // sopra le tessere colorate, sotto i popup
+const rendPerc = L.canvas({padding:.3, pane:"percorsi"});
+let mostraPerc = true, lineaZona = null;
+const STILE_PERC = {1:{color:"#6d4c41",weight:3}, 2:{color:"#8d6e63",weight:2.5,dashArray:"6 4"},
+                    3:{color:"#c62828",weight:2.6}, 4:{color:"#555",weight:1.6,dashArray:"3 4"}};
+const NOME_PERC = {1:"forestale percorribile in auto", 2:"forestale o carrareccia", 3:"sentiero segnato", 4:"sentiero"};
+async function caricaSentieri(meta){
+  const o={stato:"carico"}; SENT.set(meta.id,o);
+  try{
+    const r=await fetch(`terreno/s/${meta.id}.json`); if (!r.ok) throw new Error(r.status);
+    o.d=await r.json();
+  }catch(e){ o.stato="manca"; return; }
+  o.layer=L.layerGroup();
+  for (const [tipo,ref,xy] of o.d.linee){
+    const pts=[]; for (let i=0;i<xy.length;i+=2) pts.push([xy[i],xy[i+1]]);
+    L.polyline(pts,{...STILE_PERC[tipo], renderer:rendPerc, interactive:false, opacity:.9}).addTo(o.layer);
+  }
+  o.acc=o.d.accessi.map(a=>{
+    const mk=L.circleMarker([a[0],a[1]],{renderer:rendPerc, radius:7, color:"#1f251c", weight:2, fillColor:"#9aa093", fillOpacity:1, bubblingMouseEvents:false});
+    mk.on("click",()=>apriAccesso(meta.id,a,mk)); mk.addTo(o.layer); return {a,mk};
+  });
+  o.stato="ok"; coloraAccessi(meta.id); mostraSentieri();
+}
+// la zona migliore raggiungibile entro 400 m (indice «Possibilità oggi» della tessera, se è già calcolata)
+function migliorVicino(id,a){
+  const t=tessere.get(id); if (!t||!t.pronta||!t.calc) return null;
+  const m=t.meta, r0=Math.floor((m.nord-a[0])/IDX.dlat), c0=Math.floor((a[1]-m.ovest)/IDX.dlon), R=Math.round(RAGGIO_ZONA/IDX.res_m);
+  let best=null;
+  for (let r=Math.max(0,r0-R); r<=Math.min(m.righe-1,r0+R); r++) for (let c=Math.max(0,c0-R); c<=Math.min(m.colonne-1,c0+R); c++){
+    if ((r-r0)**2+(c-c0)**2>R*R) continue;
+    const p=r*m.colonne+c; if (!t.B.bosco[p] || !t.calc.base[p]) continue;
+    const v=indiceQui(t,p); if (!best||v>best.v) best={v, r, c};
+  }
+  if (!best) return null;
+  const lat=m.nord-(best.r+.5)*IDX.dlat, lon=m.ovest+(best.c+.5)*IDX.dlon;
+  const dy=(lat-a[0])*111320, dx=(lon-a[1])*111320*Math.cos(a[0]*Math.PI/180);
+  const dir=["nord","nord-est","est","sud-est","sud","sud-ovest","ovest","nord-ovest"][Math.round(((Math.atan2(dx,dy)*180/Math.PI)+360)%360/45)%8];
+  return {v:Math.round(best.v), lat, lon, dist:Math.round(Math.hypot(dx,dy)/10)*10, dir};
+}
+function coloraAccessi(id){
+  const o=SENT.get(id); if (!o||o.stato!=="ok") return;
+  for (const x of o.acc){ const b=migliorVicino(id,x.a); x.mk.setStyle({fillColor: b? `rgb(${coloreIndice(b.v)})` : "#9aa093"}); }
+}
+function apriAccesso(id,a,mk){
+  const b=migliorVicino(id,a);
+  const auto = a[4]<=30 ? "sulla strada" : `strada a ${a[4]} m`;
+  const park = a[7]<=1500 ? ` · parcheggio a ${a[7]} m` : "";
+  const pend = a[5]<10 ? "comodo" : a[5]<20 ? "medio" : "ripido";
+  if (lineaZona){ map.removeLayer(lineaZona); lineaZona=null; }
+  if (b){ lineaZona=L.layerGroup([L.polyline([[a[0],a[1]],[b.lat,b.lon]],{color:"#1f251c",weight:2,dashArray:"5 5",interactive:false}),
+      L.circleMarker([b.lat,b.lon],{radius:6,color:"#1f251c",weight:2,fillColor:"#fff",fillOpacity:1,interactive:false})]).addTo(map); }
+  L.popup({maxWidth:280, autoPanPaddingTopLeft:[50,10], autoPanPaddingBottomRight:[10,10]}).setLatLng([a[0],a[1]]).setContent(`<div class="pop acc-pop">
+      <h3>Accesso · ${NOME_PERC[a[2]]}${a[3]?" "+a[3]:""}</h3>
+      <div>Auto: ${auto}${park}</div>
+      <div>Primo tratto: ${Math.round(a[5])}% di pendenza (${pend}) · ${a[6]} m</div>
+      <div>Zona migliore entro ${RAGGIO_ZONA} m: ${b?`<b>${b.v}</b> a ${b.dist} m verso ${b.dir}`:"–"}</div>
+      ${portamiQui(a[0],a[1])}</div>`).openOn(map);
+}
+map.on("popupclose",()=>{ if (lineaZona){ map.removeLayer(lineaZona); lineaZona=null; } });
+function mostraSentieri(){
+  if (!IDX) return;
+  const z=map.getZoom(), b=map.getBounds().pad(.2);
+  const vis=new Set(IDX.tessere.filter(t=>t.nord>=b.getSouth()&&t.sud<=b.getNorth()&&t.est>=b.getWest()&&t.ovest<=b.getEast()).map(t=>t.id));
+  for (const m of IDX.tessere){
+    const o=SENT.get(m.id), vuoi=mostraPerc && z>=ZOOM_PERC && vis.has(m.id);
+    if (vuoi && !o) caricaSentieri(m);
+    else if (o && o.layer){ if (vuoi && !map.hasLayer(o.layer)) o.layer.addTo(map); if (!vuoi && map.hasLayer(o.layer)) map.removeLayer(o.layer); }
+  }
+}
+map.on("moveend", mostraSentieri);
+
 /* ---------------- controlli ---------------- */
 $("specie").innerHTML=SPECIE.map(s=>`<button class="chip" data-s="${s.id}" aria-pressed="${s.id===st.sp}">${s.nome}</button>`).join("");
 $("specie").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.sp=b.dataset.s;
@@ -548,6 +645,8 @@ $("modo").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.m=b
   $("scenario").style.display=st.m==="scenario"?"flex":"none"; ricalcola(); };
 $("giorno").oninput=e=>{ st.g=+e.target.value; etichettaGiorno(date[st.g]); ricalcola(); };
 ["sD","sT","sV"].forEach(id=>$(id).oninput=ricalcola);
+$("percorsi").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; mostraPerc=b.dataset.p==="si";
+  [...$("percorsi").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); mostraSentieri(); };
 $("opac").oninput=e=>{ $("opaclbl").textContent=e.target.value+"%"; for (const t of tessere.values()) if (t.overlay) t.overlay.setOpacity(e.target.value/100); };
 
 carica().catch(err=>{ $("status").textContent="Errore nel caricamento: "+err.message; console.error(err); });
