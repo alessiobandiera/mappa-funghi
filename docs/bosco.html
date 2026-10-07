@@ -141,6 +141,7 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
    suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
+   esauritaMin:.2, esauritaGiorni:5,   // buttata esaurita dal secco: cala in 5 giorni fino al 20% invece di azzerarsi (verificato 7/10/2026)
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
   {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
    suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
@@ -171,12 +172,14 @@ function valuta(D, idx, sp, quota, bosco){
     for (let k=Math.max(0,j-2); k<=j; k++) cum+=D[k].p;
     if (cum<sp.pmin*.5) continue;
     // se dopo questa pioggia c'è stato un periodo secco più lungo di quanto il terreno regge, la sua spinta è esaurita:
-    // una pioggia successiva non la "riaccende", conta solo come pioggia nuova, con i suoi tempi di attesa
+    // una pioggia successiva non la "riaccende", conta solo come pioggia nuova, con i suoi tempi di attesa.
+    // Con esauritaMin (porcino) la spinta non si azzera: cala in esauritaGiorni giorni fino a quella frazione
+    // (nei boschi più freschi qualche fungo esce ancora; verificato su ritrovamenti GBIF e casi della Lucchesia).
     const tolle=sp.secco[1]+Math.max(0,Math.min(8,(cum-sp.pmin)/20));
-    let st=0, mx=0;
+    let st=0, mx=0, esaur=1;
     for (let k=j+1; k<=idx; k++){ if (D[k].p<3 && D[k].ur<88){ st++; if (st>mx) mx=st; } else st=0; }
-    if (mx>tolle) continue;
-    const v=trap(att,...sp.attesa)*(.4+.6*Math.min(1,cum/(sp.pmin*1.5)));
+    if (mx>tolle){ if (!sp.esauritaMin) continue; esaur=Math.max(sp.esauritaMin, 1-(mx-tolle)/(sp.esauritaGiorni||5)); }
+    const v=esaur*trap(att,...sp.attesa)*(.4+.6*Math.min(1,cum/(sp.pmin*1.5)));
     if (v>best){best=v; ev={data:D[j].d, mm:Math.round(cum), att};}
   }
   f.pioggia=best;

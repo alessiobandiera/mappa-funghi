@@ -18,7 +18,13 @@ Dopo troppo secco la nostra mappa azzera la buttata. Prova: ridurla gradualmente
 | minimo 0,2, in 10 giorni | 0,588 | 0,582 | 0,759 | 9 / 20 / 68 / 31 / 49 |
 
 Il minimo conta poco; la velocità sì per il risultato di oggi (in 10 giorni una pioggerella dopo il secco riporta l'indice a 70-76).
-Proposta: `esauritaMin:.2, esauritaGiorni:5` nella mappa.
+**Applicato il 7/10** (solo porcino, docs/index.html e docs/bosco.html), dopo il ricontrollo:
+- ritrovamenti europei (5.092): 0,5863 → 0,5886, differenza appaiata +0,0011…+0,0036 al 90%, meglio nel 100% dei ricampionamenti;
+  positiva in ogni Paese e sia negli anni pari sia nei dispari; con esauritaMin=0 identico all'attuale (37.414/37.414 giorni);
+- Lucchesia (71 casi SIR): 0,754 → 0,763 (non significativo da solo, meglio nel 73%); cambiano 7 casi, di cui 4 buttate vere
+  che la mappa dava a 0 (es. 21/9/2023: 0 → 83);
+- funzione della mappa = script di prova su 145 celle × 14 giorni (2.010 identici, 20 a ±1 per arrotondamento, già prima);
+- oggi: celle a 0 dal 100% al 3%; 93% sotto 40 («poca roba»), 3% 40-69, 1% sopra 70.
 
 ## 7 ottobre 2026 — ritrovamenti GBIF in Europa (4.100, stesso metodo)
 
