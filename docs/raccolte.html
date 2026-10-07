@@ -116,6 +116,9 @@ textarea{min-height:64px;resize:vertical}
 .foto img{width:72px;height:72px;object-fit:cover;border-radius:10px}
 .foto label{width:72px;height:72px;border-radius:10px;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--muted)}
 .avviso{font-size:13px;color:var(--warn)}
+.nav-qui{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nav-qui a{border:1px solid var(--line);background:var(--chip);border-radius:10px;padding:9px 12px;font-weight:600;color:var(--fg);text-decoration:none}
+.nav-qui b{width:100%;font-size:13px;color:var(--muted)}
 .confronto{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .confronto label,.confronto div{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
 .confronto input{font:600 20px var(--display);color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%}
@@ -290,6 +293,12 @@ async function trovato() {
 }
 const ultimoBosco = () => (VOCI.find(v => v.tipo === "fungo" && v.bosco && Date.now() - Date.parse(v.t) < 6 * 3600e3) || {}).bosco || "";
 
+// «Portami qui»: apre il navigatore del telefono (Apple Mappe o Google Maps) con il percorso fino al punto
+function portamiQui(lat, lon) {
+  const d = `${(+lat).toFixed(6)},${(+lon).toFixed(6)}`;
+  return `<div class="nav-qui"><b>Portami qui</b><a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a><a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></div>`;
+}
+
 // ---------------------------------------------------------------- foglio dettagli
 const SPECIE = ["Edulis", "Aereus (nero)", "Aestivalis (estivo)", "Pinophilus", "Altro"];
 const STATO = ["Giovane", "Maturo", "Vecchio / bacato"];
@@ -309,6 +318,7 @@ async function apri(id) {
   f.innerHTML = `
     <header><div><h2>${fungo ? "Fungo" : "Giro"} · ${ora(v.t)}${!fungo && v.fine ? "–" + ora(v.fine) : ""}</h2><p>${esc(posTxt(v))}</p></div>
       <button class="btn" value="chiudi">Fatto</button></header>
+    ${v.lat != null ? portamiQui(v.lat, v.lon) : ""}
     ${fungo ? `
     <div class="campo"><span>Specie</span>${chips("specie", SPECIE, v.specie)}</div>
     <div class="campo"><span>Quanti in questo punto</span><div class="conta"><button type="button" data-n="-1">−</button><output id="n">${v.n || 1}</output><button type="button" data-n="1">+</button></div></div>
@@ -455,7 +465,7 @@ async function apriMappa() {
   L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", { maxZoom: 17, attribution: "© OpenStreetMap, © OpenTopoMap" }).addTo(mappa);
   strato = L.layerGroup().addTo(mappa);
   mappa.on("click", async e => {
-    if (!modoSegna) return;
+    if (!modoSegna) { L.popup().setLatLng(e.latlng).setContent(portamiQui(e.latlng.lat, e.latlng.lng)).openOn(mappa); return; }
     let v;
     if (modoSegna === "nuovo") {
       v = { id: nuovoId(), tipo: "fungo", t: new Date().toISOString(), giro: null, specie: "", n: 1, stato: "", bosco: "", nota: "", foto: [] };
@@ -473,12 +483,12 @@ function puntiMappa(adatta) {
   const pts = [];
   VOCI.filter(v => v.lat != null).forEach(v => {
     const fungo = v.tipo === "fungo";
-    L.circleMarker([v.lat, v.lon], { radius: fungo ? 7 : 5, color: fungo ? "#5b3a1e" : "#3d6b2f", weight: 2,
+    L.circleMarker([v.lat, v.lon], { bubblingMouseEvents: false, radius: fungo ? 7 : 5, color: fungo ? "#5b3a1e" : "#3d6b2f", weight: 2,
       fillColor: fungo ? "#c8873e" : "#ffffff", fillOpacity: .9 })
       .bindTooltip(`${new Date(v.t).toLocaleDateString("it-IT")} ${ora(v.t)} · ${descr(v)}`).on("click", () => apri(v.id)).addTo(strato);
     pts.push([v.lat, v.lon]);
   });
-  if (ultimaPos) L.circleMarker([ultimaPos.coords.latitude, ultimaPos.coords.longitude], { radius: 6, color: "#1d6fd8", fillColor: "#4a90e2", fillOpacity: 1 }).addTo(strato);
+  if (ultimaPos) L.circleMarker([ultimaPos.coords.latitude, ultimaPos.coords.longitude], { radius: 6, color: "#1d6fd8", fillColor: "#4a90e2", fillOpacity: 1, interactive: false }).addTo(strato);
   if (adatta && pts.length) mappa.fitBounds(pts, { maxZoom: 15, padding: [30, 30] });
 }
 function aggiornaNotaMappa() {

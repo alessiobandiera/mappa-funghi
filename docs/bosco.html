@@ -59,6 +59,9 @@ h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:b
 .note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
 .note a,.sub a{color:var(--accent)}
 .pop{font:13px/1.4 var(--body);min-width:220px}
+.nav-qui{display:inline-block;font-size:.9rem;padding:6px 0}
+.nav-qui a{color:var(--accent);font-weight:600}
+
 .pop h3{font:700 1rem var(--display);margin:0 0 6px}
 .pop table{border-collapse:collapse;width:100%}
 .pop td{padding:2px 0;vertical-align:top}
@@ -503,12 +506,17 @@ function esposizione(t,p){
   return {pend, dir: pend<3? "piano" : nomi[Math.round(az/45)%8]};
 }
 const livello=(v,lo,hi,t)=>v<lo?t[0]:v>hi?t[2]:t[1];
+// «Portami qui»: apre il navigatore del telefono (Apple Mappe o Google Maps) con il percorso fino al punto
+function portamiQui(lat, lon){
+  const d=`${(+lat).toFixed(6)},${(+lon).toFixed(6)}`;
+  return `<span class="nav-qui"><b>Portami qui:</b> <a href="https://maps.apple.com/?daddr=${d}&dirflg=d" target="_blank" rel="noopener">Apple Mappe</a> · <a href="https://www.google.com/maps/dir/?api=1&destination=${d}&travelmode=driving" target="_blank" rel="noopener">Google Maps</a></span>`;
+}
 map.on("click",e=>{
   const {lat,lng}=e.latlng;
   const t=[...tessere.values()].find(t=>t.pronta&&t.calc&&lat<=t.meta.nord&&lat>=t.meta.sud&&lng>=t.meta.ovest&&lng<=t.meta.est);
   if (!t) return;
   const r=Math.floor((t.meta.nord-lat)/IDX.dlat), c=Math.floor((lng-t.meta.ovest)/IDX.dlon), p=r*t.meta.colonne+c;
-  if (!t.B.bosco[p]){ L.popup().setLatLng(e.latlng).setContent(`<div class="pop"><b>Fuori dal bosco</b> secondo OpenStreetMap.</div>`).openOn(map); return; }
+  if (!t.B.bosco[p]){ L.popup().setLatLng(e.latlng).setContent(`<div class="pop"><b>Fuori dal bosco</b> secondo OpenStreetMap.<br>${portamiQui(lat,lng)}</div>`).openOn(map); return; }
   const k=t.calc.K[p], fin=Math.round(indiceQui(t,p)), es=esposizione(t,p);
   const a=t.A.acqua[p], s=t.calc.sun[p], rp=t.A.riparo[p];
   const giud=f=>f>=.85?"<span style='color:#2c6a35'>adatto</span>":f<.6?"<span style='color:#b4472f'>poco adatto</span>":"così così";
@@ -526,7 +534,7 @@ map.on("click",e=>{
       <tr><td>Effetto del terreno</td><td>×${clamp(1+.5*(k-1),.7,1.3).toFixed(2)}</td></tr>
       <tr><td>Indice ${t.calc.sp.nome.toLowerCase()} della zona</td><td>${Math.round(t.calc.base[p])}</td></tr>
       <tr><td><b>Indice qui</b></td><td><b>${fin}</b></td></tr>
-    </table><div class="why">${motivi.join("<br>")}</div></div>`).openOn(map);
+    </table><div class="why">${motivi.join("<br>")}</div>${portamiQui(lat,lng)}</div>`).openOn(map);
 });
 
 /* ---------------- controlli ---------------- */

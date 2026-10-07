@@ -1,5 +1,5 @@
 // Fa funzionare la pagina delle raccolte anche senza rete (nel bosco). Riguarda solo raccolte.* e Leaflet, non la mappa.
-const CACHE = "raccolte-v3";
+const CACHE = "raccolte-v4";
 const BASE = ["raccolte.html", "raccolte.webmanifest", "raccolte-icona-180.png", "raccolte-icona-512.png"];
 const LEAFLET = ["https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js",
                  "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"];
