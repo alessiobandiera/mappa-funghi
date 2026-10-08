@@ -320,7 +320,7 @@ function chiaveCalc(){ return st.sp+"|"+st.g; }
 function infoCella(key){
   const ck=chiaveCalc()+"|"+key;
   if (cacheCelle.has(ck)) return cacheCelle.get(ck);
-  const c=celleMap.get(key); if (!c){ cacheCelle.set(ck,null); return null; }
+  const c=celleMap.get(key); if (!c || c.elev<=3){ cacheCelle.set(ck,null); return null; }   // celle di mare escluse, come nella mappa principale
   const sp=SPECIE.find(s=>s.id===st.sp), idx=st.g, D=c.days;
   const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
   const fin=D.slice(Math.max(0,idx-32),idx+1).map(g=>g.su), smin=Math.min(...fin), smax=Math.max(...fin);

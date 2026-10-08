@@ -460,24 +460,41 @@ function rettangolo(fc){
   fc.rect.on("click",()=>select(fc));
   forestLayer.addLayer(fc.rect);
 }
-// Ogni maglia eredita il meteo del punto di griglia più vicino, con le temperature corrette per la quota.
-// Le maglie con lo stesso punto meteo, quota (a 50 m) e tipo di bosco condividono il calcolo.
-let cacheIndice=new Map();
+// Ogni maglia calcola l'indice con il meteo delle 4 celle meteo intorno (temperature corrette per la quota della maglia)
+// e ne fa la media pesata per la distanza, come la mappa a 20 m: niente salti netti sul bordo dei quadrati di 5 km
+// (un temporale misurato in una sola cella sfuma verso le vicine). Spiegazione e grafici restano quelli della cella più vicina.
+// Il calcolo per cella meteo, quota (a 50 m) e tipo di bosco è condiviso tra le maglie.
+const GRIGLIA={lat0:43.72, dlat:0.05, lon0:10.05, dlon:0.07};
+let cacheIndice=new Map(), cellaDa=null;
+function indiceCella(c, q, bosco){
+  const key=c.lat+"|"+c.lon+"|"+q+"|"+bosco;
+  let r=cacheIndice.get(key);
+  if (!r){
+    const dt=(c.elev-q)*0.0065;
+    const tmp={days:c.days.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt})), elev:q, bosco};
+    scoreCell(tmp); r={days:tmp.days, scores:tmp.scores}; cacheIndice.set(key,r);
+  }
+  return r;
+}
 function attachWeather(fc){
   if (!cells.length){ fc.scores=null; return; }
   let best=null, bd=1e9;
   for (const c of cells){ const d=(c.lat-fc.lat)**2+((c.lon-fc.lon)*.72)**2; if (d<bd){bd=d; best=c;} }
   if (!best || bd>0.0064){ fc.scores=null; return; }
-  const q=Math.round(fc.elev/50)*50, key=best.lat+"|"+best.lon+"|"+q+"|"+fc.bosco;
-  let r=cacheIndice.get(key);
-  if (!r){
-    const dt=(best.elev-q)*0.0065;
-    const tmp={days:best.days.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt})), elev:q, bosco:fc.bosco};
-    scoreCell(tmp); r={days:tmp.days, scores:tmp.scores}; cacheIndice.set(key,r);
+  const q=Math.round(fc.elev/50)*50, r=indiceCella(best, q, fc.bosco);
+  if (!cellaDa) cellaDa=new Map(cells.map(c=>[Math.round((c.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((c.lon-GRIGLIA.lon0)/GRIGLIA.dlon), c]));
+  const fi=(fc.lat-GRIGLIA.lat0)/GRIGLIA.dlat, fj=(fc.lon-GRIGLIA.lon0)/GRIGLIA.dlon, i0=Math.floor(fi), j0=Math.floor(fj), ty=fi-i0, tx=fj-j0;
+  const parti=[];
+  for (const [di,dj,w] of [[0,0,(1-ty)*(1-tx)],[0,1,(1-ty)*tx],[1,0,ty*(1-tx)],[1,1,ty*tx]]){
+    const c=cellaDa.get((i0+di)+","+(j0+dj)); if (c && w>0) parti.push([w, indiceCella(c, q, fc.bosco)]);   // celle di mare escluse
   }
-  fc.wc=best; fc.days=r.days; fc.scores=r.scores;
+  const W=parti.reduce((s,[w])=>s+w,0);
+  fc.wc=best; fc.days=r.days;
+  if (parti.length<2 || !W){ fc.scores=r.scores; return; }
+  fc.scores={};
+  for (const sp of SPECIE) fc.scores[sp.id]=r.scores[sp.id].map((x,k)=>({...x, i:Math.round(parti.reduce((s,[w,p])=>s+w*p.scores[sp.id][k].i,0)/W)}));
 }
-function aggiornaBoschi(){ cacheIndice=new Map(); forest.forEach(attachWeather); }
+function aggiornaBoschi(){ cacheIndice=new Map(); cellaDa=null; forest.forEach(attachWeather); }
 function setForestStatus(t){ document.getElementById("fstatus").textContent=t; }
 
 /* ---------------- interfaccia ---------------- */
@@ -663,7 +680,7 @@ function renderDetail(){
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
   { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<div class="meta" style="margin:0">${portamiQui(P.lat,P.lon)}<span>Al punto toccato; in auto fino alla strada più vicina.</span></div>`; }
-  if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${CLS_TXT[c.cls]}${c.wc?` · meteo del punto a ${c.wc.elev} m, temperature corrette per la quota`:""}</p>`;
+  if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${CLS_TXT[c.cls]}${c.wc?` · indice dalle celle meteo intorno pesate per distanza (la più vicina a ${c.wc.elev} m), temperature corrette per la quota`:""}</p>`;
   html+=`<p class="meta"><a href="bosco.html#${c.lat.toFixed(4)},${c.lon.toFixed(4)},15" style="color:var(--accent);font-weight:600">Guarda questa zona a 20 m</a> · dove conviene dentro il bosco</p>`;
   html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;
   if (!c.scores) html+=`<p class="meta">Il meteo di questa zona è ancora in arrivo.</p>`;
@@ -696,8 +713,8 @@ function renderDetail(){
   document.getElementById("diarioForm").onsubmit=e=>{ e.preventDefault(); salvaUscita(c); };
   document.getElementById("closeDet").onclick=()=>{ state.sel=null; if (selMarker){map.removeLayer(selMarker); selMarker=null;} renderDetail(); };
   document.getElementById("boscoSel").onchange=e=>{ c.bosco=e.target.value;
-    if (c.forest && c.wc){ const dt=(c.wc.elev-c.elev)*0.0065; c.days=c.wc.days.map(g=>({...g, tmin:g.tmin+dt, tmax:g.tmax+dt, tmed:g.tmed+dt, st:g.st+dt})); }
-    scoreCell(c); render(); };
+    if (c.forest) attachWeather(c); else scoreCell(c);
+    render(); };
 }
 
 /* ---------------- diario delle uscite ---------------- */
