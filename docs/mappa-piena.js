@@ -19,17 +19,17 @@
   }
   const css = document.createElement("style");
   css.textContent = `
-.mp-ctl a{display:flex!important;align-items:center;justify-content:center;color:#333}
+.mp-ctl a{display:flex!important;align-items:center;justify-content:center}
 .mp-ctl svg{width:18px;height:18px}
 .mp-barra{display:none;position:absolute;left:50%;bottom:calc(46px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:1000;
-  background:var(--panel,#fff);color:var(--fg,#222);border:1px solid var(--line,#ccc);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.28);
-  padding:6px;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;width:max-content;max-width:calc(100% - 24px);
-  font:500 14px/1.2 var(--body,system-ui,sans-serif)}
+  background:var(--panel,#fff);color:var(--fg,#222);border-radius:16px;box-shadow:0 8px 28px rgba(14,34,30,.28);
+  padding:7px;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;width:max-content;max-width:calc(100% - 24px);
+  font:600 15px/1.2 var(--display,system-ui,sans-serif)}
 .mappa-piena .mp-barra{display:flex}
-.mp-barra select{font:inherit;color:inherit;background:var(--chip,transparent);border:1px solid var(--line,#ccc);border-radius:9px;padding:6px 8px;min-height:38px;max-width:12em}
+.mp-barra select{font:inherit;color:inherit;background:var(--chip,transparent);border:1.5px solid var(--line,#ccc);border-radius:10px;padding:6px 8px;min-height:40px;max-width:12em}
 .mp-giorno{display:flex;align-items:center;gap:4px}
-.mp-giorno button{width:38px;height:38px;border-radius:9px;border:1px solid var(--line,#ccc);background:var(--chip,transparent);color:inherit;font:600 20px/1 system-ui,sans-serif;cursor:pointer}
-.mp-giorno button:disabled{opacity:.35;cursor:default}
+.mp-giorno button{width:40px;height:40px;border-radius:10px;border:0;background:var(--accent,#333);color:var(--accent-ink,#fff);font:700 20px/1 system-ui,sans-serif;cursor:pointer}
+.mp-giorno button:disabled{opacity:.3;cursor:default}
 .mp-giorno span{min-width:7.5em;text-align:center;font-variant-numeric:tabular-nums}`;
   document.head.append(css);
 

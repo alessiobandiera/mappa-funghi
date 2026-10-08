@@ -8,113 +8,53 @@
 <title>Zone nel bosco</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="stile.css">
 <style>
-:root{
-  --bg:#eef0ea; --panel:#fbfbf8; --fg:#1f251c; --muted:#5d6656; --line:#d6dbcf;
-  --accent:#3d6b2f; --accent-ink:#ffffff; --chip:#e6eadf;
-  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
-  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; } }
-:root[data-theme="dark"]{
-  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
-  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; }
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
-.app{display:grid;grid-template-columns:380px 1fr;height:100%}
-#map{height:100%;min-height:0;background:var(--bg)}
-.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
-  padding-block:18px 24px;padding-inline:18px;display:flex;flex-direction:column;gap:16px;min-width:0}
-@media (max-width:760px){
-  .app{grid-template-columns:1fr;grid-template-rows:55% 45%}
-  .panel{order:2;border-right:0;border-top:1px solid var(--line);padding-inline:16px}
-  #map{order:1}
-}
-h1{font:700 1.5rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
-.sub{color:var(--muted);margin:4px 0 0}
-.label{font:500 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;
-  padding:6px 12px;font:500 .88rem var(--body);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.chip:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* solo questa pagina (il resto è in stile.css) */
 .row{display:flex;align-items:center;gap:10px}
-.row input[type=range]{flex:1;accent-color:var(--accent);min-width:0}
-.val{font:500 .9rem var(--mono);min-width:8.5em;text-align:right}
-.sl{display:grid;grid-template-columns:6.5em 1fr 6.5em;gap:8px;align-items:center;font-size:.82rem;color:var(--muted)}
-.sl input{accent-color:var(--accent);min-width:0}
+.row input[type=range]{flex:1;min-width:0}
+.val{font:600 .95rem var(--display);min-width:3.5em;text-align:right}
+.sl{display:grid;grid-template-columns:6.5em 1fr 6.5em;gap:8px;align-items:center;font-size:.84rem;color:var(--muted)}
+.sl input{min-width:0}
 .sl span:last-child{text-align:right}
-.box{padding:10px 12px;border-radius:8px;background:var(--chip);font-size:.88rem}
 .box b{font-weight:600}
-.legend{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
-.ramp{height:12px;border-radius:3px}
-.ramp-lab{display:flex;justify-content:space-between}
-.note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
-.note a,.sub a{color:var(--accent)}
-.pop{font:13px/1.4 var(--body);min-width:220px}
-.acc-pop h3{font-size:.95rem;margin-bottom:4px}
-.acc-pop div{margin:2px 0}
-.leg-perc{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:.8rem;color:var(--muted)}
-.leg-perc span{display:inline-flex;align-items:center;gap:5px}
-.leg-perc i{display:inline-block;width:18px;height:3px;border-radius:2px}
-.leg-perc i.tr{background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 8px)}
-.leg-perc b.acc{display:inline-block;width:12px;height:12px;border-radius:50%;background:#78a048;border:2px solid #1f251c}
-.nav-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.9rem;padding:6px 0}
-.nav-qui a{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);font-weight:600;text-decoration:none}
-
-.pop h3{font:700 1rem var(--display);margin:0 0 6px}
+.ramp{height:10px;border-radius:5px}
+.ramp-lab{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);padding-top:4px}
+.pop{min-width:220px}
+.pop h3{font-size:1.1rem;margin:0 0 8px}
 .pop table{border-collapse:collapse;width:100%}
 .pop td{padding:2px 0;vertical-align:top}
-.pop td:last-child{text-align:right;font-family:var(--mono);padding-left:10px}
-.pop .why{color:#5d6656;margin-top:6px;font-size:12px}
-.status{font-size:.85rem;color:var(--muted)}
+.pop td:last-child{text-align:right;font:600 .95rem var(--display);padding-left:10px;font-variant-numeric:tabular-nums}
+.pop .why{color:var(--muted);margin-top:8px;font-size:.84rem}
+.acc-pop h3{font-size:1.05rem;margin-bottom:6px}
+.acc-pop div{margin:3px 0}
+.leg-perc{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:.84rem;color:var(--muted)}
+.leg-perc span{display:inline-flex;align-items:center;gap:6px}
+.leg-perc i{display:inline-block;width:20px;height:3px;border-radius:2px}
+.leg-perc i.tr{background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 8px)}
+.leg-perc b.acc{display:inline-block;width:13px;height:13px;border-radius:50%;background:var(--s3);border:2px solid #17302b}
 .leaflet-image-layer{image-rendering:pixelated}
 .zoomhint{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:500;background:var(--panel);color:var(--fg);
-  border:1px solid var(--line);border-radius:999px;padding:6px 14px;font:500 .88rem var(--body);box-shadow:0 2px 8px rgba(0,0,0,.15);pointer-events:none}
-.mapwrap{position:relative;min-height:0;height:100%}
-@media (max-width:760px){ .mapwrap{order:1} }
-/* elenco delle zone migliori (come «I punti migliori» della mappa principale) */
-.list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-.list li button{width:100%;display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;align-items:center;text-align:left;
-  background:none;border:0;border-radius:6px;padding:7px 6px;color:var(--fg);font:inherit;cursor:pointer}
-.list li button:hover{background:var(--chip)}
-.score{font:500 1rem var(--mono);font-variant-numeric:tabular-nums;text-align:center;border-radius:4px;padding:2px 0;color:#fff}
-.where{min-width:0}
-.where b{font-weight:600}
-.where small{display:block;color:var(--muted);font-size:.8rem}
-.list .vuoto{color:var(--muted);font-size:.85rem;padding:4px 0}
-/* mappa a schermo intero (pulsante sulla mappa): sparisce il pannello */
-html.mappa-piena .app{grid-template-columns:1fr;grid-template-rows:1fr}
-html.mappa-piena .panel{display:none}
+  border-radius:999px;padding:7px 15px;font:600 .92rem var(--display);box-shadow:0 2px 10px rgba(14,34,30,.22);pointer-events:none;white-space:nowrap}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="panel" aria-label="Controlli">
-    <div>
+  <aside class="panel" id="panel" aria-label="Controlli">
+    <div class="testa">
       <h1>Zone nel bosco</h1>
-      <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle. <a href="./">Torna alla mappa</a></p>
+      <a class="vai" href="./">Mappa generale</a>
     </div>
 
-    <div>
-      <p class="label">Specie</p>
-      <div class="chips" id="specie" role="group" aria-label="Specie"></div>
-    </div>
+    <div class="chips" id="specie" role="group" aria-label="Specie"></div>
 
     <div>
-      <p class="label">Giorno</p>
-      <div class="row">
-        <input type="range" id="giorno" min="0" max="0" value="0" aria-label="Giorno" disabled>
-        <span class="val" id="giornolbl">–</span>
-      </div>
-      <p class="sub" id="giornonota" style="margin:6px 0 0"></p>
+      <div class="giorni" id="giorni" role="group" aria-label="Giorno"></div>
+      <input type="range" id="giorno" class="nascosto" min="0" max="0" value="0" aria-label="Giorno" disabled tabindex="-1">
+      <div class="giornolbl"><strong id="giornolbl">–</strong></div>
+      <p class="daynote" id="giornonota"></p>
     </div>
 
     <div>
@@ -144,8 +84,8 @@ html.mappa-piena .panel{display:none}
       </div>
       <div class="leg-perc">
         <span><i style="background:#c62828"></i>sentiero segnato (CAI)</span>
-        <span><i style="background:#6d4c41"></i>forestale in auto</span>
-        <span><i class="tr" style="--c:#8d6e63"></i>forestale chiusa / carrareccia</span>
+        <span><i style="background:#2f4a52"></i>forestale in auto</span>
+        <span><i class="tr" style="--c:#4f6d75"></i>forestale chiusa / carrareccia</span>
         <span><i class="tr" style="--c:#555"></i>sentiero</span>
         <span><b class="acc"></b>accesso al bosco</span>
       </div>
@@ -173,7 +113,9 @@ html.mappa-piena .panel{display:none}
 
     <p class="status" id="status"></p>
 
-    <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: verde scuro = più favorevole di un bosco tipico, marrone = meno. Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
+    <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle.</p>
+
+    <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
     <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
     Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
   </aside>
@@ -182,6 +124,7 @@ html.mappa-piena .panel{display:none}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="mappa-piena.js"></script>
+<script src="foglio.js"></script>
 <script>
 /* regole dell'indice: copiate dalla mappa principale (index.html) */
 const SPECIE = [
@@ -304,9 +247,9 @@ async function carica(){
     celleMap.set(Math.round((c.lat-GRIDW.lat0)/GRIDW.dlat)+","+Math.round((c.lon-GRIDW.lon0)/GRIDW.dlon), c);
   });
   date=[...celleMap.values()][0].days.map(g=>g.d);
-  const gi=$("giorno"); gi.min=Math.min(26,date.length-5); gi.max=date.length-1;
+  const gi=$("giorno"); gi.max=date.length-1; gi.min=Math.max(0, Math.min(date.indexOf(oggiISO)<0? date.length-14 : date.indexOf(oggiISO)-6, date.length-5));
   st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-8;
-  gi.value=st.g; gi.disabled=false;
+  gi.value=st.g; gi.disabled=false; GIORNI.aggiorna();
   contorni=L.layerGroup(IDX.tessere.map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
     {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
   const q=new Date(met.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
@@ -417,10 +360,11 @@ function calcolaTessera(t){
 }
 
 /* ---------------- colori ---------------- */
-const COLI=[[154,160,147],[216,196,138],[217,154,62],[120,160,72],[44,106,53]];
+// dalla nebbia (niente) al cappello del porcino (ottima), come nella mappa principale
+const COLI=[[195,203,205],[232,215,156],[226,160,59],[179,86,31],[90,34,16]];
 const lerp=(c1,c2,t)=>[c1[0]+(c2[0]-c1[0])*t, c1[1]+(c2[1]-c1[1])*t, c1[2]+(c2[2]-c1[2])*t];
 function rampa(stops, t){ t=clamp(t); const n=stops.length-1, k=Math.min(n-1,Math.floor(t*n)); return lerp(stops[k],stops[k+1],t*n-k); }
-const DIV=[[140,81,10],[216,179,101],[245,240,225],[90,174,97],[0,90,50]];
+const DIV=[[70,104,122],[160,182,192],[238,236,226],[222,150,70],[120,48,22]];   // meno favorevole (freddo) -> più favorevole (caldo)
 const SEQ=[[247,244,232],[199,220,170],[110,170,110],[30,110,90],[10,60,90]];
 const SUN=[[40,60,110],[120,140,170],[240,235,215],[240,190,90],[200,110,30]];
 const coloreIndice=v=>COLI[v>=70?4: v>=50?3: v>=30?2: v>=10?1:0];
@@ -460,7 +404,7 @@ function legenda(){
   const L_=LEGENDE[st.v], el=$("legenda");
   if (L_.bande){
     const LAB=["fuori stagione","scarsa","possibile","buona","ottima"];
-    el.innerHTML=`<div style="display:flex;gap:10px;flex-wrap:wrap">`+COLI.map((c,i)=>`<span style="display:inline-flex;gap:5px;align-items:center"><i style="width:12px;height:12px;border-radius:2px;background:rgb(${c})"></i>${LAB[i]}</span>`).join("")+`</div>`;
+    el.innerHTML=`<div class="scala" aria-label="Legenda dell'indice">${COLI.map(c=>`<i style="background:rgb(${c})"></i>`).join("")}${LAB.map((l,i)=>`<span>${["0-9","10-29","30-49","50-69","70+"][i]}<br>${l}</span>`).join("")}</div>`;
     return;
   }
   const g=L_.stops.map((c,i)=>`rgb(${c}) ${100*i/(L_.stops.length-1)}%`).join(",");
@@ -517,6 +461,13 @@ basi["Sentieri (OpenTopoMap)"].addTo(map);
 L.control.layers(basi,null,{position:"topright"}).addTo(map);
 L.control.scale({imperial:false}).addTo(map);
 // schermo intero: senza pannello, con specie, vista e giorno in una barretta in basso
+const FOGLIO=Foglio($("panel"));
+const GIORNI=StrisciaGiorni($("giorno"), $("giorni"), i=>{
+  const iso=date[i]; if (!iso) return null; const d=new Date(iso+"T12:00:00");
+  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5), f=k<0?0:k===0?1:k<=3?2:3;
+  return {sett: k===0? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:f,
+    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][f]};
+});
 MappaPiena(map,{gruppi:[{sel:"#specie",nome:"Specie"},{sel:"#viste",nome:"Cosa mostrare"}], giorno:"#giorno", etichetta:"#giornolbl"});
 let contorni=null;
 
@@ -637,13 +588,14 @@ function disegnaTop(){
       acc? `accesso a ${Math.round(acc.d/10)*10} m${acc.a[3]?" (CAI "+acc.a[3]+")":""}` : null].filter(Boolean).join(" · ");
     const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
     const col=coloreIndice(z.v);
-    btn.innerHTML=`<span class="score" style="background:rgb(${col});color:${z.v<30?"#1f251c":"#fff"}">${z.v}</span>
-      <span class="where"><b>${q} m</b>${det?` · ${det}`:""}<small>${z.lat.toFixed(4)} N, ${z.lon.toFixed(4)} E</small></span><span class="sub" style="margin:0">›</span>`;
+    btn.innerHTML=`<span class="score${z.v<50?" chiaro":""}" style="background:rgb(${col})">${z.v}</span>
+      <span class="where"><b>${q} m</b>${det?` · ${det}`:""}<small>${z.lat.toFixed(4)} N, ${z.lon.toFixed(4)} E</small></span><span class="freccia" aria-hidden="true">›</span>`;
     btn.onclick=()=>vaiZona(z); li.appendChild(btn); ul.appendChild(li);
   });
 }
 function vaiZona(z){
   const ll=L.latLng(z.lat,z.lon), zz=Math.max(map.getZoom(),15);
+  FOGLIO.chiudi();          // sul telefono il foglio scende, così si vede la zona
   if (map.getZoom()===zz && map.getBounds().pad(-.2).contains(ll)){ apriPunto(ll); return; }
   map.once("moveend",()=>setTimeout(()=>apriPunto(ll),250));
   map.flyTo(ll, zz, {duration: matchMedia("(prefers-reduced-motion: reduce)").matches?0:.6});
@@ -656,7 +608,7 @@ const SENT = new Map();                      // id tessera -> {stato, d, layer, 
 map.createPane("percorsi"); map.getPane("percorsi").style.zIndex = 450;     // sopra le tessere colorate, sotto i popup
 const rendPerc = L.canvas({padding:.3, pane:"percorsi"});
 let mostraPerc = true, lineaZona = null;
-const STILE_PERC = {1:{color:"#6d4c41",weight:3}, 2:{color:"#8d6e63",weight:2.5,dashArray:"6 4"},
+const STILE_PERC = {1:{color:"#2f4a52",weight:3}, 2:{color:"#4f6d75",weight:2.5,dashArray:"6 4"},
                     3:{color:"#c62828",weight:2.6}, 4:{color:"#555",weight:1.6,dashArray:"3 4"}};
 const NOME_PERC = {1:"forestale percorribile in auto", 2:"forestale o carrareccia", 3:"sentiero segnato", 4:"sentiero"};
 async function caricaSentieri(meta){

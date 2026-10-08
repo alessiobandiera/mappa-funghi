@@ -8,142 +8,64 @@
 <title>Mappa Funghi Lucchesia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="stile.css">
 <style>
-/* Layout: mappa a tutto schermo, pannello laterale su desktop, foglio in basso su telefono */
-:root{
-  --bg:#eef0ea; --panel:#fbfbf8; --fg:#1f251c; --muted:#5d6656; --line:#d6dbcf;
-  --accent:#3d6b2f; --accent-ink:#ffffff; --chip:#e6eadf;
-  --s0:#9aa093; --s1:#d8c48a; --s2:#d99a3e; --s3:#78a048; --s4:#2c6a35;
-  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
-  --mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
-  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; } }
-:root[data-theme="dark"]{
-  --bg:#151a13; --panel:#1c2219; --fg:#e7ebe1; --muted:#9ba592; --line:#323b2d;
-  --accent:#8fc06f; --accent-ink:#13180f; --chip:#262e22; color-scheme:dark; }
-
-*{box-sizing:border-box}
-html,body{height:100%;margin:0}
-body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--body)}
-.app{display:grid;grid-template-columns:380px 1fr;height:100%}
-#map{height:100%;min-height:0;background:var(--bg)}
-.panel{background:var(--panel);border-right:1px solid var(--line);overflow-y:auto;
-  padding-block:18px 24px;padding-inline:18px;display:flex;flex-direction:column;gap:18px;min-width:0}
-@media (max-width:760px){
-  .app{grid-template-columns:1fr;grid-template-rows:55% 45%}
-  .panel{order:2;border-right:0;border-top:1px solid var(--line);padding-inline:16px}
-  #map{order:1}
-}
-h1{font:700 1.6rem/1.1 var(--display);margin:0;letter-spacing:-.01em;text-wrap:balance}
-.sub{color:var(--muted);margin:4px 0 0}
-.label{font:500 .72rem/1 var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 8px}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;
-  padding:6px 12px;font:500 .9rem var(--body);cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.chip:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.dayrow{display:flex;flex-direction:column;align-items:stretch;gap:4px}
-.dayrow input{width:100%;margin:0;accent-color:var(--accent)}
-.daylbl{font:500 .95rem var(--mono);order:-1}
-/* fasce dei giorni sotto la barra: misurati, previsione 1-3 giorni, tendenza 4-7 giorni */
-.dayzone{display:flex;gap:2px;margin-top:6px;font-size:.72rem;color:var(--muted);line-height:1.2}
-.dayzone div{display:flex;flex-direction:column;gap:3px;min-width:0}
-.dayzone i{display:block;height:5px;border-radius:3px;background:var(--accent)}
-.dayzone .z1 i{background:color-mix(in srgb,var(--accent) 55%,transparent)}
-.dayzone .z2 i{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--accent) 45%,transparent) 0 4px,transparent 4px 7px);
-  outline:1px dashed color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:-1px}
-.dayzone span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.daynote{margin:6px 0 0;font-size:.8rem;color:var(--muted)}
-.daynote.tend{color:var(--fg);background:var(--chip);padding:6px 8px;border-radius:6px}
-.status{font-size:.88rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;flex-basis:100%}
-.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
-button.btn{border:1px solid var(--line);background:transparent;color:var(--fg);border-radius:6px;padding:5px 10px;font:500 .85rem var(--body);cursor:pointer}
-.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
-.legend span{display:inline-flex;align-items:center;gap:5px}
-.legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
-.list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-.list li button{width:100%;display:grid;grid-template-columns:2.6em 1fr auto;gap:10px;align-items:center;
-  background:none;border:0;border-bottom:1px solid var(--line);color:var(--fg);padding:8px 2px;text-align:left;cursor:pointer;font:inherit}
-.list li button:hover{background:var(--chip)}
-.score{font:500 1rem var(--mono);font-variant-numeric:tabular-nums;text-align:center;border-radius:4px;padding:2px 0;color:#fff}
-.where{min-width:0}
-.where b{font-weight:600}
-.where small{display:block;color:var(--muted)}
-.det{display:flex;flex-direction:column;gap:12px}
+/* solo questa pagina: dettaglio della zona, diario, fumetto a schermo intero (il resto è in stile.css) */
+.det{display:flex;flex-direction:column;gap:12px;border-top:2px solid var(--fg);padding-top:14px}
 .det header{display:flex;justify-content:space-between;align-items:start;gap:8px}
-.det h2{font:700 1.15rem/1.2 var(--display);margin:0}
-.meta{color:var(--muted);font-size:.85rem}
-.nav-qui{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;font-size:.9rem;padding:6px 0}
-.nav-qui a{display:inline-block;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--chip);color:var(--fg);font-weight:600;text-decoration:none}
-
+.det h2{font-size:1.3rem;line-height:1.15}
 .sp{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
-.sp .n{font-weight:600}
-.sp .v{font:500 1.05rem var(--mono);font-variant-numeric:tabular-nums}
-.sp .why{grid-column:1/-1;color:var(--muted);font-size:.84rem}
-.spark{grid-column:1/-1;display:flex;gap:3px;align-items:flex-end;height:30px;margin-top:4px}
-.spark div{flex:1;border-radius:2px 2px 0 0;min-height:2px;position:relative}
-.spark div.fc{opacity:.5}
-.spark div.fc2{opacity:.28;outline:1px dashed currentColor;outline-offset:-1px}
+.sp .n{font:600 1.05rem var(--display)}
+.sp .v{font:700 1.35rem/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
+.sp .v .meta{font:500 .85rem var(--body)}
+.sp .why{grid-column:1/-1;color:var(--muted);font-size:.86rem}
+.spark{grid-column:1/-1;display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:6px}
+.spark div{flex:1;border-radius:3px 3px 0 0;min-height:3px;position:relative}
+.spark div.fc{opacity:.55}
+.spark div.fc2{opacity:.3;outline:1px dashed currentColor;outline-offset:-1px}
 .spark div.cur{outline:2px solid var(--fg);outline-offset:1px}
-select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px}
-.note{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
-.note a{color:var(--accent)}
-.diario-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;border:1px solid var(--line);border-radius:8px}
-.diario-form label{display:flex;flex-direction:column;gap:3px;font-size:.82rem;color:var(--muted);min-width:0}
+.diario-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border-radius:12px;background:var(--chip)}
+.diario-form strong{font:700 1.05rem var(--display)}
+.diario-form label{display:flex;flex-direction:column;gap:3px;font-size:.84rem;color:var(--muted);min-width:0}
 .diario-form .full{grid-column:1/-1}
-.diario-form input,.diario-form select{font:inherit;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:4px 6px;min-width:0}
-.esito{display:flex;gap:6px}
-.esito label{flex-direction:row;align-items:center;gap:4px;color:var(--fg)}
-.btn-primario{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:7px 12px;font:600 .9rem var(--body);cursor:pointer}
-.diario-voce{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.diario-form input,.diario-form select{min-width:0}
+.esito{display:flex;gap:12px}
+.esito label{flex-direction:row;align-items:center;gap:5px;color:var(--fg)}
+.diario-voce{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:.9rem}
 .diario-voce .pallino{width:10px;height:10px;border-radius:50%}
 .diario-voce button{background:none;border:0;color:var(--muted);cursor:pointer;font:inherit}
 .diario-voce .apri{text-align:left;color:var(--fg);padding:0}
-.diario-azioni{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.riepilogo{font-size:.88rem;padding:8px 10px;border-radius:6px;background:var(--chip)}
-.hint{margin:0;font-size:.88rem;padding:8px 10px;border-radius:6px;background:var(--chip);color:var(--fg)}
-.leaflet-tooltip.cell-tip{font:500 .8rem var(--body);padding:4px 8px}
+.diario-azioni{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.pp{display:flex;flex-direction:column;gap:7px;min-width:200px}
+.pp>b{font:700 1.05rem/1.2 var(--display)}
+.pp .pp-m{color:var(--muted);font-size:.82rem}
+.pp-r{display:grid;grid-template-columns:1fr 2.6em;gap:8px;align-items:center}
+.pp-r .score{font-size:1rem;padding:4px 0}
+.pp-det{align-self:flex-start;margin-top:2px}
 @media (prefers-reduced-motion: reduce){ .bar i{transition:none} }
-/* mappa a schermo intero (pulsante sulla mappa): sparisce il pannello */
-html.mappa-piena .app{grid-template-columns:1fr;grid-template-rows:1fr}
-html.mappa-piena .panel{display:none}
-.pp{display:flex;flex-direction:column;gap:6px;font:14px/1.35 var(--body);color:#1f251c;min-width:190px}
-.pp .pp-m{color:#5d6656;font-size:12px}
-.pp-r{display:grid;grid-template-columns:1fr 2.4em;gap:8px;align-items:center}
-.pp-r b{font:500 14px var(--mono);text-align:center;border-radius:4px;padding:1px 0;color:#fff}
-.pp .nav-qui a{color:#3d6b2f}
-.pp-det{align-self:flex-start;margin-top:2px;font:600 13px var(--body);padding:6px 10px;border-radius:8px;border:1px solid #d6dbcf;background:#e6eadf;color:#1f251c;cursor:pointer}
 </style>
 </head>
 <body>
 <div class="app">
-  <aside class="panel" aria-label="Controlli">
-    <div>
-      <h1>Funghi in Lucchesia</h1>
-      <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata per specie dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
+  <aside class="panel" id="panel" aria-label="Controlli">
+    <div class="testa">
+      <h1>Buttate in Lucchesia</h1>
+      <a class="vai" href="bosco.html">Zone a 20 m</a>
     </div>
 
-    <div>
-      <p class="label">Specie</p>
-      <div class="chips" id="chips" role="group" aria-label="Specie"></div>
-    </div>
+    <div class="chips" id="chips" role="group" aria-label="Specie"></div>
 
     <div>
-      <p class="label">Giorno</p>
-      <div class="dayrow">
-        <input type="range" id="day" min="0" max="9" value="6" aria-label="Giorno" disabled>
-        <span class="daylbl" id="daylbl">–</span>
-      </div>
-      <div class="dayzone" id="dayzone" aria-hidden="true"></div>
+      <div class="giorni" id="giorni" role="group" aria-label="Giorno"></div>
+      <input type="range" id="day" class="nascosto" min="0" max="9" value="6" aria-label="Giorno" disabled tabindex="-1">
+      <div class="giornolbl"><strong id="daylbl">–</strong></div>
+      <div class="dayzone" id="dayzone" hidden></div>
       <p class="daynote" id="daynote"></p>
     </div>
+
+    <div id="legend"></div>
 
     <div class="status" id="statusbox">
       <span id="status">Preparo la griglia…</span>
@@ -151,11 +73,15 @@ html.mappa-piena .panel{display:none}
       <div class="bar"><i id="prog"></i></div>
     </div>
 
-    <div class="legend" id="legend"></div>
     <p class="hint" id="hint">Avvicinati sulla mappa (zoom 11 o più) per vedere i boschi reali, a maglie di circa 600 m, ognuno con la sua quota.</p>
     <p class="meta" id="fstatus" hidden></p>
 
     <section id="detail" class="det" hidden></section>
+
+    <section id="topbox">
+      <p class="label" id="toplbl">I punti migliori</p>
+      <ul class="list" id="top"></ul>
+    </section>
 
     <section id="diario">
       <p class="label">Diario delle uscite</p>
@@ -168,21 +94,17 @@ html.mappa-piena .panel{display:none}
       </div>
     </section>
 
-    <p class="hint"><a href="bosco.html" style="color:var(--accent);font-weight:600">Zone nel bosco a 20 m</a> · dove conviene dentro il bosco in base a sole, ristagno e vento, su tutta l'area.</p>
-
-    <section id="topbox">
-      <p class="label" id="toplbl">I punti migliori</p>
-      <ul class="list" id="top"></ul>
-    </section>
+    <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata per specie dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
 
     <p class="note">Indice indicativo basato su regole empiriche. Per i giorni passati usa pioggia e temperature misurate dalle stazioni della Regione dove ce n'è una vicina, altrimenti il modello meteo, che può non vedere i temporali locali. Verifica del 4 ottobre 2026 su 117 esiti reali documentati (2015–2026, Appennino toscano, emiliano e ligure): nel 75% dei confronti tra un giorno con porcini e uno senza, l'indice dà il valore più alto al primo. I boschi vengono da OpenStreetMap; dove non indica latifoglie o conifere il tipo è stimato dalla quota: correggilo nel dettaglio. Rispetta tesserino, giorni di raccolta e aree protette (Parco delle Apuane, Parco dell'Appennino tosco-emiliano). Nessuna app dice se un fungo è commestibile: fai controllare il raccolto all'Ispettorato micologico della ASL.<br>
     Pioggia e temperature misurate: <a href="https://www.sir.toscana.it/" target="_blank" rel="noopener">SIR</a> e <a href="https://www.cfr.toscana.it/" target="_blank" rel="noopener">CFR</a> Regione Toscana · Previsione e modello: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0) · Boschi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a> (ODbL).</p>
   </aside>
-  <div id="map" role="application" aria-label="Mappa"></div>
+  <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div></div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="mappa-piena.js"></script>
+<script src="foglio.js"></script>
 <script>
 "use strict";
 /* ---------------- configurazione ---------------- */
@@ -405,7 +327,7 @@ function computeAll(raw){
   dayEl.max=dayDates.length-1; dayEl.disabled=false;
   if (firstTime){ state.day=dayDates.indexOf(oggiISO); if (state.day<0) state.day=Math.min(6,dayDates.length-1); }
   state.day=Math.min(state.day, dayDates.length-1);
-  dayEl.value=state.day;
+  dayEl.value=state.day; GIORNI.aggiorna();
   if (prev) state.sel = cells.find(c=>c.lat===prev.lat&&c.lon===prev.lon) || null;
   aggiornaBoschi();
 }
@@ -498,7 +420,9 @@ function aggiornaBoschi(){ cacheIndice=new Map(); cellaDa=null; forest.forEach(a
 function setForestStatus(t){ document.getElementById("fstatus").textContent=t; }
 
 /* ---------------- interfaccia ---------------- */
-const COL=["#9aa093","#d8c48a","#d99a3e","#78a048","#2c6a35"];
+// dalla nebbia (niente) al cappello del porcino (ottima): più è caldo e scuro, più conviene
+const COL=["#c3cbcd","#e8d79c","#e2a03b","#b3561f","#5a2210"];
+const chiaro=b=>b<=2?" chiaro":"";
 const LAB=["fuori stagione","scarsa","possibile","buona","ottima"];
 const band=i=> i>=70?4: i>=50?3: i>=30?2: i>=10?1:0;
 const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
@@ -524,7 +448,8 @@ function disegnaFasce(fz){
 }
 const spName=id=>id==="best"?"Migliore":SPECIE.find(s=>s.id===id).nome;
 
-function setStatus(t,p){ document.getElementById("status").textContent=t; if (p!=null) document.getElementById("prog").style.width=(100*p)+"%"; }
+function setStatus(t,p){ document.getElementById("status").textContent=t;
+  if (p!=null){ const g=document.getElementById("prog"); g.style.width=(100*p)+"%"; g.parentElement.style.visibility=p>=1?"hidden":"visible"; } }
 
 const map=L.map("map",{zoomControl:true, preferCanvas:true}).setView([44.02,10.45],10);
 // punto esatto toccato (arriva prima del clic sulla cella): serve per «Portami qui»
@@ -548,6 +473,12 @@ const gridLayer=L.layerGroup().addTo(map);
 const stazioniLayer=L.layerGroup().addTo(map);
 L.control.layers(null,{"Stazioni della Regione":stazioniLayer},{collapsed:false,position:"topright"}).addTo(map);
 // schermo intero: senza pannello, con specie e giorno in una barretta in basso e il dettaglio in un fumetto sulla mappa
+const FOGLIO=Foglio(document.getElementById("panel"));
+const GIORNI=StrisciaGiorni(document.getElementById("day"), document.getElementById("giorni"), i=>{
+  const iso=dayDates[i]; if (!iso) return null; const d=new Date(iso+"T12:00:00");
+  return {sett: iso===oggiISO? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:fase(iso).n,
+    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][fase(iso).n]};
+});
 const MP=MappaPiena(map,{gruppi:[{sel:"#chips",nome:"Specie"}], giorno:"#day", etichetta:"#daylbl"});
 async function caricaStazioni(){
   if (location.protocol==="file:") return;
@@ -583,7 +514,7 @@ function buildChips(){
     b.onclick=()=>{ state.sp=s.id; box.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===s.id))); render(); };
     box.appendChild(b);
   });
-  document.getElementById("legend").innerHTML=COL.map((c,i)=>`<span><i style="background:${c}"></i>${LAB[i]}</span>`).join("");
+  document.getElementById("legend").innerHTML=`<div class="scala" aria-label="Legenda dell'indice">${COL.map(c=>`<i style="background:${c}"></i>`).join("")}${LAB.map((l,i)=>`<span>${["0-9","10-29","30-49","50-69","70+"][i]}<br>${l}</span>`).join("")}</div>`;
 }
 
 function renderGrid(){
@@ -626,9 +557,9 @@ function renderTop(){
   if (!arr.length){ ul.innerHTML=`<li class="meta">${boschi && !src.length ? "Nessun bosco caricato qui per ora." : "Nessun punto con indice sopra zero per questo giorno."}</li>`; return; }
   arr.forEach(({c,s})=>{
     const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
-    btn.innerHTML=`<span class="score" style="background:${COL[band(s.i)]}">${s.i}</span>
+    btn.innerHTML=`<span class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</span>
       <span class="where"><b>${c.elev} m · ${BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E${state.sp==="best"?" · "+spName(s.sp):""}</small></span>
-      <span class="meta">›</span>`;
+      <span class="freccia" aria-hidden="true">›</span>`;
     btn.onclick=()=>select(c,true); li.appendChild(btn); ul.appendChild(li);
   });
 }
@@ -643,8 +574,9 @@ function select(c, fly){
   if (MP.attiva()){ popupPieno(); return; }
   // sul telefono il dettaglio sta in fondo al pannello sotto la mappa: lo porto in vista, così si vede subito «Portami qui»
   if (matchMedia("(max-width:760px)").matches){
+    FOGLIO.apri("medio");
     const det=document.getElementById("detail"), pan=det.closest(".panel");
-    if (pan) pan.scrollTo({top: det.offsetTop - pan.offsetTop - 8, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+    if (pan) pan.scrollTo({top: pan.scrollTop + det.getBoundingClientRect().top - pan.getBoundingClientRect().top - 40, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
   }
 }
 
@@ -654,15 +586,16 @@ function popupPieno(){
   const c=state.sel; if (!c) return;
   const P=state.punto||{lat:c.lat,lon:c.lon};
   let h=`<div class="pp"><b>${c.forest?"Bosco · ":""}${c.elev} m · ${BOSCHI[c.bosco]}</b><span class="pp-m">${dayDates.length?fmtDay(dayDates[state.day]):""}</span>`;
-  if (c.scores) h+=SPECIE.map(sp=>{ const s=c.scores[sp.id][state.day]; return `<div class="pp-r"><span>${sp.nome}</span><b style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }).join("");
+  if (c.scores) h+=SPECIE.map(sp=>{ const s=c.scores[sp.id][state.day]; return `<div class="pp-r"><span>${sp.nome}</span><b class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }).join("");
   else h+=`<span class="pp-m">Il meteo di questa zona è ancora in arrivo.</span>`;
-  h+=portamiQui(P.lat,P.lon)+`<button type="button" class="pp-det">Tutti i dettagli</button></div>`;
+  h+=portamiQui(P.lat,P.lon)+`<button type="button" class="btn pp-det">Tutti i dettagli</button></div>`;
   if (ppAperto && map.hasLayer(ppAperto)) ppAperto.setLatLng([P.lat,P.lon]).setContent(h);
   else ppAperto=L.popup({maxWidth:260, autoPanPaddingTopLeft:[50,10], autoPanPaddingBottomRight:[10,90]}).setLatLng([P.lat,P.lon]).setContent(h).openOn(map);
   const b=ppAperto.getElement()&&ppAperto.getElement().querySelector(".pp-det");
   if (b) b.onclick=()=>{ map.closePopup(); MP.imposta(false);
+    FOGLIO.apri("medio");
     setTimeout(()=>{ const det=document.getElementById("detail"), pan=det.closest(".panel");
-      if (pan) pan.scrollTo({top: det.offsetTop - pan.offsetTop - 8}); }, 60); };
+      if (pan) pan.scrollTo({top: pan.scrollTop + det.getBoundingClientRect().top - pan.getBoundingClientRect().top - 40}); }, 60); };
 }
 
 function renderDetail(){
@@ -742,7 +675,7 @@ function renderDiario(){
   diarioLayer.clearLayers();
   const lista=document.getElementById("diarioLista"); lista.innerHTML="";
   diario.forEach(u=>{
-    L.circleMarker([u.lat,u.lon],{radius:6,weight:2,color:"#fff",fillColor:u.trovati?"#2c6a35":"#b4472f",fillOpacity:1})
+    L.circleMarker([u.lat,u.lon],{radius:6,weight:2,color:"#fff",fillColor:u.trovati?"#5a2210":"#7d8a8c",fillOpacity:1})
       .bindTooltip(`${fmtDay(u.data,true)} · ${spName(u.sp)} · ${u.trovati?"trovati":"niente"}`).addTo(diarioLayer);
     const r=document.createElement("div"); r.className="diario-voce";
     r.innerHTML=`<span class="pallino" style="background:${u.trovati?"#2c6a35":"#b4472f"}"></span>
