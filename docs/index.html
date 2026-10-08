@@ -451,7 +451,14 @@ const spName=id=>id==="best"?"Migliore":SPECIE.find(s=>s.id===id).nome;
 function setStatus(t,p){ document.getElementById("status").textContent=t;
   if (p!=null){ const g=document.getElementById("prog"); g.style.width=(100*p)+"%"; g.parentElement.style.visibility=p>=1?"hidden":"visible"; } }
 
-const map=L.map("map",{zoomControl:true, preferCanvas:true}).setView([44.02,10.45],10);
+// la zona di partenza può arrivare nell'indirizzo (#lat,lon,zoom), es. dal pulsante «Mappa generale» della mappa a 20 m
+const vistaIniziale=location.hash.slice(1).split(",").map(Number);
+const map=L.map("map",{zoomControl:true, preferCanvas:true}).setView(
+  vistaIniziale.length===3&&vistaIniziale.every(isFinite)? [vistaIniziale[0],vistaIniziale[1]] : [44.02,10.45], vistaIniziale.length===3&&isFinite(vistaIniziale[2])? vistaIniziale[2] : 10);
+// «Zone a 20 m» apre la mappa a 20 m sulla zona che si sta guardando (almeno a zoom 13, dove si vedono le zone)
+function aggiornaLinkBosco(){ const c=map.getCenter(), a=document.querySelector(".testa .vai");
+  if (a) a.href=`bosco.html#${c.lat.toFixed(4)},${c.lng.toFixed(4)},${Math.max(13,Math.min(16,map.getZoom()+1))}`; }
+map.on("moveend", aggiornaLinkBosco); aggiornaLinkBosco();
 // punto esatto toccato (arriva prima del clic sulla cella): serve per «Portami qui»
 map.on("preclick", e=>{ ultimoTocco=e.latlng; });
 map.attributionControl.addAttribution("Boschi © contributori OpenStreetMap (ODbL) · Meteo Open-Meteo.com");

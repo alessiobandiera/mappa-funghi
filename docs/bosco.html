@@ -476,6 +476,7 @@ function visibili(){
   const z=map.getZoom();
   $("zoomhint").style.display = z>=ZOOM_MIN ? "none" : "block";
   history.replaceState(null,"",`#${map.getCenter().lat.toFixed(4)},${map.getCenter().lng.toFixed(4)},${z}`);
+  { const a=document.querySelector(".testa .vai"); if (a) a.href=`./#${map.getCenter().lat.toFixed(4)},${map.getCenter().lng.toFixed(4)},${Math.max(9,Math.min(14,z-1))}`; }
   if (z<ZOOM_MIN){ for (const t of tessere.values()) if (t.overlay){ map.removeLayer(t.overlay); t.overlay=null; } return; }
   const b=map.getBounds().pad(.2);
   const vis=IDX.tessere.filter(t=>t.nord>=b.getSouth()&&t.sud<=b.getNorth()&&t.est>=b.getWest()&&t.ovest<=b.getEast());

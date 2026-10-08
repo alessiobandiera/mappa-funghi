@@ -517,7 +517,14 @@ function apriPrevisioni() {
   }
   frame = document.createElement("iframe"); frame.id = "previsioni"; frame.title = "Previsioni buttate";
   frame.src = "./"; $("#v-previsioni").prepend(frame);
-  frame.addEventListener("load", () => { sopra = null; primaVolta = true; pienaPrevisioni(false); aspettaMappa(0); });
+  frame.addEventListener("load", () => {
+    sopra = null; pienaPrevisioni(false);
+    // ricentra sul GPS solo all'apertura della mappa: se la pagina arriva con una zona scelta (#lat,lon,zoom, es. «Guarda questa
+    // zona a 20 m» o «Mappa generale») resta lì; il pulsante del GPS ricentra quando vuoi
+    let h = ""; try { h = frame.contentWindow.location.hash; } catch {}
+    primaVolta = !/^#-?\d/.test(h);
+    aspettaMappa(0);
+  });
 }
 // la mappa nel riquadro chiede lo schermo intero: via le barre dell'app (e schermo intero vero dove il browser lo permette)
 let fsPrevisioni = false;
