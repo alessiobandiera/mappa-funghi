@@ -42,7 +42,8 @@ function valuta(D, idx, P, quota){
     // pioggia totale del periodo piovoso (P.cluster giorni fino all'evento): un agosto con 80 mm in più temporali regge più a lungo
     let tot=cum; if (P.cluster){ tot=0; for (let k=Math.max(0,j-P.cluster+1); k<=j; k++) tot+=D[k].p; }
     if (P.totmin && tot<P.totmin) continue;           // pioggia minima sull'intero periodo (con P.cluster): es. 60 mm in 10 giorni
-    let esaur=1;
+    let esaur=1, mxDopo=0;
+    { let st=0; for (let k=j+1;k<=idx;k++){ if (D[k].p<3&&D[k].ur<88){ st++; if(st>mxDopo) mxDopo=st; } else st=0; } }
     if (P.esaurita){
       const tolle=P.secco[1]+Math.max(0,Math.min(P.maxextra||8,(tot-P.pmin)/P.extra)); let st=0, mx=0;
       for (let k=j+1;k<=idx;k++){ if (D[k].p<3&&D[k].ur<88){ st++; if(st>mx) mx=st; } else st=0; }
@@ -50,7 +51,7 @@ function valuta(D, idx, P, quota){
       if (mx>tolle){ if (!P.esauritaMin) continue; esaur=Math.max(P.esauritaMin, 1-(mx-tolle)/(P.esauritaGiorni||10)); }
     }
     const v=esaur*trap(att,...P.attesa)*(.4+.6*Math.min(1,(P.cluster?tot:cum)/(P.pieno||P.pmin*1.5)));
-    if (v>best){best=v; ev={mm:tot,att};}
+    if (v>best){best=v; ev={mm:tot,att,secco:mxDopo};}
   }
   f.pioggia=best;
   const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
@@ -62,6 +63,8 @@ function valuta(D, idx, P, quota){
   f.aria=trap(avg(u5,"ur"),45,65,100,101,.3);
   f.vento=Math.max(.2,1-.25*u5.filter(tram).length);
   let secchi=0; for (let k=idx;k>=Math.max(0,idx-25);k--){ if (D[k].p>=3||D[k].ur>=88) break; secchi++; }
+  // prova (P.seccoDopo): il secco che conta è il più lungo dopo la pioggia che ha fatto partire la buttata; una pioggia di oggi non lo azzera
+  if (P.seccoDopo && ev) secchi=Math.max(secchi, ev.secco);
   const extra=ev?Math.max(0,Math.min(P.maxextra||8,(ev.mm-P.pmin)/P.extra)):0;
   f.secco=trap(secchi,-1,0,P.secco[0]+extra,P.secco[1]+extra,.1);
   if (P.calo){ const prec=D.slice(Math.max(0,idx-20),idx-6); if (prec.length>=7){ const c=trap(avg(prec,"tmed")-avg(u7,"tmed"),-3,1.5,8,14,.3); f.calo=1-P.calo*(1-c); } }
