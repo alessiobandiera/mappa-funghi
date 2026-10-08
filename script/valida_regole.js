@@ -6,14 +6,35 @@ const tram=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
 
 // parametri attuali del porcino nella mappa (dal 5 ottobre: piena dal 12° giorno dopo la pioggia)
 const ATTUALE={attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13], suoloU:[0,.35,1.01,1.02],
-  quota:[150,500,1600,2000], calo:.15, extra:20, esaurita:1};   // calo .5 -> .15 il 7/10/2026 (ritrovamenti GBIF)
+  quota:[150,500,1600,2000], calo:.15, extra:20, esaurita:1, esauritaMin:.2, esauritaGiorni:5,   // calo .5 -> .15 il 7/10/2026 (ritrovamenti GBIF)
+  // porcino d'autunno, come la mappa (8/10/2026): dal 1° al 31 ottobre passaggio graduale a questi parametri
+  autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22], secco:[10,18]}, autunnoDa:274, autunnoGiorni:30};
 // versione di stamattina: niente giorni asciutti, suolo 12-18
 // proposta dal confronto sui 292 casi con pioggia Open-Meteo (5 ottobre 2026): almeno 60 mm in 10 giorni.
 // NON confermata con la pioggia misurata SIR e la quota neutra (6 ottobre): resta solo per le prove.
 const PIOGGIA60={...ATTUALE, cluster:10, totmin:60};
 const MATTINA={...ATTUALE, suoloT:[8,12,18,23], notte:[3,8,15,20], secco:[100,200], esaurita:0};
 
+// Porcino d'autunno (edulis, pinophilus): nasce più tardi dopo la pioggia, regge suolo e notti più freddi e più giorni asciutti
+// dei porcini estivi. Dal 1° al 31 ottobre i parametri passano gradualmente a quelli d'autunno (verificato l'8/10/2026 su
+// 2.108 ritrovamenti GBIF d'autunno: 0,573 -> 0,593, settembre e estate invariati; Lucchesia non peggiora).
+const cacheStagione=new WeakMap();   // per ogni insieme di parametri: peso d'autunno -> parametri del giorno
+function profiloStagione(P, iso){
+  if (!P.autunno || !iso) return P;
+  const doy=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(iso.slice(0,4)+"-01-01T12:00:00Z"))/864e5)+1;
+  const w=Math.max(0,Math.min(1,(doy-P.autunnoDa)/P.autunnoGiorni));
+  if (!w) return P;
+  let c=cacheStagione.get(P); if (!c) cacheStagione.set(P, c=new Map()); let p=c.get(w);
+  if (!p){
+    p={...P};
+    for (const [nome,v] of Object.entries(P.autunno)) p[nome]=v.map((x,i)=>P[nome][i]+(x-P[nome][i])*w);
+    p.attesa=p.attesa.map(Math.round); p.secco=p.secco.map(Math.round);
+    c.set(w,p);
+  }
+  return p;
+}
 function valuta(D, idx, P, quota){
+  P=profiloStagione(P, D[idx]&&D[idx].d);
   const f={}; let best=0, ev=null;
   for (let j=Math.max(0,idx-P.attesa[3]); j<=idx; j++){
     const att=idx-j; let cum=0; for (let k=Math.max(0,j-2); k<=j; k++) cum+=D[k].p;

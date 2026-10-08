@@ -125,6 +125,7 @@ const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
    suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
    esauritaMin:.2, esauritaGiorni:5,   // buttata esaurita dal secco: cala in 5 giorni fino al 20% invece di azzerarsi (verificato 7/10/2026)
+   autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22], secco:[10,18]}, autunnoDa:274, autunnoGiorni:30,   // d'autunno: vedi profiloStagione
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
   {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
    suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
@@ -148,7 +149,26 @@ function trap(x,a,b,c,d,min=0){
 const avg=(arr,k)=>arr.reduce((s,g)=>s+g[k],0)/arr.length;
 const tramontana=g=>(g.vd>=315||g.vd<=60)&&g.vm>=20&&g.ur<60;
 
+// Porcino d'autunno (edulis, pinophilus): nasce più tardi dopo la pioggia, regge suolo e notti più freddi e più giorni asciutti
+// dei porcini estivi. Dal 1° al 31 ottobre i parametri passano gradualmente a quelli d'autunno (verificato l'8/10/2026 su
+// 2.108 ritrovamenti GBIF d'autunno: 0,573 -> 0,593, settembre e estate invariati; Lucchesia non peggiora).
+const cacheStagione=new WeakMap();   // per ogni insieme di parametri: peso d'autunno -> parametri del giorno
+function profiloStagione(sp, iso){
+  if (!sp.autunno || !iso) return sp;
+  const doy=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(iso.slice(0,4)+"-01-01T12:00:00Z"))/864e5)+1;
+  const w=Math.max(0,Math.min(1,(doy-sp.autunnoDa)/sp.autunnoGiorni));
+  if (!w) return sp;
+  let c=cacheStagione.get(sp); if (!c) cacheStagione.set(sp, c=new Map()); let p=c.get(w);
+  if (!p){
+    p={...sp};
+    for (const [nome,v] of Object.entries(sp.autunno)) p[nome]=v.map((x,i)=>sp[nome][i]+(x-sp[nome][i])*w);
+    p.attesa=p.attesa.map(Math.round); p.secco=p.secco.map(Math.round);
+    c.set(w,p);
+  }
+  return p;
+}
 function valuta(D, idx, sp, quota, bosco){
+  sp=profiloStagione(sp, D[idx]&&D[idx].d);
   const f={}; let best=0, ev=null;
   for (let j=Math.max(0,idx-sp.attesa[3]); j<=idx; j++){
     const att=idx-j; let cum=0;

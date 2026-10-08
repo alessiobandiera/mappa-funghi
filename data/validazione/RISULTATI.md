@@ -130,3 +130,30 @@ Casi propri con GPS: posto, quota e bosco veri, esito certo (anche i giri a vuot
 - script/valida_ml.py, script/valida_confronto.js, script/valida_regole.js (opzioni di prova: totmin, cluster, senza)
 - serie_om.json non è nel repository: il workflow «Meteo storico dei casi» da GitHub viene rallentato da Open-Meteo
   (limite di richieste) e va in timeout; il meteo dei casi è stato scaricato dal browser.
+
+## 8 ottobre 2026 — porcino d'autunno (applicato)
+
+Domanda: i porcini estivi (reticulatus, aereus) e quelli d'autunno (edulis, pinophilus) nascono con condizioni diverse?
+Ritrovamenti GBIF divisi per specie e mese (6.340, indice di allora): aereus 0,645, reticulatus 0,597, edulis 0,578;
+giugno-luglio 0,585, agosto-settembre 0,609, **ottobre-dicembre 0,568** (il periodo peggiore).
+
+Taratura sui soli ritrovamenti d'autunno, verificata su dati non usati (anni pari ↔ dispari, Italia tenuta fuori):
+0,550 → 0,600, 0,588 → 0,612, 0,563 → 0,575. In tutte le prove l'autunno vuole un'attesa più lunga, suolo e notti più freddi,
+più giorni asciutti tollerati. In estate la taratura non migliora (i parametri attuali vanno già bene).
+
+Profilo d'autunno: attesa 8/15/22/30 giorni (era 7/12/18/26), suolo 4/8/20/25 °C (era 8/12/22/26), notti 2/5/19/22 °C (era 3/8/19/22),
+secco 10/18 giorni (era 5/13). Passaggio graduale dal 1° al 31 ottobre (`autunno`, `autunnoDa:274`, `autunnoGiorni:30`, funzione
+`profiloStagione` in index.html, bosco.html e valida_regole.js).
+
+| passaggio | GBIF ott-dic | settembre | estate | Lucchesia (49 casi, suolo NASA + pioggia SIR) |
+|---|---|---|---|---|
+| nessuno | 0,573 | 0,624 | 0,590 | 0,680 |
+| 15/9 → 15/10 | 0,608 | 0,632 | = | 0,671 |
+| **1/10 → 31/10 (scelto)** | **0,593** | 0,624 | = | **0,685** |
+
+(Profilo deciso dalla data del ritrovamento per tutti i giorni confrontati. Valutando ogni giorno con il suo profilo, come fa la
+mappa, i ritrovamenti di fine settembre perdono un po' perché i giorni di ottobre confrontati salgono: agosto-settembre 0,609 → 0,602.)
+Analisi ufficiale dopo l'applicazione (gbif_analisi.py, con anche l'esaurimento graduale ora negli script): tutti 0,596, edulis 0,584,
+pinophilus 0,615, ottobre-dicembre 0,593. Mappa e script danno lo stesso indice (±1 di arrotondamento, senza il fattore bosco).
+Effetto sulla mappa: media delle celle l'8/10 13,5 → 21,1, il 15/10 1,7 → 10,2 (il secco di settembre pesa meno in autunno).
+Da verificare con le uscite dell'app.
