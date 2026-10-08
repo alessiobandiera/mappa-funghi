@@ -157,3 +157,23 @@ Analisi ufficiale dopo l'applicazione (gbif_analisi.py, con anche l'esaurimento 
 pinophilus 0,615, ottobre-dicembre 0,593. Mappa e script danno lo stesso indice (±1 di arrotondamento, senza il fattore bosco).
 Effetto sulla mappa: media delle celle l'8/10 13,5 → 21,1, il 15/10 1,7 → 10,2 (il secco di settembre pesa meno in autunno).
 Da verificare con le uscite dell'app.
+
+### 8 ottobre, sera — correzione: troppo ottimista dopo il secco (applicata)
+
+Il profilo d'autunno con il secco tollerato 10/18 alzava il livello della mappa (celle «possibile» o più: 7/10 15, 8/10 54, 11/10 66 su 145)
+senza che le verifiche lo vedessero: il confronto caso/giorni vicini misura l'ordine, non il livello. In più il fattore «giorni asciutti»
+contava il secco solo fino a oggi: una pioggia oggi lo azzerava e faceva ripartire la spinta di piogge vecchie già seccate
+(anche con i parametri di prima: 3 → 21 celle tra il 7 e l'8/10, giorno di pioggia dopo 18 giorni asciutti).
+
+Correzioni: (1) nel profilo d'autunno il secco tollerato resta quello estivo (5/13); (2) il secco che conta è il più lungo **dopo la
+pioggia che ha fatto partire la buttata** (`ev.secco`; negli script `seccoDopo:true`): una pioggia nuova non riaccende una buttata seccata.
+
+| | celle ≥30 il 7/10 / 8/10 / 11/10 / 15/10 | GBIF tutti | estate | settembre | ott-dic | Lucchesia |
+|---|---|---|---|---|---|---|
+| applicato nel pomeriggio | 15 / 54 / 66 / 12 | 0,599 | 0,590 | 0,624 | 0,593 | 0,685 |
+| **corretto** | **0 / 0 / 0 / 1** | 0,597 | 0,595 | 0,614 | 0,586 | 0,687 |
+
+(GBIF con il profilo deciso dalla data del ritrovamento.) Analisi ufficiale dopo la correzione (gbif_analisi.py, ogni giorno con il suo
+profilo): tutti 0,592, edulis 0,581, pinophilus 0,612, aereus 0,640, ottobre-dicembre 0,581, agosto-settembre 0,600.
+Oggi la mappa dà «scarsa» quasi ovunque (in linea con Borgotaro «nascita scarsa» del 6/10); la pioggia dell'8/10 dovrebbe far salire
+l'indice dalla settimana del 16-20 ottobre. Mappa e script danno lo stesso indice (±1).

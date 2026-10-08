@@ -124,7 +124,7 @@ const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
    suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
    esauritaMin:.2, esauritaGiorni:5,   // buttata esaurita dal secco: cala in 5 giorni fino al 20% invece di azzerarsi (verificato 7/10/2026)
-   autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22], secco:[10,18]}, autunnoDa:274, autunnoGiorni:30,   // d'autunno: vedi profiloStagione
+   autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22]}, autunnoDa:274, autunnoGiorni:30,   // d'autunno: vedi profiloStagione (il secco tollerato resta quello estivo: più lungo rendeva la mappa troppo ottimista)
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
 ];
 const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
@@ -173,7 +173,7 @@ function valuta(D, idx, sp, quota, bosco){
     for (let k=j+1; k<=idx; k++){ if (D[k].p<3 && D[k].ur<88){ st++; if (st>mx) mx=st; } else st=0; }
     if (mx>tolle){ if (!sp.esauritaMin) continue; esaur=Math.max(sp.esauritaMin, 1-(mx-tolle)/(sp.esauritaGiorni||5)); }
     const v=esaur*trap(att,...sp.attesa)*(.4+.6*Math.min(1,cum/(sp.pmin*1.5)));
-    if (v>best){best=v; ev={data:D[j].d, mm:Math.round(cum), att};}
+    if (v>best){best=v; ev={data:D[j].d, mm:Math.round(cum), att, secco:mx};}
   }
   f.pioggia=best;
   const u5=D.slice(idx-4,idx+1), u7=D.slice(idx-6,idx+1);
@@ -191,6 +191,9 @@ function valuta(D, idx, sp, quota, bosco){
   // dopo il temporale servono altre piogge o umidità, altrimenti la buttata non parte o si secca
   let secchi=0;
   for (let k=idx; k>=Math.max(0,idx-25); k--){ if (D[k].p>=3 || D[k].ur>=88) break; secchi++; }
+  // il secco che conta è il più lungo dopo la pioggia che ha fatto partire la buttata: una pioggia di oggi non riaccende
+  // una buttata già seccata (vale solo come pioggia nuova, con la sua attesa). Verificato l'8/10/2026 (RISULTATI.md).
+  if (ev) secchi=Math.max(secchi, ev.secco);
   // più è piovuto, più a lungo il terreno resta bagnato: +1 giorno tollerato ogni 20 mm oltre la soglia (max 8)
   const extra = ev ? Math.max(0,Math.min(8,(ev.mm-sp.pmin)/20)) : 0;
   f.secco=trap(secchi,-1,0,sp.secco[0]+extra,sp.secco[1]+extra,.1);
