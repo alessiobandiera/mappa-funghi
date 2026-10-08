@@ -55,8 +55,6 @@
       <a class="vai" href="bosco.html">Zone a 20 m</a>
     </div>
 
-    <div class="chips" id="chips" role="group" aria-label="Specie"></div>
-
     <div>
       <div class="giorni" id="giorni" role="group" aria-label="Giorno"></div>
       <input type="range" id="day" class="nascosto" min="0" max="9" value="6" aria-label="Giorno" disabled tabindex="-1">
@@ -94,7 +92,7 @@
       </div>
     </section>
 
-    <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata per specie dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
+    <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata del porcino dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
 
     <p class="note">Indice indicativo basato su regole empiriche. Per i giorni passati usa pioggia e temperature misurate dalle stazioni della Regione dove ce n'è una vicina, altrimenti il modello meteo, che può non vedere i temporali locali. Verifica del 4 ottobre 2026 su 117 esiti reali documentati (2015–2026, Appennino toscano, emiliano e ligure): nel 75% dei confronti tra un giorno con porcini e uno senza, l'indice dà il valore più alto al primo. I boschi vengono da OpenStreetMap; dove non indica latifoglie o conifere il tipo è stimato dalla quota: correggilo nel dettaglio. Rispetta tesserino, giorni di raccolta e aree protette (Parco delle Apuane, Parco dell'Appennino tosco-emiliano). Nessuna app dice se un fungo è commestibile: fai controllare il raccolto all'Ispettorato micologico della ASL.<br>
     Pioggia e temperature misurate: <a href="https://www.sir.toscana.it/" target="_blank" rel="noopener">SIR</a> e <a href="https://www.cfr.toscana.it/" target="_blank" rel="noopener">CFR</a> Regione Toscana · Previsione e modello: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0) · Boschi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a> (ODbL).</p>
@@ -121,21 +119,13 @@ const BOSCHI = {
   pineta:"Pineta litoranea", querceto:"Querceto / latifoglie miste", castagneto:"Castagneto",
   faggeta:"Faggeta", abetaia:"Abetaia / conifere", pianura:"Pianura e coltivi", prateria:"Crinale e praterie"
 };
+// solo il porcino (dall'8/10/2026 la mappa non mostra più finferlo, ovolo e chiodino)
 const SPECIE = [
   {id:"porcino", nome:"Porcino", attesa:[7,12,18,26], pmin:20, suoloT:[8,12,22,26], notte:[3,8,19,22], secco:[5,13],
    suoloU:[0,.35,1.01,1.02], quota:[150,500,1600,2000], calo:.15,   // .5 -> .15: verificato su 4.100 ritrovamenti (GBIF) e casi Lucchesia
    esauritaMin:.2, esauritaGiorni:5,   // buttata esaurita dal secco: cala in 5 giorni fino al 20% invece di azzerarsi (verificato 7/10/2026)
    autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22], secco:[10,18]}, autunnoDa:274, autunnoGiorni:30,   // d'autunno: vedi profiloStagione
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
-  {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
-   suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
-   boschi:{faggeta:1,castagneto:1,querceto:1,abetaia:.9,pineta:.6,pianura:.2,prateria:.15}},
-  {id:"ovolo", nome:"Ovolo buono", attesa:[7,10,16,22], pmin:20, suoloT:[14,17,23,27], notte:[9,13,19,23], secco:[6,14],
-   suoloU:[0,.30,1.01,1.02], quota:[0,200,900,1300], calo:0,
-   boschi:{castagneto:1,querceto:1,faggeta:.3,pineta:.2,abetaia:.1,pianura:.2,prateria:.1}},
-  {id:"chiodino", nome:"Chiodino", attesa:[4,7,14,20], pmin:15, suoloT:[5,8,14,18], notte:[0,4,10,14], secco:[5,12],
-   suoloU:[.05,.40,1.01,1.02], quota:[0,200,1300,1700], calo:.8,
-   boschi:{castagneto:1,querceto:1,faggeta:1,abetaia:.6,pineta:.4,pianura:.25,prateria:.1}},
 ];
 const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
   notti:"temperature notturne", aria:"umidità dell'aria", vento:"vento secco da nord", calo:"calo termico",
@@ -398,7 +388,7 @@ function rettangolo(fc){
   fc.rect=L.rectangle([[fc.lat-D.dlat/2,fc.lon-D.dlon/2],[fc.lat+D.dlat/2,fc.lon+D.dlon/2]],
     {stroke:false, fillColor:COL[0], fillOpacity:.3, renderer:forestRenderer});
   fc.rect.bindTooltip(()=>{ const s=cellScore(fc,state.sp,state.day);
-    return `${s? s.i+" · "+spName(s.sp)+" · ":""}${fc.elev} m · ${BOSCHI[fc.bosco]}`; },{className:"cell-tip", sticky:true});
+    return `${s? s.i+" · ":""}${fc.elev} m · ${BOSCHI[fc.bosco]}`; },{className:"cell-tip", sticky:true});
   fc.rect.on("click",()=>select(fc));
   forestLayer.addLayer(fc.rect);
 }
@@ -466,7 +456,8 @@ function disegnaFasce(fz){
     `Tendenza a ${fz.k} giorni: dal 4° giorno in avanti l'indice usa le previsioni meteo, meno affidabili. Pesa ancora la pioggia già caduta, ma temperature e piogge future possono cambiare.`];
   nota.textContent=testi[fz.n]; nota.classList.toggle("tend", fz.n===3);
 }
-const spName=id=>id==="best"?"Migliore":SPECIE.find(s=>s.id===id).nome;
+const ALTRE={finferlo:"Finferlo", ovolo:"Ovolo buono", chiodino:"Chiodino"};   // solo per le vecchie uscite del diario
+const spName=id=>id==="best"?"Migliore":(SPECIE.find(s=>s.id===id)||{nome:ALTRE[id]||id}).nome;
 
 function setStatus(t,p){ document.getElementById("status").textContent=t;
   if (p!=null){ const g=document.getElementById("prog"); g.style.width=(100*p)+"%"; g.parentElement.style.visibility=p>=1?"hidden":"visible"; } }
@@ -506,7 +497,7 @@ const GIORNI=StrisciaGiorni(document.getElementById("day"), document.getElementB
   return {sett: iso===oggiISO? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:fase(iso).n,
     titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][fase(iso).n]};
 });
-const MP=MappaPiena(map,{gruppi:[{sel:"#chips",nome:"Specie"}], giorno:"#day", etichetta:"#daylbl"});
+const MP=MappaPiena(map,{gruppi:[], giorno:"#day", etichetta:"#daylbl"});
 async function caricaStazioni(){
   if (location.protocol==="file:") return;
   try{
@@ -534,13 +525,6 @@ function portamiQui(lat, lon){
 const vistaBoschi=()=>map.getZoom()>=FZ;
 
 function buildChips(){
-  const box=document.getElementById("chips");
-  [...SPECIE.map(s=>({id:s.id,n:s.nome})), {id:"best",n:"Migliore"}].forEach(s=>{
-    const b=document.createElement("button"); b.className="chip"; b.type="button"; b.textContent=s.n; b.dataset.id=s.id;
-    b.setAttribute("aria-pressed", String(s.id===state.sp));
-    b.onclick=()=>{ state.sp=s.id; box.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",String(x.dataset.id===s.id))); render(); };
-    box.appendChild(b);
-  });
   document.getElementById("legend").innerHTML=`<div class="scala" aria-label="Legenda dell'indice">${COL.map(c=>`<i style="background:${c}"></i>`).join("")}${LAB.map((l,i)=>`<span>${["0-9","10-29","30-49","50-69","70+"][i]}<br>${l}</span>`).join("")}</div>`;
 }
 
@@ -550,7 +534,7 @@ function renderGrid(){
     const s=cellScore(c,state.sp,state.day); if (!s) return; const b=band(s.i);
     const r=L.rectangle([[c.lat-GRID.dlat/2,c.lon-GRID.dlon/2],[c.lat+GRID.dlat/2,c.lon+GRID.dlon/2]],
       {stroke:false, fillColor:COL[b], fillOpacity: b===0? .18 : .5});
-    r.bindTooltip(`${s.i} · ${spName(s.sp)} · ${c.elev} m`,{className:"cell-tip", sticky:true});
+    r.bindTooltip(`${s.i} · ${c.elev} m`,{className:"cell-tip", sticky:true});
     r.on("click",()=>select(c));
     gridLayer.addLayer(r);
   });
@@ -579,13 +563,13 @@ function renderTop(){
   const arr=src.map(c=>({c, s:cellScore(c,state.sp,state.day)})).filter(x=>x.s&&x.s.i>0)
     .sort((a,b)=>b.s.i-a.s.i).slice(0,8);
   document.getElementById("toplbl").textContent=(boschi?"I boschi migliori nella zona inquadrata":"I punti migliori")+
-    ` · ${spName(state.sp)} · ${fmtDay(dayDates[state.day])}`;
+    ` · ${fmtDay(dayDates[state.day])}`;
   const ul=document.getElementById("top"); ul.innerHTML="";
   if (!arr.length){ ul.innerHTML=`<li class="meta">${boschi && !src.length ? "Nessun bosco caricato qui per ora." : "Nessun punto con indice sopra zero per questo giorno."}</li>`; return; }
   arr.forEach(({c,s})=>{
     const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
     btn.innerHTML=`<span class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</span>
-      <span class="where"><b>${c.elev} m · ${BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E${state.sp==="best"?" · "+spName(s.sp):""}</small></span>
+      <span class="where"><b>${c.elev} m · ${BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E</small></span>
       <span class="freccia" aria-hidden="true">›</span>`;
     btn.onclick=()=>select(c,true); li.appendChild(btn); ul.appendChild(li);
   });
@@ -613,7 +597,7 @@ function popupPieno(){
   const c=state.sel; if (!c) return;
   const P=state.punto||{lat:c.lat,lon:c.lon};
   let h=`<div class="pp"><b>${c.forest?"Bosco · ":""}${c.elev} m · ${BOSCHI[c.bosco]}</b><span class="pp-m">${dayDates.length?fmtDay(dayDates[state.day]):""}</span>`;
-  if (c.scores) h+=SPECIE.map(sp=>{ const s=c.scores[sp.id][state.day]; return `<div class="pp-r"><span>${sp.nome}</span><b class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }).join("");
+  if (c.scores){ const s=c.scores.porcino[state.day]; h+=`<div class="pp-r"><span>Indice di buttata · ${LAB[band(s.i)]}</span><b class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }
   else h+=`<span class="pp-m">Il meteo di questa zona è ancora in arrivo.</span>`;
   h+=portamiQui(P.lat,P.lon)+`<button type="button" class="btn pp-det">Tutti i dettagli</button></div>`;
   if (ppAperto && map.hasLayer(ppAperto)) ppAperto.setLatLng([P.lat,P.lon]).setContent(h);
@@ -651,16 +635,15 @@ function renderDetail(){
     else why.push("nessuna pioggia utile nella finestra di attesa");
     if (s.lim) why.push(`limita: ${FATTORI[s.lim]}`);
     const spark=c.scores[sp.id].map((x,k)=>`<div class="${["","","fc","fc2"][fase(dayDates[k]).n]}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
-    html+=`<div class="sp"><span class="n">${sp.nome}</span><span class="v">${s.i} <span class="meta">${LAB[band(s.i)]}</span></span>
+    html+=`<div class="sp"><span class="n">Indice di buttata</span><span class="v">${s.i} <span class="meta">${LAB[band(s.i)]}</span></span>
       <span class="why">${why.join(" · ")}</span><div class="spark" aria-hidden="true">${spark}</div></div>`;
   });
   html+=`<p class="meta">Barre: ultimi 7 giorni, poi 3 di previsione (più chiare) e 4 di tendenza (tratteggiate: solo previsioni meteo). <a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
   const oggiOSel = dayDates[state.day] && dayDates[state.day]<=oggiISO ? dayDates[state.day] : oggiISO;
-  const spDef = state.sp==="best" ? "porcino" : state.sp;
   html+=`<form class="diario-form" id="diarioForm">
     <strong class="full">Segna un'uscita qui</strong>
     <label>Giorno <input type="date" id="dfData" value="${oggiOSel}" max="${oggiISO}" required></label>
-    <label>Specie cercata <select id="dfSp">${SPECIE.map(sp=>`<option value="${sp.id}"${sp.id===spDef?" selected":""}>${sp.nome}</option>`).join("")}</select></label>
+    <input type="hidden" id="dfSp" value="porcino">
     <div class="full esito" role="radiogroup" aria-label="Esito">
       <label><input type="radio" name="dfEsito" value="si" checked> Trovati</label>
       <label><input type="radio" name="dfEsito" value="no"> Niente</label>

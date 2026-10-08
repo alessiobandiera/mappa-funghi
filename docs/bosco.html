@@ -48,8 +48,6 @@
       <a class="vai" href="./">Mappa generale</a>
     </div>
 
-    <div class="chips" id="specie" role="group" aria-label="Specie"></div>
-
     <div>
       <div class="giorni" id="giorni" role="group" aria-label="Giorno"></div>
       <input type="range" id="giorno" class="nascosto" min="0" max="0" value="0" aria-label="Giorno" disabled tabindex="-1">
@@ -133,15 +131,6 @@ const SPECIE = [
    esauritaMin:.2, esauritaGiorni:5,   // buttata esaurita dal secco: cala in 5 giorni fino al 20% invece di azzerarsi (verificato 7/10/2026)
    autunno:{attesa:[8,15,22,30], suoloT:[4,8,20,25], notte:[2,5,19,22], secco:[10,18]}, autunnoDa:274, autunnoGiorni:30,   // d'autunno: vedi profiloStagione
    boschi:{faggeta:1,castagneto:1,abetaia:1,querceto:.9,pineta:.7,pianura:.2,prateria:.15}},
-  {id:"finferlo", nome:"Finferlo", attesa:[4,7,15,22], pmin:12, suoloT:[9,13,21,25], notte:[4,9,17,21], secco:[4,11],
-   suoloU:[.05,.45,1.01,1.02], quota:[100,300,1600,2000], calo:0,
-   boschi:{faggeta:1,castagneto:1,querceto:1,abetaia:.9,pineta:.6,pianura:.2,prateria:.15}},
-  {id:"ovolo", nome:"Ovolo buono", attesa:[7,10,16,22], pmin:20, suoloT:[14,17,23,27], notte:[9,13,19,23], secco:[6,14],
-   suoloU:[0,.30,1.01,1.02], quota:[0,200,900,1300], calo:0,
-   boschi:{castagneto:1,querceto:1,faggeta:.3,pineta:.2,abetaia:.1,pianura:.2,prateria:.1}},
-  {id:"chiodino", nome:"Chiodino", attesa:[4,7,14,20], pmin:15, suoloT:[5,8,14,18], notte:[0,4,10,14], secco:[5,12],
-   suoloU:[.05,.40,1.01,1.02], quota:[0,200,1300,1700], calo:.8,
-   boschi:{castagneto:1,querceto:1,faggeta:1,abetaia:.6,pineta:.4,pianura:.25,prateria:.1}},
 ];
 const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
   notti:"temperature notturne", aria:"umidità dell'aria", vento:"vento secco da nord", calo:"calo termico",
@@ -460,13 +449,13 @@ function aggiornaStato(){
   const cel=celleMap.get(key), stS=o.stato.st0-cel.elev*0.0065, [ta,tb,tc,td]=sp.suoloT;
   const C=sc? Math.max(0,-sc.T) : clamp((tb-stS)/(tb-ta)), H=sc? Math.max(0,sc.T) : clamp((stS-tc)/(td-tc));
   const terr = D>.66? "asciutto" : D>.4? "medio" : "bagnato";
-  const temp = C>.25? "freddo per la specie" : H>.25? "caldo per la specie" : "nella fascia giusta";
+  const temp = C>.25? "freddo per i porcini" : H>.25? "caldo per i porcini" : "nella fascia giusta";
   const pref = [ D>.55? "conche, fossi e impluvi" : D<.35? "punti che drenano, dossi e pendii" : "situazioni intermedie",
                  C>.25? "versanti al sole" : (H>.25||D>.55)? "versanti in ombra" : "esposizioni miste" ];
   if (V>.3) pref.push("lati riparati dalla tramontana");
   $("stato").innerHTML=(sc? "<b>Scenario.</b> " : `<b>${fmtDay(iso)}</b>, al centro della mappa: ${o.stato.secchi} giorni senza pioggia, `)+
     `terreno ${terr}, suolo ${temp}${V>.3?", tramontana":""}. Favoriti: ${pref.join(", ")}.`+
-    `<br>Indice ${sp.nome.toLowerCase()} della zona a ${cel.elev} m: <b>${Math.round(o.bins.latif[Math.round(cel.elev/BIN)])}</b>`+(iso>oggiISO?" · previsione":"");
+    `<br>Indice della zona a ${cel.elev} m: <b>${Math.round(o.bins.latif[Math.round(cel.elev/BIN)])}</b>`+(iso>oggiISO?" · previsione":"");
 }
 
 /* ---------------- mappa ---------------- */
@@ -488,7 +477,7 @@ const GIORNI=StrisciaGiorni($("giorno"), $("giorni"), i=>{
   return {sett: k===0? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:f,
     titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][f]};
 });
-MappaPiena(map,{gruppi:[{sel:"#specie",nome:"Specie"},{sel:"#viste",nome:"Cosa mostrare"}], giorno:"#giorno", etichetta:"#giornolbl"});
+MappaPiena(map,{gruppi:[{sel:"#viste",nome:"Cosa mostrare"}], giorno:"#giorno", etichetta:"#giornolbl"});
 let contorni=null;
 
 function visibili(){
@@ -550,7 +539,7 @@ function apriPunto(ll){
       <tr><td>Sole rispetto al piano</td><td>${Math.round(s*100)}%</td></tr>
       <tr><td>Riparo tramontana</td><td>${Math.round(rp*100)}%</td></tr>
       <tr><td>Effetto del terreno</td><td>×${clamp(1+.5*(k-1),.7,1.3).toFixed(2)}</td></tr>
-      <tr><td>Indice ${t.calc.sp.nome.toLowerCase()} della zona</td><td>${Math.round(t.calc.base[p])}</td></tr>
+      <tr><td>Indice della zona</td><td>${Math.round(t.calc.base[p])}</td></tr>
       <tr><td><b>Indice qui</b></td><td><b>${fin}</b></td></tr>
     </table><div class="why">${motivi.join("<br>")}</div>${portamiQui(lat,lng)}</div>`).openOn(map);
 }
@@ -598,7 +587,7 @@ let topT=null;
 function renderTop(){ clearTimeout(topT); topT=setTimeout(disegnaTop,200); }
 function disegnaTop(){
   const ul=$("top"), r=zoneMigliori(), sp=SPECIE.find(s=>s.id===st.sp);
-  $("toplbl").textContent=`Le zone migliori nella zona inquadrata · ${sp.nome} · ${date.length?fmtDay(date[st.g],true):""}`;
+  $("toplbl").textContent=`Le zone migliori nella zona inquadrata · ${date.length?fmtDay(date[st.g],true):""}`;
   if (r.stato==="zoom"){ ul.innerHTML=`<li class="vuoto">Avvicinati sulla mappa (zoom ${ZOOM_MIN} o più) per vedere le zone a 20 m.</li>`; return; }
   if (!r.zone.length){ ul.innerHTML=`<li class="vuoto">${r.attesa? "Carico le tessere…" : r.viste? "Nessuna zona di bosco con indice sopra zero qui per questo giorno." : "Qui non ci sono tessere a 20 m."}</li>`; return; }
   ul.innerHTML="";
@@ -698,9 +687,6 @@ function mostraSentieri(){
 map.on("moveend", mostraSentieri);
 
 /* ---------------- controlli ---------------- */
-$("specie").innerHTML=SPECIE.map(s=>`<button class="chip" data-s="${s.id}" aria-pressed="${s.id===st.sp}">${s.nome}</button>`).join("");
-$("specie").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.sp=b.dataset.s;
-  [...$("specie").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); ricalcola(); };
 $("viste").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.v=b.dataset.v;
   [...$("viste").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); ridisegna(); };
 $("modo").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; st.m=b.dataset.m;
