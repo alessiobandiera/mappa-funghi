@@ -67,7 +67,7 @@ function valuta(D, idx, P, quota){
   // prova (P.seccoDopo): il secco che conta è il più lungo dopo la pioggia che ha fatto partire la buttata; una pioggia di oggi non lo azzera
   if (P.seccoDopo && ev) secchi=Math.max(secchi, ev.secco);
   const extra=ev?Math.max(0,Math.min(P.maxextra||8,(ev.mm-P.pmin)/P.extra)):0;
-  f.secco=trap(secchi,-1,0,P.secco[0]+extra,P.secco[1]+extra,.1);
+  f.secco=trap(secchi,-1,0,P.secco[0]+extra,P.secco[1]+extra,P.seccoMin??.1);
   if (P.calo){ const prec=D.slice(Math.max(0,idx-20),idx-6); if (prec.length>=7){ const c=trap(avg(prec,"tmed")-avg(u7,"tmed"),-3,1.5,8,14,.3); f.calo=1-P.calo*(1-c); } }
   f.quota=trap(quota,...P.quota,.05);
   if (P.senza) for (const x of P.senza) delete f[x];   // prove: fattori esclusi (es. 'quota': nei casi il punto è il paese, non il bosco)

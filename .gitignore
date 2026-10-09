@@ -3,3 +3,4 @@ data/validazione/uscite_locali.json
 data/gbif/confronti.json
 data/gbif/modello.json
 data/gbif/parametri.json
+data/gbif/parametri-*.json

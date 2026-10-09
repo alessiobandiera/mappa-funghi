@@ -177,3 +177,31 @@ pioggia che ha fatto partire la buttata** (`ev.secco`; negli script `seccoDopo:t
 profilo): tutti 0,592, edulis 0,581, pinophilus 0,612, aereus 0,640, ottobre-dicembre 0,581, agosto-settembre 0,600.
 Oggi la mappa dà «scarsa» quasi ovunque (in linea con Borgotaro «nascita scarsa» del 6/10); la pioggia dell'8/10 dovrebbe far salire
 l'indice dalla settimana del 16-20 ottobre. Mappa e script danno lo stesso indice (±1).
+
+## 9 ottobre 2026 — porcino per specie, con alberi, quota e stagione (applicato)
+
+L'indice del porcino è il migliore fra quattro specie (`docs/porcini.js`, usato da index.html e bosco.html):
+porcino nero (*aereus*), estivo (*reticulatus*), d'autunno (*edulis*), dei pini (*pinophilus*).
+- **Meteo per specie**: tarato sui ritrovamenti GBIF di ogni specie (`script/gbif_tara_specie.js`, anni pari/dispari e Italia tenuti fuori);
+  presi i valori comuni alle prove, arrotondati (i migliori grezzi cambiavano troppo da una prova all'altra).
+- **Stagione**: frequenza del mese per specie rispetto a tutte le specie (corregge lo sforzo di raccolta), ritrovamenti del Mediterraneo;
+  piena da 0,8. Estivo: giugno-luglio ×2-4, cala da ottobre; nero: in Italia ottobre-novembre, a bassa quota; d'autunno: agosto-novembre.
+- **Quota**: limite vero per specie (0 fuori fascia): nero 0/150/1000/1400 m, estivo 50/250/1300/1700, d'autunno 150/450/1700/2100, dei pini 200/500/1700/2100.
+- **Alberi (simbiosi)**: tabella `OSPITI` per tipo di bosco (castagno, querce, leccio, faggio, abeti, pini montani/mediterranei, misti…);
+  tipo di bosco dalla carta **ISPRA Corine Land Cover 2018 IV livello** (`script/boschi_clc.py` + workflow, `script/boschi_tipi.py`):
+  per pixel a 20 m (`docs/terreno/f/`) e per maglia da 600 m (`docs/dati/tipi_bosco.json`, 8.582 maglie su 9.348); dove manca, stima da quota e OpenStreetMap.
+- **Secco**: fattore minimo 0,03 (era 0,1): una buttata seccata dà indice basso (prima restava a 30 per l'ammorbidimento del fattore peggiore).
+
+| | indice di prima | per specie |
+|---|---|---|
+| aereus (771) | 0,649 | 0,669 (Italia 0,628 → 0,650) |
+| reticulatus (1.869) | 0,601 | 0,636 (Italia 0,548 → 0,596) |
+| edulis (3.990) | 0,583 | 0,603 |
+| pinophilus (382) | 0,597 | 0,608 |
+| **combinato, tutti (7.012)** | **0,596** | **0,617** (Italia 0,594; anni pari/dispari 0,616/0,618; estate 0,605, settembre 0,653, ott-dic 0,602) |
+| Lucchesia (49 casi, castagno) | 0,685 | 0,680 (alla pari) |
+
+(Nei ritrovamenti il bosco non è noto: alberi = 1 per tutte le specie; quota neutra.)
+Livello della mappa il 9/10: nessuna maglia ≥30 (prima del secco più netto: 287); sotto i 100 m media 2, massimo 12; pinete costiere ≤9;
+castagneti fino a 25. Mappa generale e mappa a 20 m: stessa fascia nel 90% delle maglie.
+La tabella degli alberi è da conoscenza generale: da correggere con l'esperienza e con le uscite dell'app.
