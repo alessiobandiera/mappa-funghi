@@ -1,0 +1,28 @@
+name: Diagnosi orari SIR
+
+# Solo a mano: confronta i valori giornalieri SIR con le letture CFR archiviate. Salva l'uscita in data/previsioni/diagnosi_sir.txt.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnosi:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: PYTHONUNBUFFERED=1 timeout 12m python script/diagnosi_sir.py 2>&1 | tee data/previsioni/diagnosi_sir.txt
+        continue-on-error: true
+      - name: Salva
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/previsioni/diagnosi_sir.txt
+          git commit -q -m "Diagnosi orari SIR [skip ci]" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep $((RANDOM % 20 + 5)); done
