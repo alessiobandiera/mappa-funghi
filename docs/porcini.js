@@ -17,18 +17,20 @@ const BOSCHI = {
   esotiche:"Conifere esotiche (douglasia…)", robinia:"Latifoglie esotiche (robinia…)", igrofile:"Salici, pioppi, ontani",
   pianura:"Pianura e coltivi", prateria:"Crinale e praterie"
 };
-// con quali alberi vive ogni specie (simbiosi): 1 = ospite tipico, 0 = mai
+// con quali alberi vive ogni specie (simbiosi): 1 = ospite tipico, 0 = mai. Rivisto il 9/10/2026 sulle schede della Regione
+// Piemonte e della Scuola Sant'Anna (Alta Val di Vara): il porcino rosso (pinophilus) vive con castagno, faggio, abeti e pini
+// montani, non con i pini mediterranei; il nero (aereus) anche in faggeta; l'estivo (reticulatus) dal castagno alla faggeta.
 const OSPITI = {
-  castagno:   {aereus:1,   reticulatus:1,   edulis:1,   pinophilus:.5},
+  castagno:   {aereus:1,   reticulatus:1,   edulis:1,   pinophilus:.9},
   querce:     {aereus:1,   reticulatus:1,   edulis:.6,  pinophilus:.2},
   leccio:     {aereus:1,   reticulatus:.5,  edulis:.3,  pinophilus:.1},
-  faggio:     {aereus:.2,  reticulatus:.7,  edulis:1,   pinophilus:.6},
+  faggio:     {aereus:.4,  reticulatus:.9,  edulis:1,   pinophilus:1},
   latifoglie: {aereus:.5,  reticulatus:.7,  edulis:.5,  pinophilus:.2},
-  mistolat:   {aereus:.7,  reticulatus:.8,  edulis:.9,  pinophilus:.6},
+  mistolat:   {aereus:.7,  reticulatus:.8,  edulis:.9,  pinophilus:.8},
   mistocon:   {aereus:.4,  reticulatus:.5,  edulis:.9,  pinophilus:.9},
-  abeti:      {aereus:.05, reticulatus:.2,  edulis:1,   pinophilus:.8},
+  abeti:      {aereus:.05, reticulatus:.2,  edulis:1,   pinophilus:1},
   pinimontani:{aereus:.05, reticulatus:.2,  edulis:.8,  pinophilus:1},
-  pini:       {aereus:.2,  reticulatus:.1,  edulis:.4,  pinophilus:.5},
+  pini:       {aereus:.2,  reticulatus:.1,  edulis:.4,  pinophilus:.2},
   larice:     {aereus:.05, reticulatus:.05, edulis:.6,  pinophilus:.6},
   esotiche:   {aereus:.05, reticulatus:.1,  edulis:.5,  pinophilus:.5},
   robinia:    {aereus:.2,  reticulatus:.2,  edulis:.2,  pinophilus:.1},
@@ -53,13 +55,13 @@ function tipoStimato(lat, lon, elev, osm){
 const COMUNI_P = {soloMeteo:true, esauritaMin:.2, esauritaGiorni:5, seccoMin:.03, suoloU:[0,.3,1.01,1.02]};   // seccoMin: buttata seccata = indice basso (9/10/2026)
 const SPECIE_PORCINI = [
   {...COMUNI_P, id:"aereus", nome:"Porcino nero", attesa:[6,16,21,30], pmin:26, suoloT:[6,12,21,26], notte:[3,9,19,23], secco:[6,15], extra:30, calo:.2,
-   quotaSpecie:[0,150,1000,1400], stagione:[.1,.1,.1,.1,.8,.8,1,.79,1,1,1,1]},
+   quotaSpecie:[50,200,1000,1400], stagione:[.1,.1,.1,.1,.8,.8,1,.79,1,1,1,1]},
   {...COMUNI_P, id:"reticulatus", nome:"Porcino estivo", attesa:[7,13,18,32], pmin:24, suoloT:[8,16,24,28], notte:[4,8,18,22], secco:[8,16], extra:15, calo:0,
    quotaSpecie:[50,250,1300,1700], stagione:[.1,.1,.1,.1,1,1,1,1,1,.71,.69,.26]},
   {...COMUNI_P, id:"edulis", nome:"Porcino d'autunno", attesa:[6,16,21,32], pmin:28, suoloT:[4,10,20,26], notte:[2,6,15,20], secco:[3,14], extra:15, calo:0,
    suoloU:[0,.2,1.01,1.02], quotaSpecie:[150,450,1700,2100], stagione:[.1,.1,.1,.1,.26,.26,.73,1,1,1,1,1]},
-  {...COMUNI_P, id:"pinophilus", nome:"Porcino dei pini", attesa:[10,16,22,29], pmin:20, suoloT:[5,11,20,25], notte:[4,7,17,23], secco:[8,14], extra:14, calo:.3,
-   suoloU:[0,.25,1.01,1.02], quotaSpecie:[200,500,1700,2100], stagione:[.1,.1,.1,.1,1,1,.84,.89,1,1,1,1]},
+  {...COMUNI_P, id:"pinophilus", nome:"Porcino rosso", attesa:[10,16,22,29], pmin:20, suoloT:[5,11,20,25], notte:[4,7,17,23], secco:[8,14], extra:14, calo:.3,
+   suoloU:[0,.25,1.01,1.02], quotaSpecie:[200,400,1400,1800], stagione:[.1,.1,.1,.1,1,1,.5,.5,1,1,1,1]},
 ];
 const NOME_SPECIE = Object.fromEntries(SPECIE_PORCINI.map(s=>[s.id, s.nome]));
 // stagione del giorno: valori a metà mese, interpolati

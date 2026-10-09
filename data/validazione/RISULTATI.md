@@ -181,7 +181,7 @@ l'indice dalla settimana del 16-20 ottobre. Mappa e script danno lo stesso indic
 ## 9 ottobre 2026 — porcino per specie, con alberi, quota e stagione (applicato)
 
 L'indice del porcino è il migliore fra quattro specie (`docs/porcini.js`, usato da index.html e bosco.html):
-porcino nero (*aereus*), estivo (*reticulatus*), d'autunno (*edulis*), dei pini (*pinophilus*).
+porcino nero (*aereus*), estivo (*reticulatus*), d'autunno (*edulis*), rosso (*pinophilus*, prima «dei pini»).
 - **Meteo per specie**: tarato sui ritrovamenti GBIF di ogni specie (`script/gbif_tara_specie.js`, anni pari/dispari e Italia tenuti fuori);
   presi i valori comuni alle prove, arrotondati (i migliori grezzi cambiavano troppo da una prova all'altra).
 - **Stagione**: frequenza del mese per specie rispetto a tutte le specie (corregge lo sforzo di raccolta), ritrovamenti del Mediterraneo;
@@ -205,3 +205,16 @@ porcino nero (*aereus*), estivo (*reticulatus*), d'autunno (*edulis*), dei pini 
 Livello della mappa il 9/10: nessuna maglia ≥30 (prima del secco più netto: 287); sotto i 100 m media 2, massimo 12; pinete costiere ≤9;
 castagneti fino a 25. Mappa generale e mappa a 20 m: stessa fascia nel 90% delle maglie.
 La tabella degli alberi è da conoscenza generale: da correggere con l'esperienza e con le uscite dell'app.
+
+### 9 ottobre, mattina — alberi, quota e stagione rivisti sulle fonti (applicato)
+Tabella degli alberi confrontata con le schede di [Regione Piemonte](https://www.regione.piemonte.it/web/media/14354/download) e della
+Scuola Sant'Anna per l'Alta Val di Vara ([aereus, aestivalis, edulis](https://iris.santannapisa.it/retrieve/dd9e0b31-bbf2-709e-e053-3705fe0a83fd/96_vqr_Funghi.pdf),
+[pinophilus](https://iris.santannapisa.it/retrieve/dd9e0b31-bbe9-709e-e053-3705fe0a83fd/104_vqr_Funghi.pdf)):
+- **porcino rosso** (*pinophilus*, prima «dei pini»): vive anche con castagno e faggio, i pini sono quelli montani. Castagno 0,5 → 0,9,
+  faggio 0,6 → 1, abeti 0,8 → 1, misto di latifoglie 0,6 → 0,8, pini mediterranei 0,5 → 0,2; quota 200/400/1400/1800 m; luglio-agosto 0,5
+  (due produzioni, primavera e tardo autunno);
+- **nero** (*aereus*): faggio 0,2 → 0,4; quota 50/200/1000/1400 m;
+- **estivo** (*reticulatus*): faggio 0,7 → 0,9.
+
+GBIF combinato 0,617 (Italia 0,594 → 0,591, estate 0,608, settembre 0,649, ott-dic 0,603); Lucchesia castagno 0,680 → 0,687,
+bosco stimato 0,653 → 0,671. Mappa del 9/10: nessuna maglia ≥30, pinete costiere ≤7, castagneti fino a 25, faggete fino a 28.
