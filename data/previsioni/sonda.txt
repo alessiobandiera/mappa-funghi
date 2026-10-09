@@ -1,5 +1,48 @@
-Traceback (most recent call last):
-  File "/home/runner/work/mappa-funghi/mappa-funghi/script/previsioni_sonda.py", line 20, in <module>
-    for s, e in (("2025-05-01", "2025-05-03"), ("2025-10-01", "2025-10-03"), ((oggi - timedelta(days=4)).isoformat(), (oggi - timedelta(days=2)).isoformat())):
-                                                                               ^^^^
-NameError: name 'oggi' is not defined
+best_match                   2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+best_match                   2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+best_match                   2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+italia_meteo_arpae_icon_2i   2025-05-01: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+italia_meteo_arpae_icon_2i   2025-10-01: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+italia_meteo_arpae_icon_2i   2026-10-05: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+icon_d2                      2025-05-01: errore <urlopen error _ssl.c:993: The handshake operation timed out>
+icon_d2                      2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+icon_d2                      2026-10-05: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+icon_eu                      2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
+icon_eu                      2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
+icon_eu                      2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
+icon_seamless                2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
+icon_seamless                2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
+icon_seamless                2026-10-05: errore <urlopen error _ssl.c:993: The handshake operation timed out>
+ecmwf_ifs025                 2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_ifs025                 2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_ifs025                 2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_ifs                    2025-05-01: p=72 pd1=0 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+ecmwf_ifs                    2025-10-01: p=72 pd1=70 pd2=46 pd3=22 pd4=0 pd5=0 pd6=0 pd7=0
+ecmwf_ifs                    2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_aifs025_single         2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_aifs025_single         2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ecmwf_aifs025_single         2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+meteofrance_arome_france_hd  2025-05-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arome_france_hd  2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arome_france_hd  2026-10-05: errore <urlopen error _ssl.c:993: The handshake operation timed out>
+meteofrance_arome_france     2025-05-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arome_france     2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arome_france     2026-10-05: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arpege_europe    2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arpege_europe    2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_arpege_europe    2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_seamless         2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_seamless         2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+meteofrance_seamless         2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
+gfs_seamless                 2025-05-01: errore <urlopen error _ssl.c:993: The handshake operation timed out>
+gfs_seamless                 2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+gfs_seamless                 2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
+ukmo_seamless                2025-05-01: p=72 pd1=0 pd2=72 pd3=72 pd4=0 pd5=0 pd6=72 pd7=0
+ukmo_seamless                2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
+ukmo_seamless                2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
+ARW_3KM_RUN00 errore HTTP Error 404: 404
+ARW_3KM_RUN12 errore HTTP Error 404: 404
+nessun file per 2026-10-08
+nessun file per 2026-08-10
+nessun file per 2026-03-23
+nessun file per 2025-09-04
