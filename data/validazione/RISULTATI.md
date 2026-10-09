@@ -276,3 +276,28 @@ La mappa generale non cambia: a 600 m una maglia comprende versanti diversi.
   uscita 8-14 giorni dopo l'ingresso nell'intervallo; versanti a sud circa 2 °C più caldi. Simile a umidità del suolo + temperatura del suolo + attesa.
 - [Funghi che passione, indice FCP](https://funghichepassione.shop/crescita-funghi-tempo-reale/): pioggia degli ultimi 15 giorni, 10-18 °C, umidità notturna
   (Open-Meteo); formula non pubblicata.
+
+## 9 ottobre 2026 (notte) — pioggia: giorni allineati e previsione da più modelli (applicato)
+**Orari dell'archivio SIR** (`script/diagnosi_sir.py`, letture CFR in `data/db`): il valore giornaliero di **pioggia** del giorno D è la pioggia
+**dalle 9 del giorno prima alle 9 di D** (es. una stazione: 71,6 mm caduti il 7/10 compaiono nell'archivio SIR all'8/10); le **temperature**
+min/max sono invece da mezzanotte a mezzanotte. Conseguenze nella mappa: pioggia spostata in avanti di circa mezza giornata e, ogni mattina,
+pioggia di ieri dopo le 9 assente. Corretto in `script/aggiorna.py`: ogni finestra 9→9 si ripartisce fra i due giorni civili con l'andamento
+orario della pioggia del modello; ieri e l'altro ieri prendono i totali esatti 0-24 del riepilogo CFR («1 giorno», «2 giorni»); oggi = pioggia
+misurata dal CFR fino all'ultima lettura + previsione per le ore che restano. Casi della Lucchesia con i giorni riallineati in proporzione alle ore
+(`ALLINEA=1`, ora predefinito): 0,694 / 0,676 (castagno / bosco stimato) contro 0,703 / 0,682 senza; spostando di un giorno intero 0,714 / 0,689:
+differenze dentro il rumore di 49 casi.
+
+**Previsione della pioggia** (`script/previsioni_scarica.py`, `previsioni_confronta.py`, `data/previsioni/CONFRONTO.md`): previsioni passate
+di 8 modelli (Open-Meteo Previous Runs) contro la pioggia SIR 9→9 di 15 stazioni sparse sulla mappa, 15/4/2025-8/10/2026 (~8.000 giorni-stazione
+per anticipo). La scelta automatica di Open-Meteo usata finora è ICON (DWD) e, a 0-1 giorni, ICON-D2, che qui sottostima molto (a 1 giorno prende
+il 40% dei giorni di pioggia utile e sottostima di 2,5 mm/giorno). LaMMA WRF: pubblicazione dei dati aperti ferma al 20/1/2026, file non più scaricabili.
+CSI (1 = perfetto) per la pioggia utile, ≥13 mm in 3 giorni, anticipo 0…7 giorni:
+| | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---|---|---|---|---|---|---|---|
+| automatico (ICON, ICON-D2) | 0,46 | 0,36 | 0,57 | 0,55 | 0,51 | 0,42 | 0,43 | 0,29 |
+| AROME France HD 1,5 km | 0,67 | 0,63 | | | | | | |
+| ECMWF IFS | 0,61 | 0,59 | 0,59 | 0,55 | 0,51 | 0,51 | 0,44 | 0,37 |
+| **media AROME + ICON-2I + ECMWF IFS + AIFS** | **0,68** | **0,65** | **0,62** | **0,57** | **0,56** | **0,56** | **0,50** | **0,46** |
+Anche giorni ≥3 mm (CSI 0,62/0,62/0,58 contro 0,49/0,40/0,57 a 0/1/2 giorni) e piogge ≥20 mm (0,52/0,48/0,39 contro 0,28/0,20/0,34);
+scarto medio quasi nullo (−0,1…−0,5 mm/giorno contro −1,7/−2,5). **Applicata** in `aggiorna.py` (`pioggia_prevista`): pioggia oraria media dei
+modelli disponibili a ogni ora, da oggi in poi (e andamento orario di ieri). Le altre variabili restano della scelta automatica.
