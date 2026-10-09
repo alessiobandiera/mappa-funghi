@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/home/runner/work/mappa-funghi/mappa-funghi/script/previsioni_sonda.py", line 20, in <module>
+    for s, e in (("2025-05-01", "2025-05-03"), ("2025-10-01", "2025-10-03"), ((oggi - timedelta(days=4)).isoformat(), (oggi - timedelta(days=2)).isoformat())):
+                                                                               ^^^^
+NameError: name 'oggi' is not defined
