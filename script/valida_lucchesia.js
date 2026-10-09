@@ -14,7 +14,13 @@ function conSir(r) {
     if (pesi.length) { y.p = Math.round(10 * pesi.reduce((a, [v, w]) => a + v * w, 0) / pesi.reduce((a, [, w]) => a + w, 0)) / 10; gp++; }
     for (const [id, , d] of tm) if (x.d in d) { const c = (SIR.stazioni[id].quota - r.quota) * .0065; y.tn = d[x.d][0] + c; y.tx = d[x.d][1] + c; break; }
     return y; });
-  return gp < .8 * serie.length ? null : { ...r, serie };
+  if (gp < .8 * serie.length) return null;
+  // ALLINEA (9/10/2026): il valore SIR del giorno D è la pioggia dalle 9 del giorno prima alle 9 di D. Giornata civile D ≈
+  // 9/24 di SIR(D) + 15/24 di SIR(D+1) (ALLINEA=1); ALLINEA=0 lascia i valori come sono; ALLINEA=2 sposta tutto di un giorno.
+  const AL = process.env.ALLINEA ?? "1";
+  if (AL !== "0") { const p = serie.map(x => x.p);
+    serie.forEach((x, i) => { const dopo = i + 1 < p.length ? p[i + 1] : p[i]; x.p = AL === "2" ? dopo : .375 * p[i] + .625 * dopo; }); }
+  return { ...r, serie };
 }
 const casi = ML.prepara(S.casi.filter(c => c.lat >= 43.7 && c.lat <= 44.45 && c.lon >= 9.85 && c.lon <= 11).map(conSir).filter(Boolean)), y = casi.map(c => c.y);
 for (const c of casi) for (const x of c.D) x.st = x.tmed;   // suolo = media dell'aria, come la mappa

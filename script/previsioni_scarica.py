@@ -6,7 +6,7 @@
   sommata per giorno (ora italiana). Anticipo 0 = la corsa più recente (quasi un'analisi).
 - LaMMA WRF-ARW 3 km (dati aperti Regione Toscana, CC BY): vedi script/previsioni_lamma.py.
 
-Uscita: data/previsioni/stazioni.json, sir.json, om_<modello>.json
+Uscita: data/previsioni/stazioni.json, sir.json, om9_<modello>.json (per anticipo: «k» giornata civile, «wk» dalle 9 alle 9 come SIR)
 Variabili d'ambiente: DAL (default 2025-04-15), MODELLI (elenco separato da virgole), MAX_STAZIONI (default 20).
 Uso: python script/previsioni_scarica.py        (solo libreria standard)
 """
@@ -85,12 +85,18 @@ def previsioni_om(modello, stazioni, file):
                 vals = H.get(var[k]) or H.get(f"{var[k]}_{modello}")
                 if not vals:
                     continue
-                giorni = {}
+                giorni, fin9 = {}, {}
                 for t, v in zip(H["time"], vals):
                     giorni.setdefault(t[:10], []).append(v)
+                    # come l'archivio SIR: il giorno D va dalle 9 del giorno prima alle 9 di D (ora italiana)
+                    d9 = t[:10] if int(t[11:13]) < 9 else (date.fromisoformat(t[:10]) + timedelta(days=1)).isoformat()
+                    fin9.setdefault(d9, []).append(v)
                 for d, v in giorni.items():
                     if len(v) == 24 and all(x is not None for x in v):
                         out[s["id"]][str(k)][d] = round(sum(v), 1)
+                for d, v in fin9.items():
+                    if len(v) == 24 and all(x is not None for x in v):
+                        out[s["id"]].setdefault("w" + str(k), {})[d] = round(sum(v), 1)
         fatti.add(a.isoformat())
         json.dump({**out, "_fatti": sorted(fatti)}, open(file, "w"), separators=(",", ":"))
         A.log(f"  {modello}: {a} → {b} fatto")
@@ -121,7 +127,7 @@ def main():
         A.log("SIR: " + ", ".join(f"{len(v)}" for v in sir.values()) + " giorni per stazione")
     for m in MODELLI:
         A.log(f"Open-Meteo {m}")
-        previsioni_om(m, meta, OUT / f"om_{m}.json")
+        previsioni_om(m, meta, OUT / f"om9_{m}.json")
 
 
 if __name__ == "__main__":

@@ -14,9 +14,9 @@ jobs:
     timeout-minutes: 90
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 3
       matrix:
-        modello: [italia_meteo_arpae_icon_2i, ecmwf_ifs025, icon_seamless, meteofrance_arome_france_hd, icon_d2, ecmwf_aifs025_single, gfs_seamless]
+        modello: [best_match, italia_meteo_arpae_icon_2i, ecmwf_ifs025, icon_seamless, meteofrance_arome_france_hd, icon_d2, ecmwf_aifs025_single, gfs_seamless]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
