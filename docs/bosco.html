@@ -114,7 +114,7 @@
     <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle.</p>
 
     <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
-    <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
+    <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Ogni specie ha le sue soglie di freddo e caldo e il suo versante: il porcino nero cerca i versanti caldi, soleggiati e asciutti, il rosso e quello d'autunno quelli freschi e umidi (schede della Regione Piemonte e della Scuola Sant'Anna). Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
     Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
   </aside>
   <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div><div class="zoomhint" id="zoomhint">Avvicinati per vedere le zone a 20 m</div></div>
@@ -191,8 +191,10 @@ function infoCella(key){
     SPECIE_PORCINI.forEach((sp,k)=>{ bins[k][b]=valuta(DD, idx, sp, q).v; });
   }
   const iso=date[idx], doy=Math.round((new Date(iso+"T12:00:00")-new Date(iso.slice(0,4)+"-01-01T12:00:00"))/864e5)+1;
-  const [ta,tb,tc,td]=SUOLO_RIF, stC=stato.st0-c.elev*0.0065;
-  const ref=riferimento(stato.D, clamp((tb-stC)/(tb-ta)), clamp((stC-tc)/(td-tc)), stato.V, doy);
+  const stC=stato.st0-c.elev*0.0065;
+  // riferimento per specie: ognuna con le sue soglie di freddo e caldo (temperatura del suolo) e il suo versante preferito
+  const ref=SPECIE_PORCINI.map(sp=>{ const [ta,tb,tc,td]=sp.suoloT;
+    return riferimento(stato.D, clamp((tb-stC)/(tb-ta)), clamp((stC-tc)/(td-tc)), stato.V, doy, sp.versante); });
   const o={stato, bins, ref}; cacheCelle.set(ck,o); return o;
 }
 
@@ -222,10 +224,11 @@ async function caricaTessera(meta){
 }
 function scenario(){ return st.m==="scenario" ? {D:+$("sD").value/100, T:+$("sT").value/100, V:+$("sV").value/100} : null; }
 // fattore del terreno per un punto (a = ristagno, s = sole rispetto al piano, rp = riparo)
-function fattoriTerreno(a, s, rp, Dv, Cv, Hv, Vv){
-  const aStar=.2+.65*Dv;
+// vs = versante preferito dalla specie (docs/porcini.js): sposta il sole e il ristagno ideali
+function fattoriTerreno(a, s, rp, Dv, Cv, Hv, Vv, vs){
+  const aStar=.2+.65*Dv+(vs?vs.acqua:0);
   const fa=1-.8*Math.abs(a-aStar);
-  const sStar=1+.45*Cv-.45*Hv-.3*Dv*(1-Cv);
+  const sStar=1+.45*Cv-.45*Hv-.3*Dv*(1-Cv)+(vs?vs.sole:0);
   const fs=1-.6*Math.min(1,Math.abs(s-sStar)/.6);
   const fr=1-(.1+.5*Vv)*(1-rp);
   return {m:fa*fs*fr, fa, fs, fr};
@@ -233,12 +236,12 @@ function fattoriTerreno(a, s, rp, Dv, Cv, Hv, Vv){
 // riferimento: la media su un campione di punti di bosco di tutta l'area (docs/terreno/campione.json),
 // così «più favorevole» vuol dire «meglio di un punto di bosco tipico» con lo stesso meteo, senza salti tra tessere
 let CAMPIONE=null;
-function riferimento(Dv, Cv, Hv, Vv, doy){
-  if (!CAMPIONE) return fattoriTerreno(.5, 1, .5, Dv, Cv, Hv, Vv).m;
+function riferimento(Dv, Cv, Hv, Vv, doy, vs){
+  if (!CAMPIONE) return fattoriTerreno(.5, 1, .5, Dv, Cv, Hv, Vv, vs).m;
   let s=0;
   for (const [a,ss,so,sn,rp] of CAMPIONE){
     const sole = doy<=258? ss : doy<=288? ss+(so-ss)*(doy-258)/30 : doy<=319? so+(sn-so)*(doy-288)/31 : sn;
-    s+=fattoriTerreno(a, sole, rp, Dv, Cv, Hv, Vv).m;
+    s+=fattoriTerreno(a, sole, rp, Dv, Cv, Hv, Vv, vs).m;
   }
   return s/CAMPIONE.length;
 }
@@ -246,32 +249,42 @@ function calcolaTessera(t){
   if (!t.pronta) return;
   const m=t.meta, n=m.righe*m.colonne, iso=date[st.g], stag=SPECIE_PORCINI.map(sp=>stagione(sp, iso));
   const doy=Math.round((new Date(iso+"T12:00:00")-new Date(iso.slice(0,4)+"-01-01T12:00:00"))/864e5)+1;
-  const [ta,tb,tc,td]=SUOLO_RIF, sc=scenario();
-  const refScen = sc ? riferimento(sc.D, Math.max(0,-sc.T), Math.max(0,sc.T), sc.V, doy) : 0;
+  const sc=scenario();
+  const refScen = sc ? SPECIE_PORCINI.map(sp=>riferimento(sc.D, Math.max(0,-sc.T), Math.max(0,sc.T), sc.V, doy, sp.versante)) : null;
   const K=new Float32Array(n), base=new Float32Array(n), sun=new Float32Array(n), FA=new Float32Array(n), FS=new Float32Array(n), FR=new Float32Array(n);
-  const SPX=new Uint8Array(n), NS=SPECIE_PORCINI.length, ib=new Float32Array(NS);   // SPX: specie più probabile (1-4)
+  const SPX=new Uint8Array(n), NS=SPECIE_PORCINI.length, ib=new Float32Array(NS), sR=new Float32Array(NS);   // SPX: specie più probabile (1-4)
   for (let r=0;r<m.righe;r++){
     const lat=m.nord-(r+.5)*IDX.dlat, fi=(lat-GRIDW.lat0)/GRIDW.dlat, i0=Math.floor(fi), ty=fi-i0;
     for (let c=0;c<m.colonne;c++){
       const p=r*m.colonne+c; if (!t.B.bosco[p]) continue;
       const lon=m.ovest+(c+.5)*IDX.dlon, fj=(lon-GRIDW.lon0)/GRIDW.dlon, j0=Math.floor(fj), tx=fj-j0;
       const q=t.B.quota[p], bq=Math.min(Math.floor(q/BIN), Math.ceil(2000/BIN)), tq=q/BIN-bq;
-      let w=0, sD=0, sS=0, sV=0, sR=0; ib.fill(0);
+      let w=0, sD=0, sS=0, sV=0; ib.fill(0); sR.fill(0);
       for (const [di,dj,ww] of [[0,0,(1-ty)*(1-tx)],[0,1,(1-ty)*tx],[1,0,ty*(1-tx)],[1,1,ty*tx]]){
         if (ww<=0) continue; const o=infoCella((i0+di)+","+(j0+dj)); if (!o) continue;
         for (let k=0;k<NS;k++){ const arr=o.bins[k]; ib[k]+=ww*(arr[bq]*(1-tq)+arr[bq+1]*tq); }
-        sD+=ww*o.stato.D; sS+=ww*o.stato.st0; sV+=ww*o.stato.V; sR+=ww*o.ref; w+=ww;
+        for (let k=0;k<NS;k++) sR[k]+=ww*o.ref[k];
+        sD+=ww*o.stato.D; sS+=ww*o.stato.st0; sV+=ww*o.stato.V; w+=ww;
       }
       if (!w) continue;
-      sD/=w; sV/=w; let ref=sR/w; const stS=sS/w-q*0.0065;
-      // specie migliore possibile qui: meteo × alberi (tipo di bosco) × quota × stagione
+      sD/=w; sV/=w; const stS=sS/w-q*0.0065, s=soleDelGiorno(t.C,p,doy);
+      // specie migliore possibile qui: meteo × alberi (tipo di bosco) × quota × stagione × terreno. Il terreno è valutato per
+      // ogni specie con le sue soglie di freddo e caldo e il suo versante preferito (il nero al sole, il rosso al fresco).
       const tipo = t.F[p] ? TIPI[t.F[p]-1] : tipoStimato(lat, lon, q, t.B.bosco[p]===3?"n":"b"), osp=OSPITI[tipo]||OSPITI.castagno;
-      let bv=0, bk=-1;
-      for (let k=0;k<NS;k++){ const sp=SPECIE_PORCINI[k], v=ib[k]/w*osp[sp.id]*stag[k]*trap(q,...sp.quotaSpecie); if (v>bv){ bv=v; bk=k; } }
-      let Dv=sD, Cv=clamp((tb-stS)/(tb-ta)), Hv=clamp((stS-tc)/(td-tc)), Vv=sV;
-      if (sc){ Dv=sc.D; Cv=Math.max(0,-sc.T); Hv=Math.max(0,sc.T); Vv=sc.V; ref=refScen; }
-      const s=soleDelGiorno(t.C,p,doy), f=fattoriTerreno(t.A.acqua[p], s, t.A.riparo[p], Dv, Cv, Hv, Vv);
-      K[p]=clamp(f.m/ref,.4,1.6); base[p]=bv; SPX[p]=bk+1; sun[p]=s; FA[p]=f.fa; FS[p]=f.fs; FR[p]=f.fr;
+      const terr=k=>{ const sp=SPECIE_PORCINI[k], [ta,tb,tc,td]=sp.suoloT;
+        let Dv=sD, Cv=clamp((tb-stS)/(tb-ta)), Hv=clamp((stS-tc)/(td-tc)), Vv=sV, ref=sR[k]/w;
+        if (sc){ Dv=sc.D; Cv=Math.max(0,-sc.T); Hv=Math.max(0,sc.T); Vv=sc.V; ref=refScen[k]; }
+        const f=fattoriTerreno(t.A.acqua[p], s, t.A.riparo[p], Dv, Cv, Hv, Vv, sp.versante); return {f, K:clamp(f.m/ref,.4,1.6)}; };
+      let bx=-1, bk=-1, bv=0, bt=null;
+      for (let k=0;k<NS;k++){
+        const sp=SPECIE_PORCINI[k], v=ib[k]/w*osp[sp.id]*stag[k]*trap(q,...sp.quotaSpecie); if (!(v>0)) continue;
+        const tk=terr(k), x=v*clamp(1+.5*(tk.K-1),.7,1.3);
+        if (x>bx){ bx=x; bk=k; bv=v; bt=tk; }
+      }
+      // nessuna specie possibile qui (quota, alberi o stagione): indice 0, terreno con le regole senza preferenze (estivo, neutro)
+      if (!bt) bt=terr(SPECIE_PORCINI.findIndex(sp=>!sp.versante||(!sp.versante.sole&&!sp.versante.acqua)));
+      const bK=bt.K, bf=bt.f;
+      K[p]=bK; base[p]=bv; SPX[p]=bk+1; sun[p]=s; FA[p]=bf.fa; FS[p]=bf.fs; FR[p]=bf.fr;
     }
   }
   t.calc={K, base, SPX, sun, FA, FS, FR, chiave:chiaveCalc()+"|"+st.m+"|"+(sc?JSON.stringify(sc):"")};

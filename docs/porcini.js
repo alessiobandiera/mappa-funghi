@@ -52,16 +52,20 @@ function tipoStimato(lat, lon, elev, osm){
 // meteo: parametri comuni alle prove di taratura sui ritrovamenti di ogni specie (script/gbif_tara_specie.js, gbif_specie.js);
 // quota: limite vero (0 fuori dalla fascia); stagione: frequenza del mese rispetto alle altre specie (ritrovamenti del
 // Mediterraneo), piena da 0,8.
+// versante (solo mappa a 20 m): quanto la specie sposta l'esposizione ideale al sole e il ristagno ideale rispetto alle regole
+// del terreno. Dalle schede di Regione Piemonte e Scuola Sant'Anna: il nero cerca luoghi caldi, soleggiati e asciutti; il rosso
+// umidità e temperature non alte; il d'autunno boschi freschi e umidi; l'estivo caldo-umido (neutro). Non verificabile sui
+// ritrovamenti GBIF (posizione troppo imprecisa per l'esposizione): da controllare con le uscite.
 const COMUNI_P = {soloMeteo:true, esauritaMin:.2, esauritaGiorni:5, seccoMin:.03, suoloU:[0,.3,1.01,1.02]};   // seccoMin: buttata seccata = indice basso (9/10/2026)
 const SPECIE_PORCINI = [
   {...COMUNI_P, id:"aereus", nome:"Porcino nero", attesa:[6,16,21,30], pmin:26, suoloT:[6,12,21,26], notte:[3,9,19,23], secco:[6,15], extra:30, calo:.2,
-   quotaSpecie:[50,200,1000,1400], stagione:[.1,.1,.1,.1,.8,.8,1,.79,1,1,1,1]},
+   versante:{sole:.15, acqua:-.1}, quotaSpecie:[50,200,1000,1400], stagione:[.1,.1,.1,.1,.8,.8,1,.79,1,1,1,1]},
   {...COMUNI_P, id:"reticulatus", nome:"Porcino estivo", attesa:[7,13,18,32], pmin:24, suoloT:[8,16,24,28], notte:[4,8,18,22], secco:[8,16], extra:15, calo:0,
-   quotaSpecie:[50,250,1300,1700], stagione:[.1,.1,.1,.1,1,1,1,1,1,.71,.69,.26]},
+   versante:{sole:0, acqua:0}, quotaSpecie:[50,250,1300,1700], stagione:[.1,.1,.1,.1,1,1,1,1,1,.71,.69,.26]},
   {...COMUNI_P, id:"edulis", nome:"Porcino d'autunno", attesa:[6,16,21,32], pmin:28, suoloT:[4,10,20,26], notte:[2,6,15,20], secco:[3,14], extra:15, calo:0,
-   suoloU:[0,.2,1.01,1.02], quotaSpecie:[150,450,1700,2100], stagione:[.1,.1,.1,.1,.26,.26,.73,1,1,1,1,1]},
+   suoloU:[0,.2,1.01,1.02], versante:{sole:-.05, acqua:.05}, quotaSpecie:[150,450,1700,2100], stagione:[.1,.1,.1,.1,.26,.26,.73,1,1,1,1,1]},
   {...COMUNI_P, id:"pinophilus", nome:"Porcino rosso", attesa:[10,16,22,29], pmin:20, suoloT:[5,11,20,25], notte:[4,7,17,23], secco:[8,14], extra:14, calo:.3,
-   suoloU:[0,.25,1.01,1.02], quotaSpecie:[200,400,1400,1800], stagione:[.1,.1,.1,.1,1,1,.5,.5,1,1,1,1]},
+   suoloU:[0,.25,1.01,1.02], versante:{sole:-.1, acqua:.1}, quotaSpecie:[200,400,1400,1800], stagione:[.1,.1,.1,.1,1,1,.5,.5,1,1,1,1]},
 ];
 const NOME_SPECIE = Object.fromEntries(SPECIE_PORCINI.map(s=>[s.id, s.nome]));
 // stagione del giorno: valori a metà mese, interpolati

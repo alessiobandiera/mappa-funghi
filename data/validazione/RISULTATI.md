@@ -218,3 +218,20 @@ Scuola Sant'Anna per l'Alta Val di Vara ([aereus, aestivalis, edulis](https://ir
 
 GBIF combinato 0,617 (Italia 0,594 → 0,591, estate 0,608, settembre 0,649, ott-dic 0,603); Lucchesia castagno 0,680 → 0,687,
 bosco stimato 0,653 → 0,671. Mappa del 9/10: nessuna maglia ≥30, pinete costiere ≤7, castagneti fino a 25, faggete fino a 28.
+
+### 9 ottobre, mattina — tutti i fattori: prove sul meteo e versanti per specie (applicato solo il versante)
+Fattori già nell'indice: pioggia e attesa, umidità del suolo, temperatura del suolo, notti, umidità dell'aria, tramontana, giorni secchi,
+calo termico; per specie stagione, quota e alberi; a 20 m ristagno, sole e riparo secondo il meteo del giorno.
+
+**Prove sul meteo per specie** (GBIF, tarato sugli anni pari e controllato sui dispari e viceversa; scratchpad `fattori/prova.js`):
+caldo di giorno (media delle massime, soglie 22-38 °C), umidità dell'aria con soglie per specie, vento forte da qualsiasi direzione,
+escursione giorno-notte. Nessuno migliora in modo stabile (variazioni ±0,00x che cambiano segno fra pari e dispari; soglie strette peggiorano
+fino a −0,03): il caldo è già nella temperatura del suolo e delle notti. **Non aggiunti.**
+
+**Versanti per specie (mappa a 20 m, `docs/bosco.html`)**: il terreno è calcolato per ogni specie, con le sue soglie di freddo e caldo
+(temperatura del suolo della specie) e il suo versante preferito (`versante` in `docs/porcini.js`: nero sole +0,15 e ristagno −0,1;
+rosso −0,1 e +0,1; d'autunno −0,05 e +0,05; estivo neutro), da schede Regione Piemonte e Scuola Sant'Anna. Poi si prende la specie
+migliore con il terreno compreso. Non verificabile sui ritrovamenti GBIF (posizioni troppo imprecise per l'esposizione).
+Effetto, 16/10 (previsione): versanti a nord porcino d'autunno 41% → 65% dei punti, a sud nero 62% → 66%; media 24,7 → 25,3, punti ≥30
+34% → 39%. Oggi 9/10: media 10,0 → 10,2, nessun punto ≥30; il rosso passa sui versanti a nord (26% → 32%, a sud 22% → 10%).
+La mappa generale non cambia: a 600 m una maglia comprende versanti diversi.
