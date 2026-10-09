@@ -1,41 +1,37 @@
 name: Previsioni passate contro pioggia misurata (scaricamento)
 
-# Solo a mano: scarica la pioggia SIR di una ventina di stazioni e le previsioni passate dei modelli Open-Meteo negli stessi punti
-# (data/previsioni/). Non tocca la mappa.
+# Solo a mano: previsioni passate dei modelli Open-Meteo nei punti delle stazioni SIR già scelte (data/previsioni/),
+# un modello per lavoro, due alla volta. Si riprende da dove si era fermato. Non tocca la mappa.
 on:
   workflow_dispatch:
-    inputs:
-      modelli:
-        description: "Modelli Open-Meteo (separati da virgole)"
-        default: "best_match,italia_meteo_arpae_icon_2i,meteofrance_arome_france_hd,icon_d2,icon_seamless,ecmwf_ifs025,ecmwf_aifs025_single,gfs_seamless"
 
 permissions:
   contents: write
 
-concurrency:
-  group: previsioni-scarica
-  cancel-in-progress: false
-
 jobs:
   scarica:
     runs-on: ubuntu-latest
-    timeout-minutes: 170
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        modello: [italia_meteo_arpae_icon_2i, ecmwf_ifs025, icon_seamless, meteofrance_arome_france_hd, icon_d2, ecmwf_aifs025_single, gfs_seamless]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - name: Scarica
-        run: PYTHONUNBUFFERED=1 timeout 160m python script/previsioni_scarica.py 2>&1 | tee data/previsioni/scarica.log
+        run: PYTHONUNBUFFERED=1 timeout 80m python script/previsioni_scarica.py 2>&1 | tee data/previsioni/scarica_${{ matrix.modello }}.log
         continue-on-error: true
         env:
-          MODELLI: ${{ github.event.inputs.modelli }}
-          MAX_STAZIONI: "15"
+          MODELLI: ${{ matrix.modello }}
       - name: Salva
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/previsioni
-          git commit -q -m "Previsioni passate e pioggia misurata [skip ci]" || exit 0
-          for i in 1 2 3; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep 5; done
+          git commit -q -m "Previsioni passate ${{ matrix.modello }} [skip ci]" || exit 0
+          for i in 1 2 3 4 5; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep $((RANDOM % 20 + 5)); done
