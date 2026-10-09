@@ -1,0 +1,31 @@
+name: Tipi di bosco (ISPRA Corine IV livello)
+
+# Solo a mano: scarica i poligoni dei boschi con il tipo (castagneti, faggete, querce, pini...) per l'area della mappa
+# e li salva in data/boschi/clc18_boschi.geojson. Non tocca la mappa.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: boschi-clc
+  cancel-in-progress: true
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python script/boschi_clc.py
+      - name: Salva
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/boschi/clc18_boschi.geojson
+          git commit -q -m "Tipi di bosco ISPRA Corine IV livello [skip ci]" || exit 0
+          for i in 1 2 3; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep 5; done
