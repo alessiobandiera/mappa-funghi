@@ -10,6 +10,5 @@ Open-Meteo ecmwf_aifs025_single
   errore <urlopen error _ssl.c:993: The handshake operation timed out>
   ecmwf_aifs025_single: 2026-04-10 → 2026-06-08 fatto
   ecmwf_aifs025_single: 2026-06-09 → 2026-08-07 fatto
-  errore <urlopen error _ssl.c:993: The handshake operation timed out>
   ecmwf_aifs025_single: 2026-08-08 → 2026-10-06 fatto
   ecmwf_aifs025_single: 2026-10-07 → 2026-10-08 fatto
