@@ -1,48 +1,17 @@
-best_match                   2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-best_match                   2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-best_match                   2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-italia_meteo_arpae_icon_2i   2025-05-01: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-italia_meteo_arpae_icon_2i   2025-10-01: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-italia_meteo_arpae_icon_2i   2026-10-05: p=72 pd1=72 pd2=72 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-icon_d2                      2025-05-01: errore <urlopen error _ssl.c:993: The handshake operation timed out>
-icon_d2                      2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-icon_d2                      2026-10-05: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-icon_eu                      2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
-icon_eu                      2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
-icon_eu                      2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=0 pd6=0 pd7=0
-icon_seamless                2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
-icon_seamless                2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
-icon_seamless                2026-10-05: errore <urlopen error _ssl.c:993: The handshake operation timed out>
-ecmwf_ifs025                 2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_ifs025                 2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_ifs025                 2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_ifs                    2025-05-01: p=72 pd1=0 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-ecmwf_ifs                    2025-10-01: p=72 pd1=70 pd2=46 pd3=22 pd4=0 pd5=0 pd6=0 pd7=0
-ecmwf_ifs                    2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_aifs025_single         2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_aifs025_single         2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ecmwf_aifs025_single         2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-meteofrance_arome_france_hd  2025-05-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arome_france_hd  2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arome_france_hd  2026-10-05: errore <urlopen error _ssl.c:993: The handshake operation timed out>
-meteofrance_arome_france     2025-05-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arome_france     2025-10-01: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arome_france     2026-10-05: p=72 pd1=72 pd2=0 pd3=0 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arpege_europe    2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arpege_europe    2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_arpege_europe    2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_seamless         2025-05-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_seamless         2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-meteofrance_seamless         2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=0 pd5=0 pd6=0 pd7=0
-gfs_seamless                 2025-05-01: errore <urlopen error _ssl.c:993: The handshake operation timed out>
-gfs_seamless                 2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-gfs_seamless                 2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=72
-ukmo_seamless                2025-05-01: p=72 pd1=0 pd2=72 pd3=72 pd4=0 pd5=0 pd6=72 pd7=0
-ukmo_seamless                2025-10-01: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
-ukmo_seamless                2026-10-05: p=72 pd1=72 pd2=72 pd3=72 pd4=72 pd5=72 pd6=72 pd7=0
-ARW_3KM_RUN00 errore HTTP Error 404: 404
-ARW_3KM_RUN12 errore HTTP Error 404: 404
-nessun file per 2026-10-08
-nessun file per 2026-08-10
-nessun file per 2026-03-23
-nessun file per 2025-09-04
+-- https://geoportale.lamma.rete.toscana.it/download/arw_3km_run12/arw_3km_Surface_wind_gust_surface_20251125T120000000Z/arw_3km_Surface_wind_gust_surface_20251125T120000000Z_0_0.zip: HTTP Error 404: Not Found
+-- https://geoportale.lamma.rete.toscana.it/download/arw_3km_run00/arw_3km_Dew_point_temperature_height_above_ground_20251219T000000000Z/arw_3km_Dew_point_temperature_height_above_ground_20251219T000000000Z_2_0.zip: HTTP Error 404: Not Found
+-- https://geoportale.lamma.rete.toscana.it/download/: HTTP Error 403: Forbidden
+-- https://geoportale.lamma.rete.toscana.it/download/arw_3km_run00/: HTTP Error 404: Not Found
+OK 200 https://geoportale.lamma.rete.toscana.it/geoserver/ows?service=WMS&request=GetCapabilities&version=1.3.0  [text/xml None]
+    <?xml version="1.0" encoding="UTF-8"?><WMS_Capabilities version="1.3.0" updateSequence="351" xmlns="http://www.opengis.net/wms" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wms https://geoportale.lamma.toscana.it/geoserver/schemas/wms/1.3.0/capabilities_1_3_0.xsd"> <Service> <Name>WMS</Name> <Title>GeoServer Web Map Service</Title> <Abstract>A compliant implementation of WMS plus most of the SLD extension (dynamic styling). Can also generate PDF, SVG, KML, GeoRSS</Abstract> <KeywordList> <Keyword>WFS</Keyword> <Keyword>WMS</Keyword> <Keyword>GEOSERVER</Keyword> </KeywordList> <OnlineResource xlink:type="simple" xlink:href="http://geoserver.org"/> <ContactInformation> <ContactPersonPrimary> <ContactPerson>Claudius Ptolomaeus</ContactPerson> <ContactOrganization>The Ancient Geographers</ContactOrganization> </ContactPersonPrimary> <ContactPosition>Chief Geographer</ContactPosition> <ContactAddress> <AddressType>Work</AddressType> <Address/> <City>Alexandria</City> <StateOrProvince/> <PostCode/> <Country>Egypt</Country> </ContactAddress> <ContactVoiceTelephone/> <ContactFacsimileTelephone/> <ContactElectronicMailAddress>claudius.ptolomaeus@gmail.com</ContactElectronicMailAddress> </ContactInformation> <Fees>NONE</Fees> 
+   livelli: 27 []
+-- http://geoportale.lamma.rete.toscana.it/geoserver/ARW_3KM_RUN00/ows?service=WMS&request=GetCapabilities: HTTP Error 404: 404
+OK 200 https://geoportale.lamma.rete.toscana.it/geoserver/web/  [text/html;charset=UTF-8 None]
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> <head><script type="text/javascript" src="./wicket/resource/org.apache.wicket.resource.JQueryResourceReference/jquery/jquery-1.12.4-ver-ADBA03E22274074BEE5842FCD9720FBD.js"></script> <meta http-equiv="X-UA-Compatible" content="IE=10" /> <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> <title>GeoServer: Welcome</title> <link href="./wicket/resource/org.geoserver.web.GeoServerBasePage/favicon-ver-CD7C91844A87FE589C62DFE238A2ACA7.ico" rel="shortcut icon"/> <link rel="stylesheet" href="./wicket/resource/org.geoserver.web.GeoServerBasePage/css/blueprint/screen-ver-5E7BA86A4C3BEA6B457AC3C7F9ADF9B4.css" type="text/css" media="screen, projection"/> <link rel="stylesheet" href="./wicket/resource/org.geoserver.web.GeoServerBasePage/css/blueprint/print-ver-BBB913C92FDF844CBAD576E7BB0B2A96.css" type="text/css" media="print"/> <link rel="stylesheet" href="./wicket/resource/org.geoserver.web.GeoServerBasePage/css/geoserver-ver-2D2BCD55D199598D5E664EA6CD6F6A87.css" type="text/css" media="screen, projection"/> <!--[if IE]> <link rel="stylesheet" href="./wicket/resource/org.geoserver.web.GeoServerBasePage/css/blueprint/ie-ver-830652BCF971CCAF4FB29B4A140F9430.css" type="text/css" media="screen, projecti
+-- https://dati.lamma.rete.toscana.it/thredds/catalog.xml: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'dati.lamma.rete.toscana.it
+-- http://dati.lamma.rete.toscana.it/thredds/catalog.html: HTTP Error 403: Forbidden
+-- https://thredds.lamma.rete.toscana.it/thredds/catalog.xml: <urlopen error [Errno -2] Name or service not known>
+-- https://www.lamma.toscana.it/opendata: HTTP Error 403: Forbidden
+-- https://www.lamma.toscana.it/dati-aperti: HTTP Error 404: Not Found
+OK 200 https://dati.toscana.it/organization/lamma-toscana  [text/html; charset=utf-8 79574]
+    <!DOCTYPE html> <!--[if IE 9]> <html lang="it" class="ie9"> <![endif]--> <!--[if gt IE 8]><!--> <html lang="it" > <!--<![endif]--> <head> <meta charset="utf-8" /> <meta name="csrf_field_name" content="_csrf_token" /> <meta name="_csrf_token" content="IjU0OGVjZDg3YjM1NTMxYzMzMzllNDhmYTdlZTUxNjE2YjY5ZDBlNGUi.asknow.VjYMmtv9p-JHFjOUgYliZ2KjYcU" /> <meta name="generator" content="ckan 2.10.4" /> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <meta property="og:title" content="OpenData - Regione Toscana" /> <meta property="og:description" content="Open Data di Regione Toscana" /> <meta property="og:image" content="https://dati.toscana.it/images/OpenData.jpg" /> <meta property="og:url" content="https://dati.toscana.it/" /> <meta property="og:type" content="website" /> <meta property="og:site_name" content="OpenData - Regione Toscana" /> <meta property="og:image:width" content="915" /> <meta property="og:image:height" content="492" /> <meta property="og:image:alt" content="OpenData - Regione Toscana" /> <meta name="twitter:card" content="summary_large_image" /> <meta name="twitter:title" content="OpenData - Regione Toscana" /> <meta name="twitter:description" content="Open Data di Regione Toscana" /> <meta name="twitter:image" content="https://dati.toscana.it/images/OpenData.jpg" /> <meta name="twitter:image:alt" content="OpenData - Regione Toscana" /> <title>OpenData - Regione Toscana</title>
