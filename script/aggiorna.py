@@ -415,6 +415,44 @@ def open_meteo(pts) -> list[dict]:
     return celle
 
 
+# Pioggia prevista (9/10/2026): media oraria di 4 modelli, ciascuno fin dove arriva (AROME France HD ~1,5 km fino a domani,
+# ICON-2I ItaliaMeteo 2 km fino a dopodomani, ECMWF IFS e AIFS fino a 7 giorni). Confrontata con la pioggia SIR di 15 stazioni
+# da aprile 2025 (data/previsioni/CONFRONTO.md): giorni di «pioggia utile» (≥13 mm in 3 giorni) presi con CSI 0,68/0,65/0,62
+# a 0/1/2 giorni contro 0,46/0,36/0,57 della scelta automatica di Open-Meteo (ICON e ICON-D2, che qui sottostimano).
+MODELLI_PIOGGIA = ["meteofrance_arome_france_hd", "italia_meteo_arpae_icon_2i", "ecmwf_ifs025", "ecmwf_aifs025_single"]
+
+
+def pioggia_prevista(celle: list[dict], oggi: date) -> int:
+    """Sostituisce pioggia giornaliera e oraria da ieri in poi con la media dei modelli. Restituisce i giorni sostituiti."""
+    fatti = 0
+    for i in range(0, len(celle), 20):
+        parte = celle[i:i + 20]
+        q = urllib.parse.urlencode(dict(latitude=",".join(str(c["lat"]) for c in parte), longitude=",".join(str(c["lon"]) for c in parte),
+                                        hourly="precipitation", models=",".join(MODELLI_PIOGGIA), past_days=2, forecast_days=FUT,
+                                        timezone="Europe/Rome"))
+        js = json.loads(scarica("https://api.open-meteo.com/v1/forecast?" + q, tentativi=6))
+        if isinstance(js, dict):
+            js = [js]
+        for c, r in zip(parte, js):
+            h = r["hourly"]
+            serie = [h.get(f"precipitation_{m}") or [None] * len(h["time"]) for m in MODELLI_PIOGGIA]
+            ore = {}
+            for k, t in enumerate(h["time"]):
+                v = [x[k] for x in serie if x[k] is not None]
+                if v:
+                    ore.setdefault(t[:10], [None] * 24)[int(t[11:13])] = sum(v) / len(v)
+            for g in c["giorni"]:
+                ph = ore.get(g["d"])
+                if g["d"] < (oggi - timedelta(days=1)).isoformat() or not ph or any(x is None for x in ph):
+                    continue
+                g["ph"] = ph
+                if g["d"] >= oggi.isoformat():
+                    g["p"] = round(sum(ph), 1)
+                    fatti += 1
+        time.sleep(2.5)
+    return fatti
+
+
 # --------------------------------------------------------------------------- fusione
 def _idw(valori):
     """media pesata sull'inverso del quadrato della distanza: valori = [(valore, km)]"""
@@ -585,12 +623,16 @@ def main():
 
 
     celle = open_meteo(punti_griglia())
+    try:
+        log("Pioggia prevista, media dei modelli:", pioggia_prevista(celle, oggi), "giorni")
+    except Exception as e:
+        log("Pioggia prevista dai modelli non riuscita, resta la scelta automatica:", e)
     statistiche = fondi(celle, sir, oggi, cfr)
     log("Fusione:", statistiche)
     meta = dict(aggiornato=adesso.isoformat(timespec="minutes"), oggi=oggi.isoformat(),
                 stazioni_sir=dict(pioggia=len(sir.get("pluvio", [])), temperatura=len(sir.get("termo", []))),
                 fusione=statistiche,
-                fonti="Pioggia e temperature misurate: SIR/CFR Regione Toscana. Modello e previsione: Open-Meteo.com (CC BY 4.0).")
+                fonti="Pioggia e temperature misurate: SIR/CFR Regione Toscana. Modello e previsione: Open-Meteo.com (CC BY 4.0); pioggia prevista: media di AROME France HD (Météo-France), ICON-2I (ItaliaMeteo-ARPAE), ECMWF IFS e AIFS.")
     scrivi(DOCS / "meteo.json", compatta(celle, meta))
     log("Scritto docs/dati/meteo.json")
 

@@ -23,6 +23,16 @@ NOMI = {"best_match": "Open-Meteo automatico (usato ora)", "italia_meteo_arpae_i
         "meteofrance_arome_france_hd": "AROME France HD 1,5 km", "icon_d2": "ICON-D2 2 km", "icon_seamless": "ICON (DWD)",
         "ecmwf_ifs025": "ECMWF IFS", "ecmwf_aifs025_single": "ECMWF AIFS (IA)", "gfs_seamless": "GFS (USA)", "lamma_wrf": "LaMMA WRF 3 km",
         "media": "media dei modelli disponibili"}
+# combinazioni provate: media dei membri disponibili a ogni anticipo (ICON-D2 e ICON sono già dentro il modello automatico)
+COMBO = {
+    "c1": ["meteofrance_arome_france_hd", "ecmwf_ifs025", "italia_meteo_arpae_icon_2i"],
+    "c2": ["meteofrance_arome_france_hd", "ecmwf_ifs025", "italia_meteo_arpae_icon_2i", "ecmwf_aifs025_single"],
+    "c3": ["meteofrance_arome_france_hd", "ecmwf_ifs025", "italia_meteo_arpae_icon_2i", "icon_seamless"],
+    "c4": ["meteofrance_arome_france_hd", "ecmwf_ifs025", "italia_meteo_arpae_icon_2i", "ecmwf_aifs025_single", "gfs_seamless"],
+    "c5": ["meteofrance_arome_france_hd", "ecmwf_ifs025", "italia_meteo_arpae_icon_2i", "ecmwf_aifs025_single", "icon_seamless", "gfs_seamless"],
+}
+NOMI.update({"c1": "media AROME + ECMWF + ICON-2I", "c2": "media AROME + ECMWF + AIFS + ICON-2I", "c3": "media AROME + ECMWF + ICON-2I + ICON",
+             "c4": "media AROME + ECMWF + AIFS + ICON-2I + GFS", "c5": "media di AROME, ECMWF, AIFS, ICON-2I, ICON, GFS"})
 add = lambda d, n: (date.fromisoformat(d) + timedelta(days=n)).isoformat()
 
 
@@ -52,6 +62,10 @@ def confronta(k, nomi):
                 giorni[(st, d)] = (o, prev)
     ris = {m: punteggi([(p[i], o) for o, p in giorni.values()]) for i, m in enumerate(nomi)}
     ris["media"] = punteggi([(sum(p) / len(p), o) for o, p in giorni.values()])
+    for nome, membri in COMBO.items():   # media dei soli membri disponibili a questo anticipo
+        idx = [i for i, m in enumerate(nomi) if m in membri]
+        if len(idx) >= 2:
+            ris[nome] = punteggi([(sum(p[i] for i in idx) / len(idx), o) for o, p in giorni.values()])
     # pioggia utile: somma di 3 giorni (stesso anticipo per ogni giorno), quando tutti e tre i giorni ci sono
     tre = {}
     for (st, d), (o, p) in giorni.items():
@@ -60,8 +74,13 @@ def confronta(k, nomi):
             O = o + giorni[(st, d1)][0] + giorni[(st, d2)][0]
             P = [p[i] + giorni[(st, d1)][1][i] + giorni[(st, d2)][1][i] for i in range(len(nomi))]
             tre[(st, d)] = (O, P)
-    for i, m in enumerate(list(nomi) + ["media"]):
-        cp = [((P[i] if m != "media" else sum(P) / len(P)), O) for O, P in tre.values()]
+    def comb(P, m):
+        if m in nomi: return P[nomi.index(m)]
+        if m == "media": return sum(P) / len(P)
+        idx = [i for i, x in enumerate(nomi) if x in COMBO[m]]
+        return sum(P[i] for i in idx) / len(idx)
+    for m in [x for x in ris]:
+        cp = [(comb(P, m), O) for O, P in tre.values()]
         a = sum(1 for f, o in cp if f >= 13 and o >= 13); b = sum(1 for f, o in cp if f >= 13 and o < 13); c = sum(1 for f, o in cp if f < 13 and o >= 13)
         ris[m]["utile"] = dict(POD=a / (a + c) if a + c else None, FAR=b / (a + b) if a + b else None, CSI=a / (a + b + c) if a + b + c else None)
     return ris, len(giorni)
