@@ -369,7 +369,7 @@ def archivia_db(oggi: date, budget_s: float = 420) -> dict:
 # --------------------------------------------------------------------------- Open-Meteo
 DAILY = ["precipitation_sum", "temperature_2m_min", "temperature_2m_max", "temperature_2m_mean",
          "relative_humidity_2m_mean", "wind_direction_10m_dominant", "wind_speed_10m_max"]
-HOURLY = ["soil_moisture_3_to_9cm", "soil_moisture_9_to_27cm", "soil_temperature_6cm"]
+HOURLY = ["soil_moisture_3_to_9cm", "soil_moisture_9_to_27cm", "soil_temperature_6cm", "precipitation"]
 
 
 def media(v):
@@ -392,22 +392,23 @@ def open_meteo(pts) -> list[dict]:
             d, h = r["daily"], r["hourly"]
             per_giorno = {}
             for k, t in enumerate(h["time"]):
-                g = per_giorno.setdefault(t[:10], {"um": [], "st": []})
+                g = per_giorno.setdefault(t[:10], {"um": [], "st": [], "ph": [0.0] * 24})
                 g["um"].append(media([h["soil_moisture_3_to_9cm"][k], h["soil_moisture_9_to_27cm"][k]]))
                 g["st"].append(h["soil_temperature_6cm"][k])
+                g["ph"][int(t[11:13])] += h["precipitation"][k] or 0.0       # pioggia oraria del modello (ora italiana)
             giorni = []
             for k, t in enumerate(d["time"]):
                 tn, tx = d["temperature_2m_min"][k], d["temperature_2m_max"][k]
                 if tn is None or tx is None:
                     continue
                 tm = d["temperature_2m_mean"][k] if d["temperature_2m_mean"][k] is not None else (tn + tx) / 2
-                g = per_giorno.get(t, {"um": [], "st": []})
+                g = per_giorno.get(t, {"um": [], "st": [], "ph": [0.0] * 24})
                 giorni.append(dict(d=t, p=d["precipitation_sum"][k] or 0.0, tmin=tn, tmax=tx, tmed=tm,
                                    ur=d["relative_humidity_2m_mean"][k] if d["relative_humidity_2m_mean"][k] is not None else 70,
                                    vd=d["wind_direction_10m_dominant"][k] if d["wind_direction_10m_dominant"][k] is not None else 180,
                                    vm=d["wind_speed_10m_max"][k] or 0.0,
                                    su=media(g["um"]) if media(g["um"]) is not None else 0.25,
-                                   st=media(g["st"]) if media(g["st"]) is not None else tm))
+                                   st=media(g["st"]) if media(g["st"]) is not None else tm, ph=g["ph"]))
             celle.append(dict(lat=la, lon=lo, elev=round(r.get("elevation", 0)), giorni=giorni))
         log(f"Open-Meteo: {len(celle)}/{len(pts)} punti")
         time.sleep(2.5)
@@ -415,31 +416,99 @@ def open_meteo(pts) -> list[dict]:
 
 
 # --------------------------------------------------------------------------- fusione
-def fondi(celle: list[dict], sir: dict, oggi: date) -> dict:
-    """Per i giorni passati sostituisce pioggia e temperature del modello con i valori misurati vicini."""
-    misurati_p = misurati_t = totale = 0
+def _idw(valori):
+    """media pesata sull'inverso del quadrato della distanza: valori = [(valore, km)]"""
+    pesi = [(v, 1 / max(k, 1.0) ** 2) for v, k in valori if v is not None]
+    return sum(v * w for v, w in pesi) / sum(w for _, w in pesi) if pesi else None
+
+
+def _ora_cfr(ora: str, oggi: date):
+    """«09/10 17.45» → ore decimali se è di oggi, altrimenti None"""
+    m = re.fullmatch(r"(\d\d)/(\d\d) (\d\d)\.(\d\d)", (ora or "").strip())
+    if not m or int(m.group(1)) != oggi.day or int(m.group(2)) != oggi.month:
+        return None
+    return int(m.group(3)) + int(m.group(4)) / 60
+
+
+def fondi(celle: list[dict], sir: dict, oggi: date, cfr: dict | None = None) -> dict:
+    """Per i giorni passati sostituisce pioggia e temperature del modello con i valori misurati vicini.
+
+    Pioggia (corretto il 9/10/2026): l'archivio SIR dà per il giorno D la pioggia dalle 9 del giorno prima alle 9 di D
+    (verificato sulle letture del CFR), non da mezzanotte a mezzanotte. Ogni finestra 9→9 misurata viene ripartita fra i due
+    giorni civili secondo l'andamento orario della pioggia del modello (se il modello non ne dà, in proporzione alle ore).
+    Ieri e l'altro ieri: totali esatti 0-24 del CFR (riepilogo «1 giorno» e «2 giorni»). Oggi: pioggia misurata dal CFR da
+    mezzanotte all'ultima lettura, più il modello per le ore che restano. Temperature SIR: già da mezzanotte a mezzanotte."""
+    misurati_p = misurati_t = totale = esatti = 0
     pluvio, termo = sir.get("pluvio", []), sir.get("termo", [])
+    cfr_st = [dict(v, id=k) for k, v in (cfr or {}).items() if v.get("lat") is not None]
+    ieri, altroieri = (oggi - timedelta(days=1)).isoformat(), (oggi - timedelta(days=2)).isoformat()
     for c in celle:
         vic_p = [(s, km(c["lat"], c["lon"], s["lat"], s["lon"])) for s in pluvio]
         vic_p = sorted([x for x in vic_p if x[1] <= RAGGIO_PIOGGIA_KM], key=lambda x: x[1])[:4]
         vic_t = [(s, km(c["lat"], c["lon"], s["lat"], s["lon"])) for s in termo if s.get("quota") is not None]
         vic_t = sorted([x for x in vic_t if x[1] <= RAGGIO_TEMP_KM], key=lambda x: x[1])[:3]
+        vic_c = [(s, km(c["lat"], c["lon"], s["lat"], s["lon"])) for s in cfr_st]
+        vic_c = sorted([x for x in vic_c if x[1] <= RAGGIO_PIOGGIA_KM], key=lambda x: x[1])[:4]
         c["stazioni"] = dict(pioggia=[s["nome"] for s, _ in vic_p], temperatura=[s["nome"] for s, _ in vic_t[:1]])
-        for g in c["giorni"]:
+        G = {g["d"]: g for g in c["giorni"]}
+        # finestre SIR 9→9 della cella: W[D] = pioggia dalle 9 del giorno prima alle 9 di D
+        W = {}
+        for d in G:
+            v = _idw([(s["dati"].get(d), k) for s, k in vic_p])
+            if v is not None:
+                W[d] = v
+        ph = lambda d, a, b: sum((G[d].get("ph") or [0.0] * 24)[a:b]) if d in G else 0.0
+        prima = lambda d: (date.fromisoformat(d) - timedelta(days=1)).isoformat()
+        dopo = lambda d: (date.fromisoformat(d) + timedelta(days=1)).isoformat()
+        nuova = {}
+        for d, g in G.items():
             g["fp"] = g["ft"] = 0
-            if g["d"] >= oggi.isoformat():
+            if d >= oggi.isoformat():
                 continue
             totale += 1
-            # pioggia: media pesata sull'inverso del quadrato della distanza
-            pesi = [(s["dati"][g["d"]], 1 / max(k, 1.0) ** 2) for s, k in vic_p if g["d"] in s["dati"]]
-            if pesi:
-                g["p"] = round(sum(v * w for v, w in pesi) / sum(w for _, w in pesi), 1)
+            # parte 0-9 del giorno d, dalla finestra W[d] (che comincia alle 9 del giorno prima)
+            if d in W:
+                m_a, m_tot = ph(d, 0, 9), ph(prima(d), 9, 24) + ph(d, 0, 9)
+                parte_a, mis_a = W[d] * (m_a / m_tot if m_tot >= 0.3 else 9 / 24), True
+            else:
+                parte_a, mis_a = ph(d, 0, 9), False
+            # parte 9-24 del giorno d, dalla finestra W[d+1]
+            d1 = dopo(d)
+            if d1 in W:
+                m_b, m_tot = ph(d, 9, 24), ph(d, 9, 24) + ph(d1, 0, 9)
+                parte_b, mis_b = W[d1] * (m_b / m_tot if m_tot >= 0.3 else 15 / 24), True
+            else:
+                parte_b, mis_b = ph(d, 9, 24), False
+            if mis_a or mis_b:
+                nuova[d] = parte_a + parte_b
                 g["fp"] = 1
-                misurati_p += 1
-            # temperatura: stazione più vicina con dato, corretta per la differenza di quota
+            # ieri e l'altro ieri: totali esatti 0-24 del CFR
+            if d in (ieri, altroieri) and vic_c:
+                v = _idw([((s.get("p1") if d == ieri else (s["p2"] - s["p1"] if s.get("p2") is not None and s.get("p1") is not None
+                           and s["p2"] >= s["p1"] else None)), k) for s, k in vic_c])
+                if v is not None:
+                    nuova[d] = v; g["fp"] = 1; esatti += 1
+        for d, v in nuova.items():
+            G[d]["p"] = round(v, 1)
+            misurati_p += 1
+        # oggi: misurata dal CFR fino all'ultima lettura, poi il modello
+        go = G.get(oggi.isoformat())
+        if go is not None and vic_c:
+            letture = [(s.get("oggi"), _ora_cfr(s.get("ora"), oggi), k) for s, k in vic_c]
+            letture = [(v, h, k) for v, h, k in letture if v is not None and h is not None]
+            if letture:
+                h = min(x[1] for x in letture)
+                v = _idw([(v, k) for v, _, k in letture])
+                resto = sum(go["ph"][int(h) + 1:]) + go["ph"][min(23, int(h))] * (1 - (h - int(h)))
+                go["p"] = round(v + resto, 1)
+                go["fp"] = 2          # in parte misurata
+        for d, g in G.items():
+            if d >= oggi.isoformat():
+                continue
+            # temperatura: stazione più vicina con dato, corretta per la differenza di quota (SIR: giornata civile)
             for s, k in vic_t:
-                if g["d"] in s["dati"]:
-                    tn, tx = s["dati"][g["d"]]
+                if d in s["dati"]:
+                    tn, tx = s["dati"][d]
                     corr = (s["quota"] - c["elev"]) * 0.0065
                     nuova_tm = (tn + tx) / 2 + corr
                     g["st"] = g["st"] + (nuova_tm - g["tmed"])          # il suolo segue lo scarto dell'aria
@@ -447,7 +516,9 @@ def fondi(celle: list[dict], sir: dict, oggi: date) -> dict:
                     g["ft"] = 1
                     misurati_t += 1
                     break
-    return dict(giorni_passati=totale, pioggia_misurata=misurati_p, temperatura_misurata=misurati_t)
+        for g in c["giorni"]:
+            g.pop("ph", None)
+    return dict(giorni_passati=totale, pioggia_misurata=misurati_p, pioggia_esatta_cfr=esatti, temperatura_misurata=misurati_t)
 
 
 def compatta(celle: list[dict], meta: dict) -> dict:
@@ -500,10 +571,21 @@ def main():
                compatto=False)
     else:
         sir = json.loads(cache_sir.read_text()) if cache_sir.exists() else {}
+        try:   # pioggia di oggi fino all'ultima lettura: il riepilogo CFR è leggero (poche pagine)
+            cfr = riepilogo_cfr()
+            log(f"CFR: {len(cfr)} stazioni nella zona")
+            scrivi(DOCS / "stazioni.json", dict(aggiornato=adesso.isoformat(timespec="minutes"),
+                                                 stazioni=[dict(id=k, **v) for k, v in cfr.items()]))
+        except Exception as e:
+            log("CFR:", e)
+            try:
+                cfr = {x.pop("id"): x for x in json.loads((DOCS / "stazioni.json").read_text())["stazioni"]}
+            except Exception:
+                cfr = {}
 
 
     celle = open_meteo(punti_griglia())
-    statistiche = fondi(celle, sir, oggi)
+    statistiche = fondi(celle, sir, oggi, cfr)
     log("Fusione:", statistiche)
     meta = dict(aggiornato=adesso.isoformat(timespec="minutes"), oggi=oggi.isoformat(),
                 stazioni_sir=dict(pioggia=len(sir.get("pluvio", [])), temperatura=len(sir.get("termo", []))),

@@ -15,8 +15,8 @@ from pathlib import Path
 DIR = Path(__file__).resolve().parent.parent / "data" / "previsioni"
 sir = json.load(open(DIR / "sir.json"))
 modelli = {}
-for f in sorted(DIR.glob("om_*.json")):
-    modelli[f.stem[3:]] = json.load(open(f))
+for f in sorted(DIR.glob("om9_*.json")):   # somme dalle 9 alle 9, come i valori giornalieri SIR
+    modelli[f.stem[4:]] = json.load(open(f))
 if (DIR / "lamma.json").exists():
     modelli["lamma_wrf"] = json.load(open(DIR / "lamma.json"))
 NOMI = {"best_match": "Open-Meteo automatico (usato ora)", "italia_meteo_arpae_icon_2i": "ICON-2I ItaliaMeteo 2 km",
@@ -39,7 +39,7 @@ def punteggi(coppie):
 
 
 def serie(mod, st, k):
-    return modelli[mod].get(st, {}).get(str(k), {})
+    return modelli[mod].get(st, {}).get("w" + str(k), {})
 
 
 def confronta(k, nomi):
@@ -70,7 +70,7 @@ def confronta(k, nomi):
 f2 = lambda x: "–" if x is None else f"{x:.2f}"
 righe = ["# Previsioni di pioggia contro pioggia misurata (stazioni SIR)", "",
          f"Stazioni: {len(sir)}. Modelli: {', '.join(NOMI.get(m, m) for m in modelli)}.",
-         "Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.", ""]
+         "Giorno D = pioggia dalle 9 del giorno prima alle 9 di D (come l'archivio SIR). Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.", ""]
 for k in range(0, 8):
     nomi = [m for m in modelli if any(serie(m, st, k) for st in sir)]
     if not nomi: continue
