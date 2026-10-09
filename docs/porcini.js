@@ -171,7 +171,9 @@ function valuta(D, idx, sp, quota, bosco){
   let ind=0;
   if (mn>0){
     const geo=Math.exp(vals.reduce((s,v)=>s+Math.log(v),0)/vals.length);
-    ind=Math.pow(geo,.6)*Math.pow(mn,.4)*Math.min(1,.5+f.pioggia)*Math.min(1,.5+f.suoloU);
+    // ×pioggia^0,3 (9/10/2026): nei primi giorni dopo la pioggia l'attesa pesa di più (a 8 giorni da 50 mm l'indice passa da 32 a 20;
+    // il micologo Opicelli indica 13-20 giorni dopo la pioggia principale). Ritrovamenti GBIF 0,620 -> 0,623, Italia 0,597 -> 0,604.
+    ind=Math.pow(geo,.6)*Math.pow(mn,.4)*Math.min(1,.5+f.pioggia)*Math.min(1,.5+f.suoloU)*Math.pow(f.pioggia,.3);
   }
   const lim = mn<.95 ? Object.keys(f).reduce((a,b)=>f[a]<=f[b]?a:b) : null;
   return {i:Math.round(100*ind), v:100*ind, f, lim, ev};

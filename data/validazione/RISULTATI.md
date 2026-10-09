@@ -235,3 +235,44 @@ migliore con il terreno compreso. Non verificabile sui ritrovamenti GBIF (posizi
 Effetto, 16/10 (previsione): versanti a nord porcino d'autunno 41% → 65% dei punti, a sud nero 62% → 66%; media 24,7 → 25,3, punti ≥30
 34% → 39%. Oggi 9/10: media 10,0 → 10,2, nessun punto ≥30; il rosso passa sui versanti a nord (26% → 32%, a sud 22% → 10%).
 La mappa generale non cambia: a 600 m una maglia comprende versanti diversi.
+
+## 9 ottobre 2026 (sera) — ricontrollo completo: dati, codice, altri siti (applicato)
+**Dati in ingresso, mappa contro verifiche**
+- Temperatura del suolo: la mappa usa Open-Meteo 6 cm, che in media è uguale alla media dell'aria (ago-ott 2026: +0,02…+0,06 °C);
+  le verifiche usavano la stima «aria − 1». Anche il suolo ERA5 0-7 cm dei ritrovamenti GBIF è circa la media dell'aria (+0,8…+1,4 sulla stima).
+  Con il suolo vero (soglie invariate) GBIF combinato 0,617 → 0,620, Lucchesia (castagno) 0,687 → 0,698: la mappa era nel giusto,
+  **le verifiche ora usano il suolo vero** (`script/gbif_specie.js`, nuovo `script/valida_lucchesia.js`).
+- Pioggia: le stazioni SIR (mappa) hanno quasi gli stessi giorni ≥3 mm della griglia (16,3% contro 15,8%) ma il 28% di pioggia in più
+  e quasi il triplo dei giorni ≥30 mm. Ridurre la pioggia SIR per somigliare alla griglia peggiora la Lucchesia (×0,85: 0,680; ×0,78: 0,658):
+  **lasciata com'è**.
+- Umidità dell'aria, vento massimo e direzione: stesse variabili Open-Meteo nella mappa e nelle verifiche.
+- `gbif_specie.js` usava una copia del calcolo (`valida_regole.js`) che differiva di poco da quella della mappa: ora usa `docs/porcini.js`.
+
+**Codice**
+- Mappa generale: media delle 4 celle dopo aver scelto la specie (la 20 m prima): differenza media 0,1 punti, massimo 5, cambio di fascia
+  1-2% delle maglie. Lasciata.
+- **Attesa dopo la pioggia troppo morbida**: con la pioggia di 26-69 mm dell'8/10 dopo 20 giorni secchi, il 16/10 (8° giorno, fattore attesa
+  0,2) dava 27-32 («possibile») perché la combinazione dei fattori attenua il più basso. Aggiunto ×pioggia^0,3:
+  | | prima | dopo |
+  |---|---|---|
+  | GBIF combinato (suolo vero) | 0,620 | **0,623** (anni pari 0,618 → 0,622, dispari 0,621 → 0,624) |
+  | GBIF Italia | 0,597 | **0,604** |
+  | per stagione | | giu-ago 0,613, settembre 0,654, ott-dic 0,611 |
+  | Lucchesia castagno / bosco stimato | 0,698 / 0,671 | **0,703 / 0,682** |
+  | 50 mm dopo un periodo secco, giorno 4/8/12/16/20 | 0/32/65/35/18 | 0/20/56/35/15 |
+  Provati anche ×pioggia^0,5 e ^0,8 (stessa AUC, Italia peggio) e altre forme (peggio).
+- Livello: oggi 9/10 nessuna maglia ≥30 (massimo 20); il 16/10 una sola maglia ≥30 (prima 3.854), castagneti fino a 28.
+  Mappa a 20 m: oggi media 6, il 16/10 media 15, 0,1% dei punti ≥30. Mappa generale e 20 m il 16/10: stessa fascia nel 96% delle maglie
+  (correlazione 0,97).
+
+**Altri siti (solo termine di paragone)**
+- [Meteofunghi](https://www.meteofunghi.it/) (associazione, previsioni per regione): le pagine non si possono leggere in automatico (robots.txt), non consultato.
+- [3BMeteo, meteo funghi](https://www.3bmeteo.com/meteo-funghi): metodo statistico non descritto. Abetone: «assente» 9-15/10, «quasi del tutto assente» 16-23/10;
+  Castelnuovo di Garfagnana e Bagni di Lucca senza dati (servizio in aggiornamento). La mappa corretta è coerente (scarsa fino al 16).
+- [Il Dolomiti, intervista al micologo N. Opicelli](https://www.ildolomiti.it/altra-montagna/ambiente/2026/in-quanto-tempo-cresce-un-porcino-quali-condizioni-originano-una-buttata-quali-specie-si-sviluppano-piu-rapidamente-scopriamo-i-segreti-dei-funghi-con-lesperto):
+  porcino 13-20 giorni dopo la pioggia principale; meglio pioggia moderata e prolungata di un temporale con vento e caldo; vento secco e calo
+  brusco di temperatura frenano. Coerente con attesa, secco, tramontana e calo termico del modello.
+- [Prevedere l'uscita dei porcini (blog)](https://prevedereuscitaporcini.blogspot.com/): «pioggia residua» e temperatura del terreno in un intervallo,
+  uscita 8-14 giorni dopo l'ingresso nell'intervallo; versanti a sud circa 2 °C più caldi. Simile a umidità del suolo + temperatura del suolo + attesa.
+- [Funghi che passione, indice FCP](https://funghichepassione.shop/crescita-funghi-tempo-reale/): pioggia degli ultimi 15 giorni, 10-18 °C, umidità notturna
+  (Open-Meteo); formula non pubblicata.
