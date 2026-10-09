@@ -1,0 +1,59 @@
+15 stazioni: Lucca (Orto Botanico), Bagnone, Baggio, Passo Radici, S. Miniato Poggio al Pino, Cerreto, Bocca d'Arno, Gello, Melo, Calavorno, Viareggio 1, Montecatini Terme, Passo del Cerreto, Tendola, Careggine
+SIR: 542, 538, 542, 542, 542, 542, 542, 542, 542, 541, 542, 542, 541, 542, 542 giorni per stazione
+Open-Meteo best_match
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  best_match: 2025-04-15 → 2025-08-12 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  best_match: 2025-08-13 → 2025-12-10 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  best_match: 2025-12-11 → 2026-04-09 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  best_match: 2026-04-10 → 2026-08-07 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  best_match: 2026-08-08 → 2026-10-08 fatto
+Open-Meteo italia_meteo_arpae_icon_2i
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  italia_meteo_arpae_icon_2i: 2025-04-15 → 2025-08-12 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  italia_meteo_arpae_icon_2i: 2025-08-13 → 2025-12-10 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  italia_meteo_arpae_icon_2i: 2025-12-11 → 2026-04-09 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  italia_meteo_arpae_icon_2i: 2026-04-10 → 2026-08-07 fatto
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>
+  errore <urlopen error _ssl.c:993: The handshake operation timed out>

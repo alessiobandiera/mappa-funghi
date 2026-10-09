@@ -1,0 +1,111 @@
+{
+"dal": "2025-04-15",
+"al": "2026-10-08",
+"stazioni": [
+{
+"id": "TOS02000512",
+"nome": "Lucca (Orto Botanico)",
+"lat": 43.842,
+"lon": 10.511,
+"quota": 16.0
+},
+{
+"id": "TOS09000015",
+"nome": "Bagnone",
+"lat": 44.31,
+"lon": 9.984,
+"quota": 195.0
+},
+{
+"id": "TOS01001263",
+"nome": "Baggio",
+"lat": 43.991,
+"lon": 10.964,
+"quota": 525.0
+},
+{
+"id": "TOS11000106",
+"nome": "Passo Radici",
+"lat": 44.197,
+"lon": 10.487,
+"quota": 1637.0
+},
+{
+"id": "TOS11000045",
+"nome": "S. Miniato Poggio al Pino",
+"lat": 43.68,
+"lon": 10.894,
+"quota": 117.0
+},
+{
+"id": "TOS02000088",
+"nome": "Cerreto",
+"lat": 44.03,
+"lon": 10.172,
+"quota": 477.0
+},
+{
+"id": "TOS01005251",
+"nome": "Bocca d'Arno",
+"lat": 43.681,
+"lon": 10.28,
+"quota": 1.0
+},
+{
+"id": "TOS01005262",
+"nome": "Gello",
+"lat": 43.652,
+"lon": 10.588,
+"quota": 5.0
+},
+{
+"id": "TOS02000359",
+"nome": "Melo",
+"lat": 44.133,
+"lon": 10.743,
+"quota": 1000.0
+},
+{
+"id": "TOS02004195",
+"nome": "Calavorno",
+"lat": 44.02,
+"lon": 10.535,
+"quota": 137.0
+},
+{
+"id": "TOS02004091",
+"nome": "Viareggio 1",
+"lat": 43.868,
+"lon": 10.259,
+"quota": 0.0
+},
+{
+"id": "TOS01001601",
+"nome": "Montecatini Terme",
+"lat": 43.893,
+"lon": 10.772,
+"quota": 95.0
+},
+{
+"id": "TOS09001160",
+"nome": "Passo del Cerreto",
+"lat": 44.304,
+"lon": 10.217,
+"quota": 1250.0
+},
+{
+"id": "TOS09001230",
+"nome": "Tendola",
+"lat": 44.156,
+"lon": 10.034,
+"quota": 410.0
+},
+{
+"id": "TOS11000096",
+"nome": "Careggine",
+"lat": 44.104,
+"lon": 10.337,
+"quota": 1100.0
+}
+]
+}
