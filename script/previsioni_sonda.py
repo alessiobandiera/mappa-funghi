@@ -12,6 +12,7 @@ def get(url, timeout=120):
 
 
 NOMI_WMS = []
+oggi = date.today()
 # ---- Open-Meteo: previsioni passate, quali modelli rispondono e da quando
 modelli = ["best_match", "italia_meteo_arpae_icon_2i", "icon_d2", "icon_eu", "icon_seamless", "ecmwf_ifs025", "ecmwf_ifs", "ecmwf_aifs025_single",
            "meteofrance_arome_france_hd", "meteofrance_arome_france", "meteofrance_arpege_europe", "meteofrance_seamless", "gfs_seamless", "ukmo_seamless"]
