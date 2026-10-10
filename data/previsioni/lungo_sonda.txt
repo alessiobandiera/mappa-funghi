@@ -1,0 +1,135 @@
+== 1. previsione normale, 16 giorni
+    daily: 16 passi, da 2026-10-10 a 2026-10-25; variabili: 7
+      precipitation_sum: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [0.0, 0.0, 7.8]
+      temperature_2m_min: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [5.1, 2.7, 7.8]
+      temperature_2m_max: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [14.0, 18.4, 10.7]
+      temperature_2m_mean: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [8.6, 9.3, 9.6]
+      relative_humidity_2m_mean: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [76, 73, 90]
+      wind_direction_10m_dominant: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [9, 359, 236]
+      wind_speed_10m_max: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [10.3, 11.9, 15.1]
+    hourly: 384 passi, da 2026-10-10T00:00 a 2026-10-25T23:00; variabili: 4
+      soil_moisture_3_to_9cm: dati in 9 giorni (2026-10-10 … 2026-10-18), completi 8; ultimi valori [0.1, 0.099, 0.099]
+      soil_moisture_9_to_27cm: dati in 9 giorni (2026-10-10 … 2026-10-18), completi 8; ultimi valori [0.109, 0.109, 0.109]
+      soil_temperature_6cm: dati in 9 giorni (2026-10-10 … 2026-10-18), completi 8; ultimi valori [14.6, 14.5, 14.4]
+      precipitation: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [0.2, 0.2, 0.2]
+== 2. pioggia oraria per modello, 16 giorni
+    hourly: 384 passi, da 2026-10-10T00:00 a 2026-10-25T23:00; variabili: 12
+      precipitation_meteofrance_arome_france_hd: dati in 3 giorni (2026-10-10 … 2026-10-12), completi 2; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_italia_meteo_arpae_icon_2i: dati in 4 giorni (2026-10-10 … 2026-10-13), completi 3; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_ecmwf_ifs025: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 15; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_ecmwf_aifs025_single: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 15; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_ecmwf_ifs: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 15; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_gfs_seamless: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [0.2, 0.2, 0.2]
+      precipitation_gfs_graphcast025: dati in 0 giorni (- … -), completi 0; ultimi valori []
+      precipitation_icon_seamless: dati in 9 giorni (2026-10-10 … 2026-10-18), completi 8; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_gem_seamless: dati in 11 giorni (2026-10-10 … 2026-10-20), completi 10; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_ukmo_seamless: dati in 8 giorni (2026-10-10 … 2026-10-17), completi 7; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_meteofrance_seamless: dati in 5 giorni (2026-10-10 … 2026-10-14), completi 4; ultimi valori [0.0, 0.0, 0.0]
+      precipitation_best_match: dati in 16 giorni (2026-10-10 … 2026-10-25), completi 16; ultimi valori [0.2, 0.2, 0.2]
+== 3. API stagionale
+  -- predefinito, daily temperature_2m_max
+    chiavi: ['latitude', 'longitude', 'generationtime_ms', 'utc_offset_seconds', 'timezone', 'timezone_abbreviation', 'elevation', 'daily_units', 'daily'] daily: ['time', 'temperature_2m_max', 'temperature_2m_max_member01', 'temperature_2m_max_member02', 'temperature_2m_max_member03', 'temperature_2m_max_member04', 'temperature_2m_max_member05', 'temperature_2m_max_member06'] … 52
+  ecmwf_ec46: 51 serie daily, giorni 2026-10-10 … 2026-11-08; chiavi ['time', 'precipitation_sum', 'precipitation_sum_member01', 'precipitation_sum_member02', 'precipitation_sum_member03']
+  ec46: HTTP 400: {"reason":"Invalid value: Cannot initialize MultiDomains from invalid String value ec46","error":true}
+  ecmwf_ec46_ensemble_mean: <urlopen error _ssl.c:993: The handshake operation timed out>
+  ecmwf_ec46_mean: HTTP 400: {"error":true,"reason":"Invalid value: Cannot initialize MultiDomains from invalid String value ecmwf_ec46_mean"}
+  ecmwf_seasonal_seamless: 51 serie daily, giorni 2026-10-10 … 2026-11-08; chiavi ['time', 'precipitation_sum', 'precipitation_sum_member01', 'precipitation_sum_member02', 'precipitation_sum_member03']
+  ecmwf_seas5: 51 serie daily, giorni 2026-10-10 … 2026-11-08; chiavi ['time', 'precipitation_sum', 'precipitation_sum_member01', 'precipitation_sum_member02', 'precipitation_sum_member03']
+  ecmwf_seasonal_ensemble_mean: HTTP 400: {"error":true,"reason":"Invalid value: Cannot initialize MultiDomains from invalid String value ecmwf_seasonal_ensemble_mean"}
+  -- variabili daily una per una (modello predefinito e ecmwf_ec46)
+    precipitation_sum [pred.]: 51 serie (['precipitation_sum', 'precipitation_sum_member01']…), 30 giorni, primi valori [0.2, 1.1, 0.5, 0.0, 0.0]
+    precipitation_sum [ec46]: 51 serie (['precipitation_sum', 'precipitation_sum_member01']…), 30 giorni, primi valori [0.2, 1.1, 0.5, 0.0, 0.0]
+    temperature_2m_max [pred.]: 51 serie (['temperature_2m_max', 'temperature_2m_max_member01']…), 30 giorni, primi valori [19.3, 19.3, 17.7, 15.3, 17.6]
+    temperature_2m_max [ec46]: 51 serie (['temperature_2m_max', 'temperature_2m_max_member01']…), 30 giorni, primi valori [20.0, 20.0, 18.4, 16.0, 18.3]
+    temperature_2m_min [pred.]: 51 serie (['temperature_2m_min', 'temperature_2m_min_member01']…), 30 giorni, primi valori [8.9, 7.6, 9.3, 7.4, 5.2]
+    temperature_2m_min [ec46]: 51 serie (['temperature_2m_min', 'temperature_2m_min_member01']…), 30 giorni, primi valori [9.6, 8.3, 10.0, 8.1, 5.9]
+    temperature_2m_mean [pred.]: 51 serie (['temperature_2m_mean', 'temperature_2m_mean_member01']…), 30 giorni, primi valori [13.3, 12.8, 12.4, 10.0, 9.7]
+    temperature_2m_mean [ec46]: <urlopen error _ssl.c:993: The handshake operation timed out>
+    relative_humidity_2m_mean [pred.]: 51 serie (['relative_humidity_2m_mean', 'relative_humidity_2m_mean_member01']…), 30 giorni, primi valori [85, 85, 86, 80, 74]
+    relative_humidity_2m_mean [ec46]: 51 serie (['relative_humidity_2m_mean', 'relative_humidity_2m_mean_member01']…), 30 giorni, primi valori [85, 85, 86, 81, 74]
+    wind_speed_10m_max [pred.]: 51 serie (['wind_speed_10m_max', 'wind_speed_10m_max_member01']…), 30 giorni, primi valori [5.1, 5.5, 7.7, 13.2, 9.3]
+    wind_speed_10m_max [ec46]: 51 serie (['wind_speed_10m_max', 'wind_speed_10m_max_member01']…), 30 giorni, primi valori [5.1, 5.5, 7.7, 13.2, 9.3]
+    wind_speed_10m_mean [pred.]: 51 serie (['wind_speed_10m_mean', 'wind_speed_10m_mean_member01']…), 30 giorni, primi valori [2.4, 3.0, 6.2, 8.3, 7.5]
+    wind_speed_10m_mean [ec46]: 51 serie (['wind_speed_10m_mean', 'wind_speed_10m_mean_member01']…), 30 giorni, primi valori [2.4, 3.0, 6.2, 8.3, 7.5]
+    wind_direction_10m_dominant [pred.]: 51 serie (['wind_direction_10m_dominant', 'wind_direction_10m_dominant_member01']…), 30 giorni, primi valori [324, 340, 36, 25, 24]
+    wind_direction_10m_dominant [ec46]: 51 serie (['wind_direction_10m_dominant', 'wind_direction_10m_dominant_member01']…), 30 giorni, primi valori [324, 340, 36, 25, 24]
+    soil_moisture_0_to_7cm_mean [pred.]: <urlopen error _ssl.c:993: The handshake operation timed out>
+    soil_moisture_0_to_7cm_mean [ec46]: 51 serie (['soil_moisture_0_to_7cm_mean', 'soil_moisture_0_to_7cm_mean_member01']…), 30 giorni, primi valori [0.26, 0.245, 0.235, 0.222, 0.206]
+    soil_moisture_7_to_28cm_mean [pred.]: 51 serie (['soil_moisture_7_to_28cm_mean', 'soil_moisture_7_to_28cm_mean_member01']…), 30 giorni, primi valori [0.263, 0.248, 0.237, 0.229, 0.22]
+    soil_moisture_7_to_28cm_mean [ec46]: 51 serie (['soil_moisture_7_to_28cm_mean', 'soil_moisture_7_to_28cm_mean_member01']…), 30 giorni, primi valori [0.263, 0.248, 0.237, 0.229, 0.22]
+    soil_temperature_0_to_7cm_mean [pred.]: 51 serie (['soil_temperature_0_to_7cm_mean', 'soil_temperature_0_to_7cm_mean_member01']…), 30 giorni, primi valori [15.0, 14.6, 14.4, 12.6, 11.4]
+    soil_temperature_0_to_7cm_mean [ec46]: 51 serie (['soil_temperature_0_to_7cm_mean', 'soil_temperature_0_to_7cm_mean_member01']…), 30 giorni, primi valori [15.7, 15.3, 15.1, 13.3, 12.1]
+    soil_moisture_0_to_10cm_mean [pred.]: <urlopen error _ssl.c:993: The handshake operation timed out>
+    soil_moisture_0_to_10cm_mean [ec46]: 51 serie (['soil_moisture_0_to_10cm_mean', 'soil_moisture_0_to_10cm_mean_member01']…), 30 giorni, primi valori [None, None, None, None, None]
+    rain_sum [pred.]: 51 serie (['rain_sum', 'rain_sum_member01']…), 30 giorni, primi valori [0.1, 0.4, 0.3, 0.0, 0.0]
+    rain_sum [ec46]: 51 serie (['rain_sum', 'rain_sum_member01']…), 30 giorni, primi valori [0.1, 0.4, 0.3, 0.0, 0.0]
+    shortwave_radiation_sum [pred.]: 51 serie (['shortwave_radiation_sum', 'shortwave_radiation_sum_member01']…), 30 giorni, primi valori [12.61, 11.86, 11.94, 14.67, 14.58]
+    shortwave_radiation_sum [ec46]: 51 serie (['shortwave_radiation_sum', 'shortwave_radiation_sum_member01']…), 30 giorni, primi valori [12.61, 11.86, 11.94, 14.67, 14.58]
+  -- variabili orarie/6 ore (ecmwf_ec46)
+    precipitation [hourly]: <urlopen error _ssl.c:993: The handshake operation timed out>
+    precipitation [six_hourly]: 0 serie, 0 passi da -, primi []
+    temperature_2m [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [11.4, 10.0, 19.9, 14.9]
+    temperature_2m [six_hourly]: 0 serie, 0 passi da -, primi []
+    relative_humidity_2m [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [99, 100, 56, 85]
+    relative_humidity_2m [six_hourly]: 0 serie, 0 passi da -, primi []
+    wind_speed_10m [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [0.4, 5.1, 1.1, 3.0]
+    wind_speed_10m [six_hourly]: 0 serie, 0 passi da -, primi []
+    wind_direction_10m [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [360, 4, 288, 256]
+    wind_direction_10m [six_hourly]: 0 serie, 0 passi da -, primi []
+    soil_moisture_0_to_7cm [hourly]: <urlopen error _ssl.c:993: The handshake operation timed out>
+    soil_moisture_0_to_7cm [six_hourly]: 0 serie, 0 passi da -, primi []
+    soil_moisture_7_to_28cm [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [0.27, 0.265, 0.26, 0.255]
+    soil_moisture_7_to_28cm [six_hourly]: 0 serie, 0 passi da -, primi []
+    soil_temperature_0_to_7cm [hourly]: 51 serie, 120 passi da 2026-10-10T00:00, primi [13.9, 13.0, 19.5, 16.5]
+    soil_temperature_0_to_7cm [six_hourly]: 0 serie, 0 passi da -, primi []
+  -- più punti in una richiesta, tutte le variabili daily utili
+    ok, 2 punti
+      2026-10-10: membri 51, mediana 0.4, media 0.5, ≥3 mm 1/51, max 3.2
+      2026-10-11: membri 51, mediana 0.4, media 0.7, ≥3 mm 0/51, max 2.2
+      2026-10-12: membri 51, mediana 0.2, media 1.1, ≥3 mm 7/51, max 9.9
+      2026-10-13: membri 51, mediana 0.0, media 0.0, ≥3 mm 0/51, max 0.1
+      2026-10-14: membri 51, mediana 0.0, media 0.1, ≥3 mm 1/51, max 5.0
+      2026-10-15: membri 51, mediana 0.0, media 0.0, ≥3 mm 0/51, max 0.8
+      2026-10-16: membri 51, mediana 0.0, media 0.4, ≥3 mm 3/51, max 5.8
+      2026-10-17: membri 51, mediana 0.1, media 2.9, ≥3 mm 14/51, max 58.1
+      2026-10-18: membri 51, mediana 0.2, media 2.0, ≥3 mm 10/51, max 19.1
+      2026-10-19: membri 51, mediana 0.0, media 2.0, ≥3 mm 11/51, max 16.3
+      2026-10-20: membri 51, mediana 0.3, media 3.2, ≥3 mm 15/51, max 28.4
+      2026-10-21: membri 51, mediana 0.3, media 5.1, ≥3 mm 16/51, max 59.9
+      2026-10-22: membri 51, mediana 0.5, media 4.0, ≥3 mm 16/51, max 41.7
+      2026-10-23: membri 51, mediana 0.4, media 3.8, ≥3 mm 16/51, max 27.2
+      2026-10-24: membri 51, mediana 0.0, media 3.0, ≥3 mm 14/51, max 19.6
+      2026-10-25: membri 51, mediana 0.0, media 2.2, ≥3 mm 8/51, max 23.6
+      2026-10-26: membri 51, mediana 0.1, media 4.0, ≥3 mm 14/51, max 41.6
+      2026-10-27: membri 51, mediana 0.0, media 3.6, ≥3 mm 12/51, max 42.0
+      2026-10-28: membri 51, mediana 0.9, media 5.2, ≥3 mm 16/51, max 54.5
+      2026-10-29: membri 51, mediana 0.8, media 5.3, ≥3 mm 20/51, max 34.8
+      2026-10-30: membri 51, mediana 1.3, media 7.0, ≥3 mm 21/51, max 41.9
+      2026-10-31: membri 51, mediana 1.9, media 7.1, ≥3 mm 22/51, max 34.1
+      2026-11-01: membri 51, mediana 0.8, media 8.5, ≥3 mm 20/51, max 58.3
+      2026-11-02: membri 51, mediana 0.9, media 7.2, ≥3 mm 20/51, max 48.8
+      2026-11-03: membri 51, mediana 1.3, media 5.5, ≥3 mm 18/51, max 39.8
+      2026-11-04: membri 51, mediana 0.4, media 5.2, ≥3 mm 15/51, max 45.6
+      2026-11-05: membri 51, mediana 0.3, media 4.8, ≥3 mm 14/51, max 44.2
+      2026-11-06: membri 51, mediana 1.2, media 3.8, ≥3 mm 16/51, max 28.5
+      2026-11-07: membri 51, mediana 1.0, media 6.2, ≥3 mm 21/51, max 39.1
+      2026-11-08: membri 51, mediana 0.2, media 6.5, ≥3 mm 18/51, max 45.6
+== 4. Single Runs API (corse passate complete)
+  ecmwf_ifs025 2024-10-01T00:00: HTTP 400: {"reason":"The requested model run is not available. Model: ecmwf_ifs025, run: 2024-10-01T00:00Z","error":true}
+  ecmwf_ifs025 2026-04-02T00:00: 360 ore con dati, 2026-04-02T03:00 … 2026-04-17T02:00; totale 52.8 mm
+  ecmwf_ifs025 2026-04-15T00:00: 360 ore con dati, 2026-04-15T03:00 … 2026-04-30T02:00; totale 32.7 mm
+  ecmwf_ifs025 2026-07-01T00:00: 360 ore con dati, 2026-07-01T03:00 … 2026-07-16T02:00; totale 12.3 mm
+  ecmwf_ifs025 2026-10-01T00:00: 360 ore con dati, 2026-10-01T03:00 … 2026-10-16T02:00; totale 105.0 mm
+  ecmwf_aifs025_single 2024-10-01T00:00: HTTP 400: {"error":true,"reason":"The requested model run is not available. Model: ecmwf_aifs025_single, run: 2024-10-01T00:00Z"}
+  ecmwf_aifs025_single 2026-04-02T00:00: 360 ore con dati, 2026-04-02T03:00 … 2026-04-17T02:00; totale 9.0 mm
+  ecmwf_aifs025_single 2026-04-15T00:00: 360 ore con dati, 2026-04-15T03:00 … 2026-04-30T02:00; totale 90.6 mm
+  ecmwf_aifs025_single 2026-07-01T00:00: <urlopen error _ssl.c:993: The handshake operation timed out>
+  ecmwf_aifs025_single 2026-10-01T00:00: 360 ore con dati, 2026-10-01T03:00 … 2026-10-16T02:00; totale 31.2 mm
+  ecmwf_ifs 2024-10-01T00:00: 360 ore con dati, 2024-10-01T03:00 … 2024-10-16T02:00; totale 105.9 mm
+  ecmwf_ifs 2026-04-02T00:00: 360 ore con dati, 2026-04-02T03:00 … 2026-04-17T02:00; totale 55.8 mm
+  ecmwf_ifs 2026-04-15T00:00: 360 ore con dati, 2026-04-15T03:00 … 2026-04-30T02:00; totale 26.8 mm
+  ecmwf_ifs 2026-07-01T00:00: <urlopen error _ssl.c:993: The handshake operation timed out>
+  ecmwf_ifs 2026-10-01T00:00: 360 ore con dati, 2026-10-01T03:00 … 2026-10-16T02:00; totale 96.9 mm
+  gfs_seamless 2024-10-01T00:00: HTTP 400: {"error":true,"reason":"The requested model run is not available. Model: ncep_gfs013, run: 2024-10-01T00:00Z"}
+  gfs_seamless 2026-04-02T00:00: 383 ore con dati, 2026-04-02T03:00 … 2026-04-18T01:00; totale 14.2 mm
+  gfs_seamless 2026-04-15T00:00: 383 ore con dati, 2026-04-15T03:00 … 2026-05-01T01:00; totale 21.3 mm
