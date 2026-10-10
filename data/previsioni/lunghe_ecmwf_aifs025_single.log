@@ -1,0 +1,63 @@
+19:03:58 Single Runs ecmwf_aifs025_single
+19:06:06   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:08:19   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:10:32   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:12:46   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:12:57   ecmwf_aifs025_single: corse fino al 2026-04-21
+19:14:59   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:17:11   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:19:24   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:21:37   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:23:50   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:24:02   ecmwf_aifs025_single: corse fino al 2026-05-11
+19:26:04   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:28:15   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:30:30   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:32:43   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:34:56   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:35:07   ecmwf_aifs025_single: corse fino al 2026-05-31
+19:37:09   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:39:22   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:41:35   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:41:45   errore Expecting value: line 1 column 1 (char 0)
+19:43:50   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:44:00   errore Expecting value: line 1 column 1 (char 0)
+19:44:16   errore Expecting value: line 1 column 1 (char 0)
+19:44:36   errore Expecting value: line 1 column 1 (char 0)
+19:45:02   errore Expecting value: line 1 column 1 (char 0)
+19:47:41   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:49:54   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:50:02   ecmwf_aifs025_single: corse fino al 2026-06-21
+19:52:07   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:54:21   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:56:34   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+19:58:47   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:01:00   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:01:08   ecmwf_aifs025_single: corse fino al 2026-07-11
+20:03:13   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:05:26   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:07:40   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:09:53   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:12:06   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:12:14   ecmwf_aifs025_single: corse fino al 2026-07-31
+20:14:19   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:16:32   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:18:45   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:20:58   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:23:11   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:23:19   ecmwf_aifs025_single: corse fino al 2026-08-20
+20:25:24   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:27:37   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:29:50   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:32:03   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:34:16   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:34:24   ecmwf_aifs025_single: corse fino al 2026-09-09
+20:36:29   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:38:42   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:40:55   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:43:08   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:45:21   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:45:29   ecmwf_aifs025_single: corse fino al 2026-09-29
+20:47:34   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:49:47   errore <urlopen error _ssl.c:993: The handshake operation timed out>
+20:49:57 ecmwf_aifs025_single: 189 corse
