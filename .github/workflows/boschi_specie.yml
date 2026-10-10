@@ -1,0 +1,35 @@
+name: Carte delle specie da satellite (30 m)
+
+# Solo a mano: legge dalle carte europee per specie (Bonannella et al. 2022, Zenodo, CC BY 4.0) la finestra dell'area della mappa
+# e la salva in data/boschi/specie30m/. Non tocca la mappa.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -q rasterio
+      - run: PYTHONUNBUFFERED=1 timeout 55m python script/boschi_specie.py 2>&1 | tee data/boschi/specie30m/scarica.log
+        continue-on-error: true
+        env:
+          GDAL_HTTP_MAX_RETRY: "5"
+          GDAL_HTTP_RETRY_DELAY: "5"
+          GDAL_DISABLE_READDIR_ON_OPEN: "EMPTY_DIR"
+          CPL_VSIL_CURL_ALLOWED_EXTENSIONS: ".tif"
+      - name: Salva
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/boschi/specie30m
+          git commit -q -m "Carte delle specie da satellite, finestra della mappa [skip ci]" || exit 0
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null || true; sleep $((RANDOM % 25 + 10)); done; exit 1
