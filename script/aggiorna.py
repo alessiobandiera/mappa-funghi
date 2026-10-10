@@ -520,58 +520,86 @@ def _membri(D: dict, var: str, k: int) -> list:
     return [D[x][k] for x in D if (x == var or x.startswith(var + "_member")) and D[x][k] is not None]
 
 
-def tendenza_ec46(celle: list[dict], oggi: date) -> str | None:
-    """Giorni da oggi + FUT a oggi + LUNGO dal modello a lungo termine ECMWF EC46 (API stagionale di Open-Meteo, 51 membri, 36 km).
-    Pioggia: la MEDIANA dei membri (lo scenario più probabile giorno per giorno; la media spalmerebbe pochi millimetri ogni giorno).
-    Temperature e umidità dell'aria: media dei membri, corretta con lo scarto medio dalla previsione normale nei giorni in comune
-    (quota della cella e differenze fra modelli). Vento: media; direzione: media vettoriale. Suolo: ultimo valore + variazione
-    della media dei membri. Su questi giorni la buttata dipende quasi solo dalla pioggia già caduta e da quella dei prossimi
-    14 giorni (l'attesa del porcino è di almeno 6-10 giorni). Restituisce il primo giorno aggiunto."""
-    VAR = ["precipitation_sum", "temperature_2m_max", "temperature_2m_min", "temperature_2m_mean", "relative_humidity_2m_mean",
-           "wind_speed_10m_max", "wind_direction_10m_dominant", "soil_moisture_0_to_7cm_mean", "soil_moisture_7_to_28cm_mean",
-           "soil_temperature_0_to_7cm_mean"]
-    primo = None
-    for i in range(0, len(celle), 10):
-        parte = celle[i:i + 10]
-        q = urllib.parse.urlencode(dict(latitude=",".join(str(c["lat"]) for c in parte), longitude=",".join(str(c["lon"]) for c in parte),
-                                        daily=",".join(VAR), models="ecmwf_ec46", forecast_days=LUNGO + 1, timezone="Europe/Rome"))
+# EC46 ha maglie di circa 36 km: bastano 12 punti per tutta la mappa (ogni cella prende il più vicino). Ogni membro conta come una
+# variabile nel limite di richieste di Open-Meteo: poche variabili, pochi punti, una volta al giorno (aggiornamento completo;
+# i leggeri usano la copia in data/cache/ec46.json). Il vento non si chiede: in quei giorni niente tramontana.
+EC46_PUNTI = [(la, lo) for la in (43.75, 44.04, 44.33) for lo in (10.10, 10.40, 10.70, 10.95)]
+EC46_VAR = ["precipitation_sum", "temperature_2m_max", "temperature_2m_min", "relative_humidity_2m_mean",
+            "soil_moisture_0_to_7cm_mean", "soil_temperature_0_to_7cm_mean"]
+
+
+def scarica_ec46(oggi: date) -> dict:
+    """{"la,lo": {data: {p, tmin, tmax, tmed, ur, su, st}}} dai 51 membri di EC46: pioggia mediana, il resto in media."""
+    out = {}
+    for i in range(0, len(EC46_PUNTI), 4):
+        parte = EC46_PUNTI[i:i + 4]
+        q = urllib.parse.urlencode(dict(latitude=",".join(str(p[0]) for p in parte), longitude=",".join(str(p[1]) for p in parte),
+                                        daily=",".join(EC46_VAR), models="ecmwf_ec46", forecast_days=LUNGO + 1, timezone="Europe/Rome"))
         js = json.loads(scarica("https://seasonal-api.open-meteo.com/v1/seasonal?" + q, tentativi=6, timeout=120))
         if isinstance(js, dict):
             js = [js]
-        for c, r in zip(parte, js):
+        for (la, lo), r in zip(parte, js):
             D = r["daily"]; ec = {}
             for k, d in enumerate(D["time"]):
                 p = sorted(_membri(D, "precipitation_sum", k))
-                if not p:
+                tn, tx = media(_membri(D, "temperature_2m_min", k)), media(_membri(D, "temperature_2m_max", k))
+                if not p or tn is None or tx is None:
                     continue
-                dirs = _membri(D, "wind_direction_10m_dominant", k)
-                vd = (math.degrees(math.atan2(sum(math.sin(math.radians(x)) for x in dirs), sum(math.cos(math.radians(x)) for x in dirs))) % 360
-                      if dirs else 180)
-                ec[d] = dict(p=p[len(p) // 2], tmin=media(_membri(D, "temperature_2m_min", k)), tmax=media(_membri(D, "temperature_2m_max", k)),
-                             tmed=media(_membri(D, "temperature_2m_mean", k)), ur=media(_membri(D, "relative_humidity_2m_mean", k)),
-                             vm=media(_membri(D, "wind_speed_10m_max", k)), vd=round(vd),
-                             su=media([media(_membri(D, "soil_moisture_0_to_7cm_mean", k)), media(_membri(D, "soil_moisture_7_to_28cm_mean", k))]),
+                ec[d] = dict(p=round(p[len(p) // 2], 1), tmin=round(tn, 2), tmax=round(tx, 2), tmed=round((tn + tx) / 2, 2),
+                             ur=media(_membri(D, "relative_humidity_2m_mean", k)), su=media(_membri(D, "soil_moisture_0_to_7cm_mean", k)),
                              st=media(_membri(D, "soil_temperature_0_to_7cm_mean", k)))
-            G = c["giorni"]
-            comuni = [g for g in G if g["d"] >= (oggi + timedelta(days=7)).isoformat() and g["d"] in ec and ec[g["d"]]["tmed"] is not None]
-            sc = lambda campo: (sum(g[campo] - ec[g["d"]][campo] for g in comuni if ec[g["d"]][campo] is not None) / len(comuni)) if comuni else 0.0
-            dT, dU = max(-4.0, min(4.0, sc("tmed"))), max(-15.0, min(15.0, sc("ur")))      # scarti limitati: non portarsi dietro un caso strano
-            ultimo = G[-1] if G else None
-            for k in range(FUT, LUNGO + 1):
-                d = (oggi + timedelta(days=k)).isoformat()
-                e = ec.get(d)
-                if not e or e["tmin"] is None or e["tmax"] is None or ultimo is None or d <= ultimo["d"]:
-                    continue
-                tm = e["tmed"] if e["tmed"] is not None else (e["tmin"] + e["tmax"]) / 2
-                e0 = ec.get(ultimo["d"]) or {}
-                su = ultimo["su"] + (e["su"] - e0["su"]) if e["su"] is not None and e0.get("su") is not None else ultimo["su"]
-                st = ultimo["st"] + (e["st"] - e0["st"]) if e["st"] is not None and e0.get("st") is not None else tm + dT
-                nuovo = dict(d=d, p=round(e["p"], 1), tmin=e["tmin"] + dT, tmax=e["tmax"] + dT, tmed=tm + dT,
-                             ur=round(min(100, max(5, (e["ur"] if e["ur"] is not None else 75) + dU))), vd=e["vd"] % 360, vm=e["vm"] or 0.0,
-                             su=max(0.01, su), st=st, ec46=1)
-                G.append(nuovo); ultimo = nuovo
-                primo = d if primo is None or d < primo else primo
-        time.sleep(3)
+            out[f"{la},{lo}"] = ec
+        time.sleep(20)
+    return out
+
+
+def tendenza_ec46(celle: list[dict], oggi: date, completo: bool) -> str | None:
+    """Giorni da oggi + FUT a oggi + LUNGO dal modello a lungo termine ECMWF EC46 (API stagionale di Open-Meteo, 51 membri, 36 km).
+    Pioggia: la MEDIANA dei membri (lo scenario più probabile giorno per giorno; la media spalmerebbe pochi millimetri ogni giorno).
+    Temperature e umidità dell'aria: media dei membri, corretta con lo scarto medio dalla previsione normale nei giorni in comune
+    (quota della cella e differenze fra modelli). Suolo: ultimo valore + variazione della media dei membri. Su questi giorni la
+    buttata dipende quasi solo dalla pioggia già caduta e da quella dei prossimi 14 giorni (l'attesa del porcino è di almeno
+    6-10 giorni). Restituisce il primo giorno aggiunto."""
+    cache = CACHE / "ec46.json"
+    dati = None
+    try:
+        vecchio = json.loads(cache.read_text()) if cache.exists() else None
+    except Exception:
+        vecchio = None
+    if completo or not vecchio or vecchio.get("scaricato") != oggi.isoformat():
+        try:
+            dati = dict(scaricato=oggi.isoformat(), punti=scarica_ec46(oggi))
+            CACHE.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps(dati, separators=(",", ":")))
+        except Exception as e:
+            log("EC46 non scaricato, uso la copia salvata:", e)
+    dati = dati or vecchio
+    if not dati:
+        return None
+    punti = {tuple(map(float, k.split(","))): v for k, v in dati["punti"].items()}
+    primo = None
+    for c in celle:
+        ec = punti[min(punti, key=lambda p: km(c["lat"], c["lon"], p[0], p[1]))]
+        G = c["giorni"]
+        comuni = [g for g in G if g["d"] >= (oggi + timedelta(days=7)).isoformat() and g["d"] in ec]
+        def sc(campo):
+            v = [g[campo] - ec[g["d"]][campo] for g in comuni if ec[g["d"]].get(campo) is not None]
+            return sum(v) / len(v) if v else 0.0
+        dT, dU = max(-4.0, min(4.0, sc("tmed"))), max(-15.0, min(15.0, sc("ur")))      # scarti limitati: non portarsi dietro un caso strano
+        ultimo = G[-1] if G else None
+        for k in range(FUT, LUNGO + 1):
+            d = (oggi + timedelta(days=k)).isoformat()
+            e = ec.get(d)
+            if not e or ultimo is None or d <= ultimo["d"]:
+                continue
+            e0 = ec.get(ultimo["d"]) or {}
+            su = ultimo["su"] + (e["su"] - e0["su"]) if e.get("su") is not None and e0.get("su") is not None else ultimo["su"]
+            st = ultimo["st"] + (e["st"] - e0["st"]) if e.get("st") is not None and e0.get("st") is not None else e["tmed"] + dT
+            nuovo = dict(d=d, p=e["p"], tmin=e["tmin"] + dT, tmax=e["tmax"] + dT, tmed=e["tmed"] + dT,
+                         ur=round(min(100, max(5, (e["ur"] if e.get("ur") is not None else 75) + dU))), vd=180, vm=0.0,
+                         su=max(0.01, su), st=st, ec46=1)
+            G.append(nuovo); ultimo = nuovo
+            primo = d if primo is None or d < primo else primo
     return primo
 
 
@@ -754,7 +782,7 @@ def main():
     except Exception as e:
         log("Suolo a lungo termine non riuscito, restano i valori fissi:", e)
     try:
-        ec46_dal = tendenza_ec46(celle, oggi)
+        ec46_dal = tendenza_ec46(celle, oggi, args.completo)
         log("Tendenza ECMWF EC46 dal", ec46_dal)
     except Exception as e:
         ec46_dal = None
