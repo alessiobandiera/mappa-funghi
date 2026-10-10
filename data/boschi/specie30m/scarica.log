@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "rasterio/_base.pyx", line 322, in rasterio._base.DatasetBase.__init__
+  File "rasterio/_base.pyx", line 234, in rasterio._base.open_dataset
+  File "rasterio/_err.pyx", line 359, in rasterio._err.exc_wrap_pointer
+rasterio._err.CPLE_OpenFailedError: '/vsicurl/https://zenodo.org/api/records/6951628/files/veg_castanea.sativa_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif/content' does not exist in the file system, and is not recognized as a supported dataset name.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/work/mappa-funghi/mappa-funghi/script/boschi_specie.py", line 25, in <module>
+    with rasterio.open("/vsicurl/" + url) as r:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/rasterio/env.py", line 464, in wrapper
+    return f(*args, **kwds)
+           ^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/rasterio/__init__.py", line 367, in open
+    dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "rasterio/_base.pyx", line 331, in rasterio._base.DatasetBase.__init__
+rasterio.errors.RasterioIOError: '/vsicurl/https://zenodo.org/api/records/6951628/files/veg_castanea.sativa_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif/content' does not exist in the file system, and is not recognized as a supported dataset name.
