@@ -1,7 +1,22 @@
 # Previsioni di pioggia contro pioggia misurata (stazioni SIR)
 
-Stazioni: 15. Modelli: Open-Meteo automatico (usato ora), ECMWF AIFS (IA), ECMWF IFS, GFS (USA), ICON-D2 2 km, ICON (DWD), ICON-2I ItaliaMeteo 2 km, AROME France HD 1,5 km.
+Periodo 2025-04-15 – 2026-10-08. Stazioni: 15. Modelli: Open-Meteo automatico (usato ora), ECMWF AIFS (IA), ECMWF IFS, GFS (USA), ICON-D2 2 km, ICON (DWD), ICON-2I ItaliaMeteo 2 km, AROME France HD 1,5 km.
 Giorno D = pioggia dalle 9 del giorno prima alle 9 di D (come l'archivio SIR). Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.
+
+## Verdetto sulla scelta attuale (media AROME + ECMWF + AIFS + ICON-2I)
+
+Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e della migliore alternativa per anticipo:
+
+- anticipo 0: 0.68 (migliore alternativa media di AROME, ECMWF, AIFS, ICON-2I, ICON, GFS 0.69)
+- anticipo 1: 0.65 (migliore alternativa media di AROME, ECMWF, AIFS, ICON-2I, ICON, GFS 0.66)
+- anticipo 2: 0.62 (migliore alternativa media dei modelli disponibili 0.62)
+- anticipo 3: 0.57 (migliore alternativa media di AROME, ECMWF, AIFS, ICON-2I, ICON, GFS 0.58)
+- anticipo 4: 0.56 (migliore alternativa ECMWF AIFS (IA) 0.57)
+- anticipo 5: 0.56 (migliore alternativa ECMWF AIFS (IA) 0.56)
+- anticipo 6: 0.50 (migliore alternativa ECMWF AIFS (IA) 0.50)
+- anticipo 7: 0.46 (migliore alternativa ECMWF AIFS (IA) 0.46)
+
+**La scelta attuale resta la migliore** (o entro 0,03 dalla migliore) a tutti gli anticipi.
 
 ## Anticipo 0 giorni (7929 giorni-stazione)
 

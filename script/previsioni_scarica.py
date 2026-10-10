@@ -7,7 +7,9 @@
 - LaMMA WRF-ARW 3 km (dati aperti Regione Toscana, CC BY): vedi script/previsioni_lamma.py.
 
 Uscita: data/previsioni/stazioni.json, sir.json, om9_<modello>.json (per anticipo: «k» giornata civile, «wk» dalle 9 alle 9 come SIR)
-Variabili d'ambiente: DAL (default 2025-04-15), MODELLI (elenco separato da virgole), MAX_STAZIONI (default 20).
+Variabili d'ambiente: DAL (default 2025-04-15), MODELLI (elenco separato da virgole, anche vuoto), MAX_STAZIONI (default 20),
+AGGIORNA_SIR=1 (stesse stazioni, periodo esteso fino a ieri, pioggia SIR riscaricata: è il primo passo del confronto mensile).
+Si riprende da dove si era fermato: un blocco di 60 giorni si riscarica solo se mancano dei giorni.
 Uso: python script/previsioni_scarica.py        (solo libreria standard)
 """
 import json, math, os, sys, time, urllib.error, urllib.parse, urllib.request
@@ -59,18 +61,25 @@ def get_json(url, tentativi=8):
     return None
 
 
+def completo(out, stazioni, a, b):
+    """il blocco a..b c'è già per almeno metà delle stazioni (anticipo 0, giornata civile)?"""
+    giorni = [(a + timedelta(days=i)).isoformat() for i in range((b - a).days + 1)]
+    ok = sum(all(d in out.get(s["id"], {}).get("0", {}) for d in giorni) for s in stazioni)
+    return ok * 2 >= len(stazioni)
+
+
 def previsioni_om(modello, stazioni, file):
     """{id_stazione: {anticipo: {data: mm}}} per un modello: tutte le stazioni in una richiesta, blocchi di 60 giorni,
     salvataggio dopo ogni blocco (si riprende da dove si era fermato)."""
     out = json.load(open(file)) if file.exists() else {}
-    fatti = set(out.pop("_fatti", []))
+    out.pop("_fatti", None)
     for s in stazioni:
         out.setdefault(s["id"], {str(k): {} for k in LEAD})
     var = ["precipitation"] + [f"precipitation_previous_day{k}" for k in range(1, 8)]
     a = DAL
     while a <= AL:
         b = min(AL, a + timedelta(days=59))
-        if a.isoformat() in fatti:
+        if completo(out, stazioni, a, b):
             a = b + timedelta(days=1); continue
         q = urllib.parse.urlencode(dict(latitude=",".join(str(s["lat"]) for s in stazioni), longitude=",".join(str(s["lon"]) for s in stazioni),
                                         hourly=",".join(var), models=modello, start_date=a.isoformat(), end_date=b.isoformat(), timezone="Europe/Rome"))
@@ -97,17 +106,20 @@ def previsioni_om(modello, stazioni, file):
                 for d, v in fin9.items():
                     if len(v) == 24 and all(x is not None for x in v):
                         out[s["id"]].setdefault("w" + str(k), {})[d] = round(sum(v), 1)
-        fatti.add(a.isoformat())
-        json.dump({**out, "_fatti": sorted(fatti)}, open(file, "w"), separators=(",", ":"))
+        json.dump(out, open(file, "w"), separators=(",", ":"))
         A.log(f"  {modello}: {a} → {b} fatto")
         time.sleep(3)
         a = b + timedelta(days=1)
-    json.dump({**out, "_fatti": sorted(fatti)}, open(file, "w"), separators=(",", ":"))
+    json.dump(out, open(file, "w"), separators=(",", ":"))
 
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    if (OUT / "stazioni.json").exists() and os.environ.get("RIFAI") != "1":   # stesse stazioni e stesso periodo delle altre parti
+    if (OUT / "stazioni.json").exists() and os.environ.get("AGGIORNA_SIR") == "1":   # confronto mensile: stesse stazioni, fino a ieri
+        meta = json.load(open(OUT / "stazioni.json"))["stazioni"]
+        json.dump(dict(dal=DAL.isoformat(), al=AL.isoformat(), stazioni=meta), open(OUT / "stazioni.json", "w"), ensure_ascii=False, indent=0)
+        st = meta
+    elif (OUT / "stazioni.json").exists() and os.environ.get("RIFAI") != "1":   # stesse stazioni e stesso periodo delle altre parti
         meta = json.load(open(OUT / "stazioni.json"))["stazioni"]
         globals()["AL"] = date.fromisoformat(json.load(open(OUT / "stazioni.json"))["al"])
         st = None
@@ -125,7 +137,7 @@ def main():
                 A.log(f"  SIR {s['nome']}: {e}")
         json.dump(sir, open(OUT / "sir.json", "w"), separators=(",", ":"))
         A.log("SIR: " + ", ".join(f"{len(v)}" for v in sir.values()) + " giorni per stazione")
-    for m in MODELLI:
+    for m in [m for m in MODELLI if m.strip()]:
         A.log(f"Open-Meteo {m}")
         previsioni_om(m, meta, OUT / f"om9_{m}.json")
 

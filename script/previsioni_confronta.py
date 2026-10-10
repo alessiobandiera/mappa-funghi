@@ -19,7 +19,7 @@ for f in sorted(DIR.glob("om9_*.json")):   # somme dalle 9 alle 9, come i valori
     modelli[f.stem[4:]] = json.load(open(f))
 if (DIR / "lamma.json").exists():
     modelli["lamma_wrf"] = json.load(open(DIR / "lamma.json"))
-NOMI = {"best_match": "Open-Meteo automatico (usato ora)", "italia_meteo_arpae_icon_2i": "ICON-2I ItaliaMeteo 2 km",
+NOMI = {"best_match": "Open-Meteo automatico (usato fino al 9/10/2026)", "italia_meteo_arpae_icon_2i": "ICON-2I ItaliaMeteo 2 km",
         "meteofrance_arome_france_hd": "AROME France HD 1,5 km", "icon_d2": "ICON-D2 2 km", "icon_seamless": "ICON (DWD)",
         "ecmwf_ifs025": "ECMWF IFS", "ecmwf_aifs025_single": "ECMWF AIFS (IA)", "gfs_seamless": "GFS (USA)", "lamma_wrf": "LaMMA WRF 3 km",
         "media": "media dei modelli disponibili"}
@@ -87,14 +87,19 @@ def confronta(k, nomi):
 
 
 f2 = lambda x: "–" if x is None else f"{x:.2f}"
-righe = ["# Previsioni di pioggia contro pioggia misurata (stazioni SIR)", "",
-         f"Stazioni: {len(sir)}. Modelli: {', '.join(NOMI.get(m, m) for m in modelli)}.",
-         "Giorno D = pioggia dalle 9 del giorno prima alle 9 di D (come l'archivio SIR). Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.", ""]
+ATTUALE = "c2"   # la pioggia prevista della mappa (script/aggiorna.py, MODELLI_PIOGGIA)
+verdetto, sezioni = [], []
 for k in range(0, 8):
     nomi = [m for m in modelli if any(serie(m, st, k) for st in sir)]
     if not nomi: continue
     ris, n = confronta(k, nomi)
     if not n: continue
+    if ATTUALE in ris:
+        att = ris[ATTUALE]["utile"]["CSI"] or 0
+        alt = max((m for m in ris if m != ATTUALE), key=lambda m: ris[m]["utile"]["CSI"] or 0)
+        d = (ris[alt]["utile"]["CSI"] or 0) - att
+        verdetto.append((k, att, alt, d))
+    righe = sezioni
     righe += [f"## Anticipo {k} giorn{'o' if k == 1 else 'i'} ({n} giorni-stazione)", "",
               "| modello | ≥3 mm CSI | presi | falsi allarmi | prev./oss. | ≥20 mm CSI | presi | falsi | pioggia utile 3 gg CSI | presi | falsi | errore mm | scarto mm |",
               "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
@@ -104,6 +109,19 @@ for k in range(0, 8):
                      f"{f2(r['p20']['CSI'])} | {f2(r['p20']['POD'])} | {f2(r['p20']['FAR'])} | {f2(r['utile']['CSI'])} | {f2(r['utile']['POD'])} | {f2(r['utile']['FAR'])} | "
                      f"{r['MAE']:.2f} | {r['scarto']:+.2f} |")
     righe.append("")
+giorni_sir = sorted({d for v in sir.values() for d in v})
+testa = ["# Previsioni di pioggia contro pioggia misurata (stazioni SIR)", "",
+         f"Periodo {giorni_sir[0]} – {giorni_sir[-1]}. Stazioni: {len(sir)}. Modelli: {', '.join(NOMI.get(m, m) for m in modelli)}.",
+         "Giorno D = pioggia dalle 9 del giorno prima alle 9 di D (come l'archivio SIR). Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.", "",
+         f"## Verdetto sulla scelta attuale ({NOMI[ATTUALE]})", "",
+         "Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e della migliore alternativa per anticipo:", ""]
+peggio = [(k, att, alt, d) for k, att, alt, d in verdetto if d > 0.03]
+for k, att, alt, d in verdetto:
+    testa.append(f"- anticipo {k}: {att:.2f}" + (f"; meglio {NOMI.get(alt, alt)} {att + d:.2f}" if d > 0.03 else
+                 f" (migliore alternativa {NOMI.get(alt, alt)} {att + d:.2f})"))
+testa += ["", ("**Da rivedere**: un'alternativa fa meglio di più di 0,03 agli anticipi " + ", ".join(str(k) for k, *_ in peggio) + "."
+               if peggio else "**La scelta attuale resta la migliore** (o entro 0,03 dalla migliore) a tutti gli anticipi."), ""]
+righe = testa + sezioni
 testo = "\n".join(righe)
 print(testo)
 open(DIR / "CONFRONTO.md", "w").write(testo + "\n")

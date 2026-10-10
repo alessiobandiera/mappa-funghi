@@ -1,15 +1,44 @@
-name: Previsioni passate contro pioggia misurata (scaricamento)
+name: Previsioni passate contro pioggia misurata
 
-# Solo a mano: previsioni passate dei modelli Open-Meteo nei punti delle stazioni SIR già scelte (data/previsioni/),
-# un modello per lavoro, due alla volta. Si riprende da dove si era fermato. Non tocca la mappa.
+# Il 1° di ogni mese (e a mano): estende fino a ieri la pioggia SIR delle stazioni già scelte e le previsioni passate dei modelli
+# Open-Meteo negli stessi punti (data/previsioni/), poi rifà il confronto (data/previsioni/CONFRONTO.md, con il verdetto sulla
+# scelta della pioggia prevista della mappa). Si riprende da dove si era fermato. Non tocca la mappa.
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "20 2 1 * *"     # il 1° del mese, 4:20 con l'ora legale (3:20 con la solare)
 
 permissions:
   contents: write
 
+concurrency:
+  group: previsioni-confronto
+  cancel-in-progress: false
+
 jobs:
+  prepara:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pioggia SIR fino a ieri
+        run: PYTHONUNBUFFERED=1 python script/previsioni_scarica.py
+        env:
+          AGGIORNA_SIR: "1"
+          MODELLI: ""
+      - name: Salva
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/previsioni
+          git commit -q -m "Confronto previsioni: pioggia SIR fino a ieri [skip ci]" || exit 0
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
+
   scarica:
+    needs: prepara
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -19,6 +48,8 @@ jobs:
         modello: [best_match, italia_meteo_arpae_icon_2i, ecmwf_ifs025, icon_seamless, meteofrance_arome_france_hd, icon_d2, ecmwf_aifs025_single, gfs_seamless]
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}     # con la pioggia SIR appena salvata
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -34,4 +65,25 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/previsioni
           git commit -q -m "Previsioni passate ${{ matrix.modello }} [skip ci]" || exit 0
-          for i in 1 2 3 4 5; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && break; sleep $((RANDOM % 20 + 5)); done
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
+
+  confronta:
+    needs: scarica
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python script/previsioni_confronta.py > /dev/null
+      - name: Salva
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/previsioni/CONFRONTO.md
+          git commit -q -m "Confronto previsioni del $(TZ=Europe/Rome date '+%Y-%m-%d') [skip ci]" || exit 0
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
