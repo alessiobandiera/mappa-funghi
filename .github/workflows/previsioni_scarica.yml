@@ -35,7 +35,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/previsioni
           git commit -q -m "Confronto previsioni: pioggia SIR fino a ieri [skip ci]" || exit 0
-          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null || true; sleep $((RANDOM % 25 + 10)); done; exit 1
 
   scarica:
     needs: prepara
@@ -65,7 +65,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/previsioni
           git commit -q -m "Previsioni passate ${{ matrix.modello }} [skip ci]" || exit 0
-          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null || true; sleep $((RANDOM % 25 + 10)); done; exit 1
 
   confronta:
     needs: scarica
@@ -86,4 +86,4 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/previsioni/CONFRONTO.md
           git commit -q -m "Confronto previsioni del $(TZ=Europe/Rome date '+%Y-%m-%d') [skip ci]" || exit 0
-          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null; sleep $((RANDOM % 25 + 10)); done; exit 1
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin ${{ github.ref_name }} && git push -q origin HEAD:${{ github.ref_name }} && exit 0; git rebase --abort 2>/dev/null || true; sleep $((RANDOM % 25 + 10)); done; exit 1
