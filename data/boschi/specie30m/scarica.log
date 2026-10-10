@@ -1,20 +1,12 @@
-Traceback (most recent call last):
-  File "rasterio/_base.pyx", line 322, in rasterio._base.DatasetBase.__init__
-  File "rasterio/_base.pyx", line 234, in rasterio._base.open_dataset
-  File "rasterio/_err.pyx", line 359, in rasterio._err.exc_wrap_pointer
-rasterio._err.CPLE_OpenFailedError: '/vsicurl/https://zenodo.org/api/records/6951628/files/veg_castanea.sativa_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif/content' does not exist in the file system, and is not recognized as a supported dataset name.
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "/home/runner/work/mappa-funghi/mappa-funghi/script/boschi_specie.py", line 25, in <module>
-    with rasterio.open("/vsicurl/" + url) as r:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/rasterio/env.py", line 464, in wrapper
-    return f(*args, **kwds)
-           ^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.12.15/x64/lib/python3.12/site-packages/rasterio/__init__.py", line 367, in open
-    dataset = DatasetReader(path, driver=driver, sharing=sharing, thread_safe=thread_safe, **kwargs)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "rasterio/_base.pyx", line 331, in rasterio._base.DatasetBase.__init__
-rasterio.errors.RasterioIOError: '/vsicurl/https://zenodo.org/api/records/6951628/files/veg_castanea.sativa_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif/content' does not exist in the file system, and is not recognized as a supported dataset name.
+castanea.sativa veg_castanea.sativa_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 3131731 dimensione 3898 KB
+quercus.cerris veg_quercus.cerris_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 4894806 dimensione 2966 KB
+quercus.robur veg_quercus.robur_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 162209 dimensione 1331 KB
+quercus.ilex veg_quercus.ilex_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 784173 dimensione 2490 KB
+quercus.suber veg_quercus.suber_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 0 dimensione 18 KB
+fagus.sylvatica veg_fagus.sylvatica_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 2821689 dimensione 2452 KB
+abies.alba veg_abies.alba_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 567134 dimensione 1571 KB
+picea.abies veg_picea.abies_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 369463 dimensione 989 KB
+pinus.nigra veg_pinus.nigra_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 6704 dimensione 1677 KB
+pinus.sylvestris veg_pinus.sylvestris_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 5074 dimensione 2012 KB
+pinus.pinea veg_pinus.pinea_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 134 dimensione 165 KB
+pinus.halepensis veg_pinus.halepensis_anv.eml_p_30m_0..0cm_2018..2020_eumap_epsg3035_v0.3.tif (3420, 3346) pixel > 50: 119 dimensione 216 KB
