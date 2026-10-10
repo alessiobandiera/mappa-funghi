@@ -301,3 +301,22 @@ CSI (1 = perfetto) per la pioggia utile, ≥13 mm in 3 giorni, anticipo 0…7 gi
 Anche giorni ≥3 mm (CSI 0,62/0,62/0,58 contro 0,49/0,40/0,57 a 0/1/2 giorni) e piogge ≥20 mm (0,52/0,48/0,39 contro 0,28/0,20/0,34);
 scarto medio quasi nullo (−0,1…−0,5 mm/giorno contro −1,7/−2,5). **Applicata** in `aggiorna.py` (`pioggia_prevista`): pioggia oraria media dei
 modelli disponibili a ogni ora, da oggi in poi (e andamento orario di ieri). Le altre variabili restano della scelta automatica.
+
+## 10 ottobre 2026 — tipi di bosco dalla Carta degli Habitat ISPRA (applicato)
+Segnalazione dell'utente: a San Bartolomeo in Pizzorna (Villa Basilica, ~940 m) il bosco è misto di castagni e querce con prevalenza di castagno;
+Corine lo metteva in un'unica area di 2.950 ha di «querce caducifoglie». Carte esaminate (`script/boschi_sonda.py`, `data/boschi/sonda.txt`):
+| carta | dettaglio | San Bartolomeo |
+|---|---|---|
+| Corine Land Cover 2018 IV livello (ISPRA) | aree ≥25 ha | querce |
+| **Carta degli Habitat 1:50.000** (ISPRA, Carta della Natura; Toscana 2019, anche Emilia-Romagna e Liguria) | ~170 habitat, aree piccole | **castagneti (41.9)**, accanto conifere alloctone (42.G_n) |
+| Uso e copertura del suolo 1:10.000 (Regione Toscana 2019) | solo «boschi di latifoglie» | – |
+| Inventario Forestale Toscano (griglia 400 m, 1978-anni '90) | specie e coperture | castagneto puro |
+| Bonannella et al. 2022, probabilità per specie a 30 m (CC BY 4.0, 16 specie, manca la roverella) | 30 m | castagno 99, cerro 99 |
+**Adottata la Carta degli Habitat** (`script/boschi_habitat.py` + workflow → `data/boschi/habitat_boschi.geojson.gz`, 17.761 poligoni di bosco),
+disegnata sopra Corine in `script/boschi_tipi.py` (habitat → 14 tipi della mappa: castagneti 41.9, faggete 41.1x, querceti di roverella e cerro 41.7x,
+ostrieti 41.81 = altre latifoglie, leccete 45.3x, pinete 42.8x, pino nero e silvestre 42.5-42.6, conifere alloctone e piantagioni 42.G/83.31 =
+conifere esotiche, ripariali 44.x, robinia e latifoglie alloctone). Maglie da 600 m con tipo dalle carte: 9.264 su 9.348 (prima 8.582);
+il tipo cambia nel 49% delle maglie (castagno 2.898 → 3.923 maglie; «misti» quasi scomparsi). San Bartolomeo e dintorni: castagno.
+Effetto sull'indice, stessi dati meteo (10/10): oggi invariato (una maglia a 30); il 17/10 maglie ≥30 4.663 → 5.104, medie per quota +0…+3.
+Limiti: Pino nero dei rimboschimenti appenninici ricade spesso in «conifere alloctone o fuori areale» (42.G_n) insieme alla douglasia; i boschi misti
+restano di un solo tipo per area (possibile passo successivo: proporzioni dalle carte per specie a 30 m).

@@ -1,6 +1,6 @@
 // Indice di buttata del porcino, comune alla mappa generale (index.html), alla mappa a 20 m (bosco.html) e all'app.
 // Dal 9/10/2026 il porcino è il migliore fra quattro specie, ognuna con il suo meteo (tarato sui ritrovamenti GBIF di quella
-// specie), la sua stagione, la sua quota e i suoi alberi (simbiosi): il tipo di bosco viene dalla carta ISPRA Corine Land
+// specie), la sua stagione, la sua quota e i suoi alberi (simbiosi): il tipo di bosco viene dalla Carta degli Habitat ISPRA (dal 10/10/2026) e, dove manca, dalla carta ISPRA Corine Land
 // Cover 2018 IV livello (docs/dati/tipi_bosco.json, docs/terreno/f/). Verifiche in data/validazione/RISULTATI.md.
 
 const FATTORI = {pioggia:"pioggia e attesa", suoloU:"umidità del suolo", suoloT:"temperatura del suolo",
@@ -38,7 +38,7 @@ const OSPITI = {
   pianura:    {aereus:.1,  reticulatus:.1,  edulis:.05, pinophilus:.05},
   prateria:   {aereus:.05, reticulatus:.1,  edulis:.2,  pinophilus:.2},
 };
-// tipo stimato dove la carta ISPRA non ha bosco (o per le celle meteo da 5 km): quota e, se c'è, il tipo di foglia di OpenStreetMap
+// tipo stimato dove le carte ISPRA non hanno bosco (o per le celle meteo da 5 km): quota e, se c'è, il tipo di foglia di OpenStreetMap
 function tipoStimato(lat, lon, elev, osm){
   if (osm==="n") return elev<400 ? "pini" : "abeti";
   if (elev<60) return lon<10.32 ? "pini" : "pianura";

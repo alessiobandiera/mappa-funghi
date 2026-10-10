@@ -115,7 +115,7 @@
 
     <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
     <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Ogni specie ha le sue soglie di freddo e caldo e il suo versante: il porcino nero cerca i versanti caldi, soleggiati e asciutti, il rosso e quello d'autunno quelli freschi e umidi (schede della Regione Piemonte e della Scuola Sant'Anna). Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
-    Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
+    Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>; tipi di bosco: ISPRA, Carta della Natura (Carta degli Habitat 1:50.000) e Corine Land Cover 2018. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
   </aside>
   <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div><div class="zoomhint" id="zoomhint">Avvicinati per vedere le zone a 20 m</div></div>
 </div>
@@ -126,7 +126,7 @@
 <script src="porcini.js"></script>
 <script>
 /* regole dell'indice: copiate dalla mappa principale (index.html) */
-// solo il porcino: è il migliore fra quattro specie, con il tipo di bosco ISPRA pixel per pixel (docs/porcini.js)
+// solo il porcino: è il migliore fra quattro specie, con il tipo di bosco (Carta degli Habitat ISPRA) pixel per pixel (docs/porcini.js)
 const SPECIE = [{id:"porcino", nome:"Porcino"}];
 const SUOLO_RIF = [6,12,21,26];   // fascia di temperatura del suolo usata per dire «freddo» o «caldo» (media delle specie)
 
@@ -213,7 +213,7 @@ async function caricaTessera(meta){
     t.A={acqua:new Float32Array(n), riparo:new Float32Array(n)};
     t.B={quota:new Float32Array(n), bosco:new Uint8Array(n)};
     t.C={set:new Float32Array(n), ott:new Float32Array(n), nov:new Float32Array(n)};
-    t.F=new Uint8Array(n);   // tipo di bosco ISPRA (1-14, 0 = non indicato: stimato da quota e OpenStreetMap)
+    t.F=new Uint8Array(n);   // tipo di bosco: Carta degli Habitat ISPRA, dove manca Corine (1-14, 0 = non indicato: stimato da quota e OpenStreetMap)
     for (let i=0;i<n;i++){ const o=i*4;
       t.A.acqua[i]=a[o]/255; t.A.riparo[i]=a[o+2]/255;
       t.B.quota[i]=(b[o]*256+b[o+1])/2; t.B.bosco[i]=b[o+2];
