@@ -18,7 +18,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -q rasterio
-      - run: PYTHONUNBUFFERED=1 timeout 55m python script/boschi_specie.py 2>&1 | tee data/boschi/specie30m/scarica.log
+      - run: mkdir -p data/boschi/specie30m && PYTHONUNBUFFERED=1 timeout 55m python script/boschi_specie.py 2>&1 | tee data/boschi/specie30m/scarica.log
         continue-on-error: true
         env:
           GDAL_HTTP_MAX_RETRY: "5"
