@@ -89,6 +89,8 @@ input[type=range]{accent-color:var(--accent)}
 .giorni button.f2::after{background:repeating-linear-gradient(90deg,var(--muted) 0 3px,transparent 3px 5px)}
 .giorni button.f3{background:transparent;border:1.5px dashed var(--line)}
 .giorni button.f3::after{background:repeating-linear-gradient(90deg,var(--line) 0 2px,transparent 2px 5px)}
+.giorni button.f4{border-style:dotted;color:var(--muted)}
+.giorni button.f4::after{background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px 5px)}
 .giorni button.oggi{color:var(--accent)}
 .giorni button.oggi::after{background:var(--accent)}
 .giorni button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}

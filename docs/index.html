@@ -21,10 +21,11 @@
 .sp .v{font:700 1.35rem/1 var(--display);font-variant-numeric:tabular-nums;text-align:right}
 .sp .v .meta{font:500 .85rem var(--body)}
 .sp .why{grid-column:1/-1;color:var(--muted);font-size:.86rem}
-.spark{grid-column:1/-1;display:flex;gap:3px;align-items:flex-end;height:34px;margin-top:6px}
+.spark{grid-column:1/-1;display:flex;gap:2px;align-items:flex-end;height:34px;margin-top:6px}
 .spark div{flex:1;border-radius:3px 3px 0 0;min-height:3px;position:relative}
 .spark div.fc{opacity:.55}
 .spark div.fc2{opacity:.3;outline:1px dashed currentColor;outline-offset:-1px}
+.spark div.fc3{opacity:.24;outline:1px dotted currentColor;outline-offset:-1px}
 .spark div.cur{outline:2px solid var(--fg);outline-offset:1px}
 .diario-form{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border-radius:12px;background:var(--chip)}
 .diario-form strong{font:700 1.05rem var(--display)}
@@ -95,7 +96,7 @@
     <p class="sub">Garfagnana, Media Valle, Apuane, Versilia e confini con Massa, Pistoia ed Emilia. Indice di buttata del porcino dal meteo reale delle ultime 5 settimane. Da lontano vedi una griglia meteo di circa 5 km; avvicinandoti compaiono i singoli boschi.</p>
 
     <p class="note">Indice indicativo basato su regole empiriche. Per i giorni passati usa pioggia e temperature misurate dalle stazioni della Regione dove ce n'è una vicina, altrimenti il modello meteo, che può non vedere i temporali locali. Verifica del 4 ottobre 2026 su 117 esiti reali documentati (2015–2026, Appennino toscano, emiliano e ligure): nel 75% dei confronti tra un giorno con porcini e uno senza, l'indice dà il valore più alto al primo. I boschi vengono da OpenStreetMap; dove non indica latifoglie o conifere il tipo è stimato dalla quota: correggilo nel dettaglio. Rispetta tesserino, giorni di raccolta e aree protette (Parco delle Apuane, Parco dell'Appennino tosco-emiliano). Nessuna app dice se un fungo è commestibile: fai controllare il raccolto all'Ispettorato micologico della ASL.<br>
-    Pioggia e temperature misurate: <a href="https://www.sir.toscana.it/" target="_blank" rel="noopener">SIR</a> e <a href="https://www.cfr.toscana.it/" target="_blank" rel="noopener">CFR</a> Regione Toscana · Previsione e modello: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0); pioggia prevista: media di AROME France HD (Météo-France), ICON-2I (ItaliaMeteo-ARPAE), ECMWF IFS e AIFS · Boschi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a> (ODbL); tipi di bosco: ISPRA, <a href="https://www.isprambiente.gov.it/it/servizi/sistema-carta-della-natura" target="_blank" rel="noopener">Carta della Natura</a>, Corine Land Cover 2018 e carte delle specie da satellite (<a href="https://doi.org/10.7717/peerj.13728" target="_blank" rel="noopener">Bonannella et al. 2022</a>, CC BY 4.0), proporzioni tarate sull'Inventario Forestale Toscano (Regione Toscana).</p>
+    Pioggia e temperature misurate: <a href="https://www.sir.toscana.it/" target="_blank" rel="noopener">SIR</a> e <a href="https://www.cfr.toscana.it/" target="_blank" rel="noopener">CFR</a> Regione Toscana · Previsione e modello: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0); pioggia prevista: media di AROME France HD (Météo-France), ICON-2I (ItaliaMeteo-ARPAE), ECMWF IFS e AIFS; dopo 14 giorni tendenza del modello a lungo termine ECMWF EC46 · Boschi © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a> (ODbL); tipi di bosco: ISPRA, <a href="https://www.isprambiente.gov.it/it/servizi/sistema-carta-della-natura" target="_blank" rel="noopener">Carta della Natura</a>, Corine Land Cover 2018 e carte delle specie da satellite (<a href="https://doi.org/10.7717/peerj.13728" target="_blank" rel="noopener">Bonannella et al. 2022</a>, CC BY 4.0), proporzioni tarate sull'Inventario Forestale Toscano (Regione Toscana).</p>
   </aside>
   <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div></div>
 </div>
@@ -108,8 +109,9 @@
 "use strict";
 /* ---------------- configurazione ---------------- */
 const GRID = {lat0:43.72, lat1:44.36, dlat:0.05, lon0:10.05, lon1:10.95, dlon:0.07};
-const PAST = 33, FUT = 8, SPAN = 14;           // 33 giorni passati + oggi e 7 di previsione; 14 mostrati (6 passati, oggi, 7 futuri)
-const AFFIDABILI = 3;                          // fino a 3 giorni avanti: previsione; dal 4° al 7°: tendenza (solo modello meteo)
+const PAST = 33, FUT = 8, SPAN = 28;           // senza i dati del sito: 33 giorni passati + oggi e 7 di previsione da Open-Meteo
+                                               // mostrati fino a 28 giorni: 6 passati, oggi e fino a 21 futuri (dati del sito, dal 10/10/2026)
+// fasi dei giorni (passato, oggi, previsione 1-3 giorni, tendenza 4-14, lungo termine EC46): FaseGiorno in foglio.js
 const CACHE_KEY = "funghi-lucca-v4", CACHE_H = 3;
 const DAILY = ["precipitation_sum","temperature_2m_min","temperature_2m_max","temperature_2m_mean",
   "relative_humidity_2m_mean","wind_direction_10m_dominant","wind_speed_10m_max"];
@@ -228,7 +230,8 @@ function computeAll(raw){
   cells=raw.filter(c=>c.elev>3).map(c=>({...c, ...boscoCella(c), scores:null}));
   if (!cells.length) return;
   const D0=cells[0].days;
-  todayIdx=D0.findIndex(g=>g.d===oggiISO); if (todayIdx<0) todayIdx=D0.length-FUT;
+  todayIdx=D0.findIndex(g=>g.d===oggiISO);
+  if (todayIdx<0) todayIdx=DATI_SITO&&DATI_SITO.oggi? Math.max(0,D0.findIndex(g=>g.d===DATI_SITO.oggi)) : D0.length-FUT;
   startIdx=Math.max(21, todayIdx-6);
   dayDates=D0.slice(startIdx, startIdx+SPAN).map(g=>g.d);
   cells.forEach(scoreCell);
@@ -365,23 +368,16 @@ const band=i=> i>=70?4: i>=50?3: i>=30?2: i>=10?1:0;
 const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
   const s=d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"});
   return iso===oggiISO? "Oggi" : s; };
-// a che tipo di dato appartiene un giorno: 0 passato (misurato), 1 oggi, 2 previsione (1-3 giorni), 3 tendenza (4-7 giorni)
-function fase(iso){
-  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5);
-  return {k, n: k<0?0 : k===0?1 : k<=AFFIDABILI?2 : 3};
-}
+// a che tipo di dato appartiene un giorno: 0 passato (misurato), 1 oggi, 2 previsione (1-3 giorni), 3 tendenza (4-14 giorni),
+// 4 lungo termine (modello ECMWF EC46, dal 15° giorno)
+const fase=iso=>FaseGiorno.fase(iso, oggiISO, DATI_SITO&&DATI_SITO.ec46_dal);
 function disegnaFasce(fz){
   const z=document.getElementById("dayzone"), nota=document.getElementById("daynote"); if (!z) return;
-  const n=[0,0,0,0]; dayDates.forEach(d=>n[fase(d).n]++);
+  const n=[0,0,0,0,0]; dayDates.forEach(d=>n[fase(d).n]++);
   const passati=n[0]+n[1];
-  z.innerHTML=[[passati,"z0","misurati"],[n[2],"z1","previsione"],[n[3],"z2","tendenza"]].filter(x=>x[0])
+  z.innerHTML=[[passati,"z0","misurati"],[n[2],"z1","previsione"],[n[3],"z2","tendenza"],[n[4],"z3","lungo termine"]].filter(x=>x[0])
     .map(([q,c,t])=>`<div class="${c}" style="flex:${q}"><i></i><span>${t}</span></div>`).join("");
-  const testi=[
-    "Giorno passato: pioggia e temperature misurate dalle stazioni della Regione.",
-    "Oggi: pioggia misurata fino a ieri, il resto dalla previsione di oggi.",
-    `Previsione a ${fz.k} giorn${fz.k===1?"o":"i"}: pioggia già caduta (misurata) più le previsioni meteo dei prossimi giorni. Abbastanza affidabile: la buttata dipende soprattutto dalla pioggia di 1-3 settimane prima, già caduta.`,
-    `Tendenza a ${fz.k} giorni: dal 4° giorno in avanti l'indice usa le previsioni meteo, meno affidabili. Pesa ancora la pioggia già caduta, ma temperature e piogge future possono cambiare.`];
-  nota.textContent=testi[fz.n]; nota.classList.toggle("tend", fz.n===3);
+  nota.textContent=FaseGiorno.nota(fz); nota.classList.toggle("tend", fz.n>=3);
 }
 const ALTRE={finferlo:"Finferlo", ovolo:"Ovolo buono", chiodino:"Chiodino"};   // solo per le vecchie uscite del diario
 const spName=id=>id==="best"?"Migliore":(SPECIE.find(s=>s.id===id)||{nome:ALTRE[id]||id}).nome;
@@ -422,7 +418,7 @@ const FOGLIO=Foglio(document.getElementById("panel"));
 const GIORNI=StrisciaGiorni(document.getElementById("day"), document.getElementById("giorni"), i=>{
   const iso=dayDates[i]; if (!iso) return null; const d=new Date(iso+"T12:00:00");
   return {sett: iso===oggiISO? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:fase(iso).n,
-    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][fase(iso).n]};
+    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+FaseGiorno.suffisso[fase(iso).n]};
 });
 const MP=MappaPiena(map,{gruppi:[], giorno:"#day", etichetta:"#daylbl"});
 async function caricaStazioni(){
@@ -547,7 +543,7 @@ function renderDetail(){
     html+=`<div class="meta">${fmtDay(dayDates[state.day])} · pioggia ultime 5 settimane ${Math.round(rain)} mm · suolo ${g.su.toFixed(2)} m³/m³, ${g.st.toFixed(1)} °C</div>`;
     const fonte=(c.forest?c.wc:c)||{}, stz=fonte.stazioni||{};
     const giorniMis=c.days.slice(0,startIdx+state.day+1).filter(x=>x.fp&&x.d<oggiISO).length, giorniPass=c.days.slice(0,startIdx+state.day+1).filter(x=>x.d<oggiISO).length;
-    if (DATI_SITO) html+=`<div class="meta">${stz.pioggia&&stz.pioggia.length?`Pioggia misurata (${stz.pioggia.join(", ")}) in ${giorniMis} giorni su ${giorniPass}`:"Nessun pluviometro entro 12 km: pioggia stimata dal modello"}${stz.temperatura&&stz.temperatura.length?` · temperature da ${stz.temperatura[0]}`:""}. Previsione: Open-Meteo.</div>`;
+    if (DATI_SITO) html+=`<div class="meta">${stz.pioggia&&stz.pioggia.length?`Pioggia misurata (${stz.pioggia.join(", ")}) in ${giorniMis} giorni su ${giorniPass}`:"Nessun pluviometro entro 12 km: pioggia stimata dal modello"}${stz.temperatura&&stz.temperatura.length?` · temperature da ${stz.temperatura[0]}`:""}. Previsione: Open-Meteo${DATI_SITO.ec46_dal?`; dal ${fmtDay(DATI_SITO.ec46_dal,true).toLowerCase()} modello a lungo termine ECMWF EC46`:""}.</div>`;
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
   { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<div class="meta" style="margin:0">${portamiQui(P.lat,P.lon)}<span>Al punto toccato; in auto fino alla strada più vicina.</span></div>`; }
@@ -564,11 +560,13 @@ function renderDetail(){
     else why.push("nessuna pioggia utile nella finestra di attesa");
     if (s.lim) why.push(`limita: ${FATTORI[s.lim]}`);
     if (s.vincoli && s.vincoli.k<.6) why.push(`limita: ${s.vincoli.lim==="bosco"?"alberi poco adatti":s.vincoli.lim==="quota"?"quota":"stagione"}`);
-    const spark=c.scores[sp.id].map((x,k)=>`<div class="${["","","fc","fc2"][fase(dayDates[k]).n]}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
+    const spark=c.scores[sp.id].map((x,k)=>`<div class="${["","","fc","fc2","fc3"][fase(dayDates[k]).n]}${k===state.day?" cur":""}" title="${fmtDay(dayDates[k],true)}: ${x.i}" style="height:${Math.max(6,x.i)}%;background:${COL[band(x.i)]}"></div>`).join("");
     html+=`<div class="sp"><span class="n">Indice di buttata</span><span class="v">${s.i} <span class="meta">${LAB[band(s.i)]}</span></span>
       <span class="why">${s.specie?`Più probabile: <b>${NOME_SPECIE[s.specie].toLowerCase()}</b> · `:""}${why.join(" · ")}</span><div class="spark" aria-hidden="true">${spark}</div></div>`;
   });
-  html+=`<p class="meta">Barre: ultimi 7 giorni, poi 3 di previsione (più chiare) e 4 di tendenza (tratteggiate: solo previsioni meteo). <a href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
+  { const n=[0,0,0,0,0]; dayDates.forEach(d=>n[fase(d).n]++);
+    html+=`<p class="meta">Barre: ultimi ${n[0]+n[1]} giorni, poi ${n[2]} di previsione (più chiare), ${n[3]} di tendenza (tratteggiate)${n[4]?` e ${n[4]} di lungo termine (le più chiare)`:""}. <a`; }
+  html+=` href="https://www.openstreetmap.org/?mlat=${c.lat}&mlon=${c.lon}#map=15/${c.lat}/${c.lon}" target="_blank" rel="noopener">Apri in OpenStreetMap</a></p>`;
   const oggiOSel = dayDates[state.day] && dayDates[state.day]<=oggiISO ? dayDates[state.day] : oggiISO;
   html+=`<form class="diario-form" id="diarioForm">
     <strong class="full">Segna un'uscita qui</strong>
@@ -661,7 +659,7 @@ function render(){
   renderModo();
   if (!dayDates.length || !cells.length) return;   // niente meteo: niente da colorare
   const fz=fase(dayDates[state.day]);
-  document.getElementById("daylbl").textContent=fmtDay(dayDates[state.day]) + ["",""," (previsione)"," (tendenza)"][fz.n];
+  document.getElementById("daylbl").textContent=fmtDay(dayDates[state.day]) + FaseGiorno.suffisso[fz.n];
   disegnaFasce(fz);
   if (vistaBoschi()) renderForest(); else renderGrid();
   renderTop(); renderDetail();

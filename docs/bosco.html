@@ -61,7 +61,7 @@
     <div>
       <p class="label">Cosa mostrare</p>
       <div class="chips" id="viste" role="group" aria-label="Vista">
-        <button class="chip" data-v="finale" aria-pressed="true">Possibilità oggi</button>
+        <button class="chip" data-v="finale" aria-pressed="true">Possibilità del giorno</button>
         <button class="chip" data-v="terreno">Dove guardare nel bosco</button>
         <button class="chip" data-v="acqua">Ristagno</button>
         <button class="chip" data-v="sole">Sole</button>
@@ -75,7 +75,7 @@
     <section>
       <p class="label" id="toplbl">Le zone migliori nella zona inquadrata</p>
       <ul class="list" id="top"><li class="vuoto">Avvicinati sulla mappa per vedere le zone a 20 m.</li></ul>
-      <p class="sub" style="margin:6px 0 0;font-size:.8rem">Indice «Possibilità oggi» medio su riquadri di circa 100 m di bosco, al massimo 8 zone distanti almeno 300 m tra loro. Tocca una zona per andarci.</p>
+      <p class="sub" style="margin:6px 0 0;font-size:.8rem">Indice «Possibilità del giorno» medio su riquadri di circa 100 m di bosco, al massimo 8 zone distanti almeno 300 m tra loro. Tocca una zona per andarci.</p>
     </section>
 
     <div>
@@ -117,9 +117,9 @@
 
     <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle.</p>
 
-    <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
+    <p class="note"><b>Come leggerla.</b> «Possibilità del giorno» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
     <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Gli alberi sono in proporzione: un bosco misto conta per le quote dei suoi alberi (vista «Alberi»: Carta degli Habitat, Corine e carte delle specie da satellite). Ogni specie ha le sue soglie di freddo e caldo e il suo versante: il porcino nero cerca i versanti caldi, soleggiati e asciutti, il rosso e quello d'autunno quelli freschi e umidi (schede della Regione Piemonte e della Scuola Sant'Anna). Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
-    Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>; tipi di bosco: ISPRA, Carta della Natura (Carta degli Habitat 1:50.000), Corine Land Cover 2018 e carte delle specie da satellite (<a href="https://doi.org/10.7717/peerj.13728" target="_blank" rel="noopener">Bonannella et al. 2022</a>, CC BY 4.0), proporzioni tarate sull'Inventario Forestale Toscano (Regione Toscana). Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
+    Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>; tipi di bosco: ISPRA, Carta della Natura (Carta degli Habitat 1:50.000), Corine Land Cover 2018 e carte delle specie da satellite (<a href="https://doi.org/10.7717/peerj.13728" target="_blank" rel="noopener">Bonannella et al. 2022</a>, CC BY 4.0), proporzioni tarate sull'Inventario Forestale Toscano (Regione Toscana). Meteo: SIR/CFR Regione Toscana e Open-Meteo; dopo 14 giorni tendenza del modello a lungo termine ECMWF EC46.</p>
   </aside>
   <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div><div class="zoomhint" id="zoomhint">Avvicinati per vedere le zone a 20 m</div></div>
 </div>
@@ -157,15 +157,17 @@ async function carica(){
     fetch("terreno/tessere.json",{cache:"no-store"}).then(r=>r.json()),
     fetch("terreno/campione.json").then(r=>r.ok?r.json():null).catch(()=>null),
     fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"}).then(r=>r.json())]);
-  IDX=idx; CAMPIONE=camp&&camp.punti;
+  IDX=idx; CAMPIONE=camp&&camp.punti; EC46_DAL=met.ec46_dal||null; OGGI_DATI=met.oggi||null;
   const K=met.campi;
   met.celle.forEach(x=>{
     const c={lat:x.lat, lon:x.lon, elev:x.elev, days:x.giorni.map(r=>{ const o={}; K.forEach((k,i)=>o[k]=r[i]); return o; })};
     celleMap.set(Math.round((c.lat-GRIDW.lat0)/GRIDW.dlat)+","+Math.round((c.lon-GRIDW.lon0)/GRIDW.dlon), c);
   });
   date=[...celleMap.values()][0].days.map(g=>g.d);
-  const gi=$("giorno"); gi.max=date.length-1; gi.min=Math.max(0, Math.min(date.indexOf(oggiISO)<0? date.length-14 : date.indexOf(oggiISO)-6, date.length-5));
-  st.g=date.indexOf(oggiISO); if (st.g<0) st.g=date.length-8;
+  // oggi nei dati (se i dati sono di ieri: il giorno dei dati); si mostrano 6 giorni passati e tutti quelli futuri (fino a 21)
+  const iOggi=date.indexOf(oggiISO)>=0? date.indexOf(oggiISO) : Math.max(0, date.indexOf(OGGI_DATI));
+  const gi=$("giorno"); gi.max=date.length-1; gi.min=Math.max(0, Math.min(iOggi-6, date.length-5));
+  st.g=iOggi;
   gi.value=st.g; gi.disabled=false; GIORNI.aggiorna();
   contorni=L.layerGroup(IDX.tessere.map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
     {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
@@ -369,12 +371,13 @@ function legenda(){
 }
 const fmtDay=(iso,short)=>{ if (!iso) return "–"; const d=new Date(iso+"T12:00:00");
   return iso===oggiISO? "Oggi" : d.toLocaleDateString("it-IT",{weekday:short?"short":"long", day:"numeric", month:"short"}); };
-// giorni passati: meteo misurato; 1-3 giorni avanti: previsione; dal 4° al 7°: tendenza (solo previsioni meteo)
+// giorni passati: meteo misurato; 1-3 giorni avanti: previsione; dal 4° al 14°: tendenza; poi lungo termine (FaseGiorno in foglio.js)
+let EC46_DAL=null, OGGI_DATI=null;
+const faseB=iso=>FaseGiorno.fase(iso, oggiISO, EC46_DAL);
 function etichettaGiorno(iso){
-  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5);
-  $("giornolbl").textContent=fmtDay(iso,true)+(k>3?" (tendenza)":k>0?" (previsione)":"");
-  $("giornonota").textContent = k<=0 ? "" : k<=3 ? `Previsione a ${k} giorn${k===1?"o":"i"}: pioggia già caduta più previsioni meteo.`
-    : `Tendenza a ${k} giorni: dal 4° giorno l'indice usa le previsioni meteo, meno affidabili.`;
+  const f=faseB(iso);
+  $("giornolbl").textContent=fmtDay(iso,true)+FaseGiorno.suffisso[f.n];
+  $("giornonota").textContent = f.k<=0 ? "" : FaseGiorno.nota(f);
 }
 
 // ricalcola le tessere visibili (e il testo dello stato) dopo un cambio di giorno, specie o scenario
@@ -405,7 +408,7 @@ function aggiornaStato(){
   $("stato").innerHTML=(sc? "<b>Scenario.</b> " : `<b>${fmtDay(iso)}</b>, al centro della mappa: ${o.stato.secchi} giorni senza pioggia, `)+
     `terreno ${terr}, suolo ${temp}${V>.3?", tramontana":""}. Favoriti: ${pref.join(", ")}.`+
     `<br>Indice della zona a ${cel.elev} m (${typeof tipoZona==="object" ? testoMiscela(tipoZona) : BOSCHI[tipoZona].toLowerCase()}): <b>${(()=>{ const b=Math.round(cel.elev/BIN); let m=0;
-      SPECIE_PORCINI.forEach((sp,k)=>{ m=Math.max(m, o.bins[k][b]*vincoliSpecie(sp, tipoZona, cel.elev, iso).k); }); return Math.round(m); })()}</b>`+(iso>oggiISO?" · previsione":"");
+      SPECIE_PORCINI.forEach((sp,k)=>{ m=Math.max(m, o.bins[k][b]*vincoliSpecie(sp, tipoZona, cel.elev, iso).k); }); return Math.round(m); })()}</b>`+(iso>oggiISO?" ·"+FaseGiorno.suffisso[faseB(iso).n].replace(/[()]/g,""):"");
 }
 
 /* ---------------- mappa ---------------- */
@@ -423,9 +426,9 @@ L.control.scale({imperial:false}).addTo(map);
 const FOGLIO=Foglio($("panel"));
 const GIORNI=StrisciaGiorni($("giorno"), $("giorni"), i=>{
   const iso=date[i]; if (!iso) return null; const d=new Date(iso+"T12:00:00");
-  const k=Math.round((Date.parse(iso+"T12:00:00Z")-Date.parse(oggiISO+"T12:00:00Z"))/864e5), f=k<0?0:k===0?1:k<=3?2:3;
+  const {k, n:f}=faseB(iso);
   return {sett: k===0? "oggi" : d.toLocaleDateString("it-IT",{weekday:"short"}).replace(".",""), num:d.getDate(), fase:f,
-    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+["",""," (previsione)"," (tendenza)"][f]};
+    titolo: d.toLocaleDateString("it-IT",{weekday:"long",day:"numeric",month:"long"})+FaseGiorno.suffisso[f]};
 });
 MappaPiena(map,{gruppi:[{sel:"#viste",nome:"Cosa mostrare"}], giorno:"#giorno", etichetta:"#giornolbl"});
 let contorni=null;
@@ -625,7 +628,7 @@ async function caricaSentieri(meta){
   });
   o.stato="ok"; coloraAccessi(meta.id); mostraSentieri(); renderTop();
 }
-// la zona migliore raggiungibile entro 400 m (indice «Possibilità oggi» della tessera, se è già calcolata)
+// la zona migliore raggiungibile entro 400 m (indice «Possibilità del giorno» della tessera, se è già calcolata)
 function migliorVicino(id,a){
   const t=tessere.get(id); if (!t||!t.pronta||!t.calc) return null;
   const m=t.meta, r0=Math.floor((m.nord-a[0])/IDX.dlat), c0=Math.floor((a[1]-m.ovest)/IDX.dlon), R=Math.round(RAGGIO_ZONA/IDX.res_m);
