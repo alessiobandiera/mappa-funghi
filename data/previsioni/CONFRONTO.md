@@ -1,6 +1,6 @@
 # Previsioni di pioggia contro pioggia misurata (stazioni SIR)
 
-Periodo 2025-04-15 – 2026-10-08. Stazioni: 15. Modelli: Open-Meteo automatico (usato ora), ECMWF AIFS (IA), ECMWF IFS, GFS (USA), ICON-D2 2 km, ICON (DWD), ICON-2I ItaliaMeteo 2 km, AROME France HD 1,5 km.
+Periodo 2025-04-15 – 2026-10-09. Stazioni: 15. Modelli: Open-Meteo automatico (usato fino al 9/10/2026), ECMWF AIFS (IA), ECMWF IFS, GFS (USA), ICON-D2 2 km, ICON (DWD), ICON-2I ItaliaMeteo 2 km, AROME France HD 1,5 km.
 Giorno D = pioggia dalle 9 del giorno prima alle 9 di D (come l'archivio SIR). Ogni tabella usa gli stessi giorni e stazioni per tutti i modelli con quell'anticipo. CSI: 1 = perfetto, 0 = mai preso.
 
 ## Verdetto sulla scelta attuale (media AROME + ECMWF + AIFS + ICON-2I)
@@ -33,7 +33,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | ECMWF IFS | 0.56 | 0.82 | 0.36 | 1.28 | 0.40 | 0.55 | 0.39 | 0.61 | 0.77 | 0.26 | 3.28 | -0.22 |
 | GFS (USA) | 0.55 | 0.82 | 0.37 | 1.28 | 0.36 | 0.46 | 0.37 | 0.59 | 0.75 | 0.27 | 3.18 | -0.55 |
 | ICON-2I ItaliaMeteo 2 km | 0.54 | 0.70 | 0.30 | 0.99 | 0.36 | 0.49 | 0.42 | 0.55 | 0.70 | 0.28 | 3.38 | -0.62 |
-| Open-Meteo automatico (usato ora) | 0.49 | 0.57 | 0.22 | 0.73 | 0.28 | 0.33 | 0.35 | 0.46 | 0.53 | 0.21 | 3.27 | -1.74 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.49 | 0.57 | 0.22 | 0.73 | 0.28 | 0.33 | 0.35 | 0.46 | 0.53 | 0.21 | 3.27 | -1.74 |
 | ICON-D2 2 km | 0.49 | 0.56 | 0.22 | 0.72 | 0.28 | 0.33 | 0.35 | 0.46 | 0.52 | 0.21 | 3.28 | -1.77 |
 | ICON (DWD) | 0.49 | 0.56 | 0.22 | 0.72 | 0.28 | 0.33 | 0.35 | 0.46 | 0.52 | 0.21 | 3.28 | -1.77 |
 
@@ -52,7 +52,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | ECMWF AIFS (IA) | 0.56 | 0.89 | 0.39 | 1.46 | 0.42 | 0.55 | 0.35 | 0.62 | 0.82 | 0.28 | 3.33 | -0.39 |
 | ICON-2I ItaliaMeteo 2 km | 0.53 | 0.67 | 0.27 | 0.92 | 0.36 | 0.50 | 0.45 | 0.54 | 0.68 | 0.28 | 3.65 | -0.52 |
 | GFS (USA) | 0.53 | 0.75 | 0.36 | 1.18 | 0.29 | 0.35 | 0.38 | 0.56 | 0.68 | 0.23 | 3.44 | -1.20 |
-| Open-Meteo automatico (usato ora) | 0.40 | 0.46 | 0.25 | 0.61 | 0.20 | 0.23 | 0.35 | 0.36 | 0.39 | 0.19 | 3.61 | -2.48 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.40 | 0.46 | 0.25 | 0.61 | 0.20 | 0.23 | 0.35 | 0.36 | 0.39 | 0.19 | 3.61 | -2.48 |
 | ICON-D2 2 km | 0.40 | 0.45 | 0.23 | 0.58 | 0.21 | 0.24 | 0.35 | 0.37 | 0.40 | 0.18 | 3.58 | -2.51 |
 | ICON (DWD) | 0.40 | 0.45 | 0.23 | 0.58 | 0.21 | 0.24 | 0.35 | 0.37 | 0.40 | 0.18 | 3.58 | -2.51 |
 
@@ -65,7 +65,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | media AROME + ECMWF + ICON-2I + ICON | 0.60 | 0.80 | 0.29 | 1.14 | 0.39 | 0.50 | 0.37 | 0.61 | 0.77 | 0.25 | 3.23 | -0.71 |
 | media AROME + ECMWF + AIFS + ICON-2I + GFS | 0.59 | 0.83 | 0.33 | 1.25 | 0.38 | 0.48 | 0.35 | 0.62 | 0.78 | 0.26 | 3.31 | -0.70 |
 | media AROME + ECMWF + AIFS + ICON-2I | 0.58 | 0.84 | 0.34 | 1.28 | 0.39 | 0.51 | 0.37 | 0.62 | 0.81 | 0.27 | 3.36 | -0.46 |
-| Open-Meteo automatico (usato ora) | 0.57 | 0.72 | 0.27 | 0.99 | 0.34 | 0.42 | 0.38 | 0.57 | 0.67 | 0.22 | 3.35 | -1.06 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.57 | 0.72 | 0.27 | 0.99 | 0.34 | 0.42 | 0.38 | 0.57 | 0.67 | 0.22 | 3.35 | -1.06 |
 | ICON (DWD) | 0.57 | 0.72 | 0.27 | 0.99 | 0.34 | 0.42 | 0.38 | 0.57 | 0.67 | 0.22 | 3.35 | -1.06 |
 | media AROME + ECMWF + ICON-2I | 0.57 | 0.77 | 0.32 | 1.14 | 0.37 | 0.50 | 0.40 | 0.60 | 0.76 | 0.26 | 3.46 | -0.53 |
 | ECMWF AIFS (IA) | 0.55 | 0.89 | 0.41 | 1.50 | 0.36 | 0.47 | 0.39 | 0.61 | 0.83 | 0.30 | 3.55 | -0.32 |
@@ -82,7 +82,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | media AROME + ECMWF + AIFS + ICON-2I + GFS | 0.55 | 0.83 | 0.38 | 1.34 | 0.30 | 0.39 | 0.45 | 0.56 | 0.74 | 0.30 | 3.44 | -0.63 |
 | media AROME + ECMWF + ICON-2I + ICON | 0.55 | 0.76 | 0.34 | 1.14 | 0.34 | 0.46 | 0.45 | 0.57 | 0.73 | 0.28 | 3.34 | -0.62 |
 | media AROME + ECMWF + AIFS + ICON-2I | 0.55 | 0.85 | 0.39 | 1.39 | 0.31 | 0.43 | 0.46 | 0.57 | 0.78 | 0.32 | 3.51 | -0.34 |
-| Open-Meteo automatico (usato ora) | 0.52 | 0.69 | 0.32 | 1.01 | 0.33 | 0.44 | 0.44 | 0.55 | 0.68 | 0.26 | 3.50 | -0.72 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.52 | 0.69 | 0.32 | 1.01 | 0.33 | 0.44 | 0.44 | 0.55 | 0.68 | 0.26 | 3.50 | -0.72 |
 | ICON (DWD) | 0.52 | 0.69 | 0.32 | 1.01 | 0.33 | 0.44 | 0.44 | 0.55 | 0.68 | 0.26 | 3.50 | -0.72 |
 | ECMWF AIFS (IA) | 0.52 | 0.89 | 0.44 | 1.58 | 0.30 | 0.42 | 0.48 | 0.57 | 0.81 | 0.34 | 3.66 | -0.17 |
 | ECMWF IFS | 0.52 | 0.76 | 0.38 | 1.22 | 0.29 | 0.40 | 0.50 | 0.55 | 0.72 | 0.30 | 3.61 | -0.52 |
@@ -99,7 +99,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | ECMWF AIFS (IA) | 0.50 | 0.88 | 0.46 | 1.62 | 0.29 | 0.39 | 0.47 | 0.57 | 0.81 | 0.34 | 3.85 | -0.18 |
 | media AROME + ECMWF + ICON-2I + ICON | 0.50 | 0.73 | 0.39 | 1.19 | 0.31 | 0.41 | 0.43 | 0.54 | 0.71 | 0.30 | 3.60 | -0.82 |
 | ECMWF IFS | 0.50 | 0.73 | 0.39 | 1.21 | 0.32 | 0.43 | 0.45 | 0.51 | 0.68 | 0.33 | 3.84 | -0.64 |
-| Open-Meteo automatico (usato ora) | 0.46 | 0.64 | 0.39 | 1.05 | 0.29 | 0.38 | 0.46 | 0.51 | 0.66 | 0.31 | 3.71 | -1.01 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.46 | 0.64 | 0.39 | 1.05 | 0.29 | 0.38 | 0.46 | 0.51 | 0.66 | 0.31 | 3.71 | -1.01 |
 | ICON (DWD) | 0.46 | 0.64 | 0.39 | 1.05 | 0.29 | 0.38 | 0.46 | 0.51 | 0.66 | 0.31 | 3.71 | -1.01 |
 | GFS (USA) | 0.43 | 0.65 | 0.44 | 1.16 | 0.17 | 0.23 | 0.58 | 0.45 | 0.59 | 0.35 | 4.11 | -1.22 |
 
@@ -114,7 +114,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | media dei modelli disponibili | 0.46 | 0.77 | 0.46 | 1.42 | 0.19 | 0.24 | 0.50 | 0.51 | 0.69 | 0.33 | 3.97 | -0.82 |
 | ECMWF IFS | 0.44 | 0.68 | 0.45 | 1.24 | 0.27 | 0.36 | 0.49 | 0.51 | 0.68 | 0.33 | 4.06 | -0.65 |
 | media AROME + ECMWF + ICON-2I + ICON | 0.43 | 0.71 | 0.47 | 1.35 | 0.25 | 0.33 | 0.49 | 0.51 | 0.69 | 0.34 | 4.15 | -0.56 |
-| Open-Meteo automatico (usato ora) | 0.38 | 0.62 | 0.50 | 1.23 | 0.18 | 0.25 | 0.62 | 0.42 | 0.60 | 0.41 | 4.69 | -0.47 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.38 | 0.62 | 0.50 | 1.23 | 0.18 | 0.25 | 0.62 | 0.42 | 0.60 | 0.41 | 4.69 | -0.47 |
 | ICON (DWD) | 0.38 | 0.62 | 0.50 | 1.23 | 0.18 | 0.25 | 0.62 | 0.42 | 0.60 | 0.41 | 4.69 | -0.47 |
 | GFS (USA) | 0.33 | 0.44 | 0.43 | 0.77 | 0.03 | 0.03 | 0.77 | 0.28 | 0.31 | 0.29 | 4.01 | -2.60 |
 
@@ -130,7 +130,7 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | media AROME + ECMWF + ICON-2I + ICON | 0.41 | 0.71 | 0.50 | 1.42 | 0.19 | 0.26 | 0.58 | 0.46 | 0.63 | 0.36 | 4.49 | -0.46 |
 | ECMWF IFS | 0.38 | 0.64 | 0.51 | 1.30 | 0.20 | 0.27 | 0.56 | 0.44 | 0.59 | 0.37 | 4.51 | -0.61 |
 | ICON (DWD) | 0.35 | 0.59 | 0.54 | 1.27 | 0.18 | 0.28 | 0.66 | 0.43 | 0.61 | 0.40 | 4.94 | -0.30 |
-| Open-Meteo automatico (usato ora) | 0.35 | 0.59 | 0.54 | 1.27 | 0.18 | 0.28 | 0.66 | 0.43 | 0.61 | 0.40 | 4.94 | -0.30 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.35 | 0.59 | 0.54 | 1.27 | 0.18 | 0.28 | 0.66 | 0.43 | 0.61 | 0.40 | 4.94 | -0.30 |
 | GFS (USA) | 0.26 | 0.33 | 0.44 | 0.59 | 0.01 | 0.01 | 0.33 | 0.18 | 0.19 | 0.21 | 4.02 | -3.05 |
 
 ## Anticipo 7 giorni (7884 giorni-stazione)
@@ -143,6 +143,6 @@ Pioggia utile per la buttata (≥13 mm in 3 giorni), CSI della scelta attuale e 
 | media AROME + ECMWF + AIFS + ICON-2I | 0.39 | 0.75 | 0.56 | 1.70 | 0.15 | 0.20 | 0.63 | 0.46 | 0.70 | 0.43 | 4.77 | -0.24 |
 | ECMWF AIFS (IA) | 0.38 | 0.78 | 0.58 | 1.84 | 0.21 | 0.32 | 0.62 | 0.46 | 0.76 | 0.45 | 4.99 | +0.42 |
 | ECMWF IFS | 0.33 | 0.58 | 0.57 | 1.35 | 0.09 | 0.13 | 0.76 | 0.37 | 0.54 | 0.46 | 4.93 | -0.89 |
-| Open-Meteo automatico (usato ora) | 0.30 | 0.46 | 0.54 | 0.99 | 0.11 | 0.14 | 0.65 | 0.29 | 0.39 | 0.45 | 4.51 | -1.67 |
+| Open-Meteo automatico (usato fino al 9/10/2026) | 0.30 | 0.46 | 0.54 | 0.99 | 0.11 | 0.14 | 0.65 | 0.29 | 0.39 | 0.45 | 4.51 | -1.67 |
 | GFS (USA) | 0.20 | 0.26 | 0.53 | 0.56 | 0.01 | 0.01 | 0.47 | 0.10 | 0.11 | 0.42 | 4.21 | -3.09 |
 
