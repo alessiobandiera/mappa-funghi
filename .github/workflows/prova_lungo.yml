@@ -1,0 +1,32 @@
+name: Prova dati a 3 settimane (senza pubblicare)
+
+# Solo a mano, su un ramo di prova: esegue l'aggiornamento leggero e salva meteo.json e il registro in data/prove/ sul ramo.
+# Non tocca main né il sito.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prova:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: mkdir -p data/prove && PYTHONUNBUFFERED=1 python script/aggiorna.py --leggero 2>&1 | tee data/prove/aggiorna_lungo.log
+        continue-on-error: true
+        env:
+          BUDGET_ARCHIVIO_S: "5"
+      - name: Salva sul ramo
+        if: always()
+        run: |
+          cp docs/dati/meteo.json data/prove/meteo_lungo.json || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/prove
+          git commit -q -m "Prova dati a 3 settimane [skip ci]" || exit 0
+          git push -q origin HEAD:${{ github.ref_name }}
