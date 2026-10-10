@@ -1,233 +1,396 @@
-=== Carta degli Habitat ISPRA
-campi: [('natura.natura.habitat.objectid', 'esriFieldTypeOID'), ('natura.natura.habitat.codice', 'esriFieldTypeString'), ('natura.natura.habitat.id_poly', 'esriFieldTypeString'), ('natura.natura.habitat.ettari', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1ve_sic', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1ve_zps', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1ve_rms', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind2ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind3ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind4ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind5ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind6ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind7ve', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind2se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind3se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind4se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind5se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind6se', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind1pa', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind2pa', 'esriFieldTypeDouble'), ('natura.natura.habitat.ind3pa', 'esriFieldTypeDouble'), ('natura.natura.habitat.classe_ve', 'esriFieldTypeString'), ('natura.natura.habitat.classe_se', 'esriFieldTypeString'), ('natura.natura.habitat.classe_pa', 'esriFieldTypeString'), ('natura.natura.habitat.classe_fg', 'esriFieldTypeString'), ('natura.natura.habitat.regione', 'esriFieldTypeString'), ('natura.natura.habitat.classe_3ve', 'esriFieldTypeString'), ('natura.natura.habitat.classe_4ve', 'esriFieldTypeString'), ('natura.natura.habitat.classe_7ve', 'esriFieldTypeString'), ('natura.natura.habitat.classe_2se', 'esriFieldTypeString'), ('natura.natura.habitat.classe_3se', 'esriFieldTypeString'), ('natura.natura.habitat.classe_4se', 'esriFieldTypeString'), ('natura.natura.habitat.classe_1pa', 'esriFieldTypeString'), ('natura.natura.habitat.classe_2pa', 'esriFieldTypeString'), ('natura.natura.habitat.classe_3pa', 'esriFieldTypeString'), ('natura.natura.habitat.shape', 'esriFieldTypeGeometry'), ('natura.natura.legenda_hab.nomeclasse', 'esriFieldTypeString'), ('natura.natura.legenda_hab.classname', 'esriFieldTypeString'), ('natura.natura.legenda_hab.cod_nome', 'esriFieldTypeString'), ('natura.natura.legenda_hab.cod_new', 'esriFieldTypeString')]
-descrizione: 
-  S. Bartolomeo in Pizzorna: [{'natura.natura.habitat.objectid': 500818, 'natura.natura.habitat.codice': '41.9', 'natura.natura.habitat.id_poly': 'TOS52370', 'natura.natura.habitat.ettari': 37000.73370048, 'natura.natura.habitat.ind1ve_sic': 0.0, 'natura.natura.habitat.ind1ve_zps': 0.0, 'natura.natura.habitat.ind1ve_rms': 0.0, 'natura.natura.habitat.ind1ve': 0.0, 'natura.natura.habitat.ind2ve': 1.0, 'natura.natura.habitat.ind3ve': 110.0, 'natura.natura.habitat.ind4ve': 0.0, 'natura.natura.habitat.ind5ve': 1.0, 'natura.natura.habitat.ind6ve': 0.0, 'natura.natura.habitat.ind7ve': 0.00447603, 'natura.natura.habitat.ind1se': 0.0, 'natura.natura.habitat.ind2se': 32.0, 'natura.natura.habitat.ind3se': 0.0, 'natura.natura.habitat.ind4se': 1.0, 'natura.natura.habitat.ind5se': 0.0, 'natura.natura.habitat.ind6se': 0.0, 'natura.natura.habitat.ind1pa': 12.93986297, 'natura.natura.habitat.ind2pa': 0.52258127, 'natura.natura.habitat.ind3pa': 867528.125, 'natura.natura.habitat.classe_ve': 'Alta', 'natura.natura.habitat.classe_se': 'Media', 'natura.natura.habitat.classe_pa': 'Media', 'natura.natura.habitat.classe_fg': 'Media', 'natura.natura.habitat.regione': 'TOS', 'natura.natura.habitat.classe_3ve': 'Molto alta', 'natura.natura.habitat.classe_4ve': 'Molto bassa', 'natura.natura.habitat.classe_7ve': 'Molto bassa', 'natura.natura.habitat.classe_2se': 'Molto alta', 'natura.natura.habitat.classe_3se': 'Molto bassa', 'natura.natura.habitat.classe_4se': 'Molto bassa', 'natura.natura.habitat.classe_1pa': 'Molto bassa', 'natura.natura.habitat.classe_2pa': 'Molto bassa', 'natura.natura.habitat.classe_3pa': 'Media', 'natura.natura.legenda_hab.nomeclasse': 'Boschi a Castanea sativa', 'natura.natura.legenda_hab.classname': 'Chestnut (Castanea sativa) woods\xa0', 'natura.natura.legenda_hab.cod_nome': '41.9-Boschi a Castanea sativa                                                                                                                                                                           ', 'natura.natura.legenda_hab.cod_new': None}]
-  Pizzorne 1 km O: [{'natura.natura.habitat.objectid': 500818, 'natura.natura.habitat.codice': '41.9', 'natura.natura.habitat.id_poly': 'TOS52370', 'natura.natura.habitat.ettari': 37000.73370048, 'natura.natura.habitat.ind1ve_sic': 0.0, 'natura.natura.habitat.ind1ve_zps': 0.0, 'natura.natura.habitat.ind1ve_rms': 0.0, 'natura.natura.habitat.ind1ve': 0.0, 'natura.natura.habitat.ind2ve': 1.0, 'natura.natura.habitat.ind3ve': 110.0, 'natura.natura.habitat.ind4ve': 0.0, 'natura.natura.habitat.ind5ve': 1.0, 'natura.natura.habitat.ind6ve': 0.0, 'natura.natura.habitat.ind7ve': 0.00447603, 'natura.natura.habitat.ind1se': 0.0, 'natura.natura.habitat.ind2se': 32.0, 'natura.natura.habitat.ind3se': 0.0, 'natura.natura.habitat.ind4se': 1.0, 'natura.natura.habitat.ind5se': 0.0, 'natura.natura.habitat.ind6se': 0.0, 'natura.natura.habitat.ind1pa': 12.93986297, 'natura.natura.habitat.ind2pa': 0.52258127, 'natura.natura.habitat.ind3pa': 867528.125, 'natura.natura.habitat.classe_ve': 'Alta', 'natura.natura.habitat.classe_se': 'Media', 'natura.natura.habitat.classe_pa': 'Media', 'natura.natura.habitat.classe_fg': 'Media', 'natura.natura.habitat.regione': 'TOS', 'natura.natura.habitat.classe_3ve': 'Molto alta', 'natura.natura.habitat.classe_4ve': 'Molto bassa', 'natura.natura.habitat.classe_7ve': 'Molto bassa', 'natura.natura.habitat.classe_2se': 'Molto alta', 'natura.natura.habitat.classe_3se': 'Molto bassa', 'natura.natura.habitat.classe_4se': 'Molto bassa', 'natura.natura.habitat.classe_1pa': 'Molto bassa', 'natura.natura.habitat.classe_2pa': 'Molto bassa', 'natura.natura.habitat.classe_3pa': 'Media', 'natura.natura.legenda_hab.nomeclasse': 'Boschi a Castanea sativa', 'natura.natura.legenda_hab.classname': 'Chestnut (Castanea sativa) woods\xa0', 'natura.natura.legenda_hab.cod_nome': '41.9-Boschi a Castanea sativa                                                                                                                                                                           ', 'natura.natura.legenda_hab.cod_new': None}]
-  Pizzorne 1 km N: [{'natura.natura.habitat.objectid': 500818, 'natura.natura.habitat.codice': '41.9', 'natura.natura.habitat.id_poly': 'TOS52370', 'natura.natura.habitat.ettari': 37000.73370048, 'natura.natura.habitat.ind1ve_sic': 0.0, 'natura.natura.habitat.ind1ve_zps': 0.0, 'natura.natura.habitat.ind1ve_rms': 0.0, 'natura.natura.habitat.ind1ve': 0.0, 'natura.natura.habitat.ind2ve': 1.0, 'natura.natura.habitat.ind3ve': 110.0, 'natura.natura.habitat.ind4ve': 0.0, 'natura.natura.habitat.ind5ve': 1.0, 'natura.natura.habitat.ind6ve': 0.0, 'natura.natura.habitat.ind7ve': 0.00447603, 'natura.natura.habitat.ind1se': 0.0, 'natura.natura.habitat.ind2se': 32.0, 'natura.natura.habitat.ind3se': 0.0, 'natura.natura.habitat.ind4se': 1.0, 'natura.natura.habitat.ind5se': 0.0, 'natura.natura.habitat.ind6se': 0.0, 'natura.natura.habitat.ind1pa': 12.93986297, 'natura.natura.habitat.ind2pa': 0.52258127, 'natura.natura.habitat.ind3pa': 867528.125, 'natura.natura.habitat.classe_ve': 'Alta', 'natura.natura.habitat.classe_se': 'Media', 'natura.natura.habitat.classe_pa': 'Media', 'natura.natura.habitat.classe_fg': 'Media', 'natura.natura.habitat.regione': 'TOS', 'natura.natura.habitat.classe_3ve': 'Molto alta', 'natura.natura.habitat.classe_4ve': 'Molto bassa', 'natura.natura.habitat.classe_7ve': 'Molto bassa', 'natura.natura.habitat.classe_2se': 'Molto alta', 'natura.natura.habitat.classe_3se': 'Molto bassa', 'natura.natura.habitat.classe_4se': 'Molto bassa', 'natura.natura.habitat.classe_1pa': 'Molto bassa', 'natura.natura.habitat.classe_2pa': 'Molto bassa', 'natura.natura.habitat.classe_3pa': 'Media', 'natura.natura.legenda_hab.nomeclasse': 'Boschi a Castanea sativa', 'natura.natura.legenda_hab.classname': 'Chestnut (Castanea sativa) woods\xa0', 'natura.natura.legenda_hab.cod_nome': '41.9-Boschi a Castanea sativa                                                                                                                                                                           ', 'natura.natura.legenda_hab.cod_new': None}]
-  Fosciandora: [{'natura.natura.habitat.objectid': 500992, 'natura.natura.habitat.codice': '41.9', 'natura.natura.habitat.id_poly': 'TOS52544', 'natura.natura.habitat.ettari': 21043.05455157, 'natura.natura.habitat.ind1ve_sic': 0.0, 'natura.natura.habitat.ind1ve_zps': 0.0, 'natura.natura.habitat.ind1ve_rms': 0.0, 'natura.natura.habitat.ind1ve': 0.0, 'natura.natura.habitat.ind2ve': 1.0, 'natura.natura.habitat.ind3ve': 107.0, 'natura.natura.habitat.ind4ve': 0.0, 'natura.natura.habitat.ind5ve': 1.0, 'natura.natura.habitat.ind6ve': 0.0, 'natura.natura.habitat.ind7ve': 0.00498117, 'natura.natura.habitat.ind1se': 0.0, 'natura.natura.habitat.ind2se': 32.0, 'natura.natura.habitat.ind3se': 0.0, 'natura.natura.habitat.ind4se': 2.0, 'natura.natura.habitat.ind5se': 0.0, 'natura.natura.habitat.ind6se': 0.0, 'natura.natura.habitat.ind1pa': 15.52722985, 'natura.natura.habitat.ind2pa': 0.53087465, 'natura.natura.habitat.ind3pa': 563621.25, 'natura.natura.habitat.classe_ve': 'Alta', 'natura.natura.habitat.classe_se': 'Media', 'natura.natura.habitat.classe_pa': 'Bassa', 'natura.natura.habitat.classe_fg': 'Bassa', 'natura.natura.habitat.regione': 'TOS', 'natura.natura.habitat.classe_3ve': 'Alta', 'natura.natura.habitat.classe_4ve': 'Molto bassa', 'natura.natura.habitat.classe_7ve': 'Molto bassa', 'natura.natura.habitat.classe_2se': 'Molto alta', 'natura.natura.habitat.classe_3se': 'Molto bassa', 'natura.natura.habitat.classe_4se': 'Molto bassa', 'natura.natura.habitat.classe_1pa': 'Molto bassa', 'natura.natura.habitat.classe_2pa': 'Molto bassa', 'natura.natura.habitat.classe_3pa': 'Bassa', 'natura.natura.legenda_hab.nomeclasse': 'Boschi a Castanea sativa', 'natura.natura.legenda_hab.classname': 'Chestnut (Castanea sativa) woods\xa0', 'natura.natura.legenda_hab.cod_nome': '41.9-Boschi a Castanea sativa                                                                                                                                                                           ', 'natura.natura.legenda_hab.cod_new': None}]
-  Abetone: [{'natura.natura.habitat.objectid': 475883, 'natura.natura.habitat.codice': '41.17', 'natura.natura.habitat.id_poly': 'TOS27435', 'natura.natura.habitat.ettari': 11337.50746337, 'natura.natura.habitat.ind1ve_sic': 0.0, 'natura.natura.habitat.ind1ve_zps': 0.0, 'natura.natura.habitat.ind1ve_rms': 0.0, 'natura.natura.habitat.ind1ve': 0.0, 'natura.natura.habitat.ind2ve': 0.0, 'natura.natura.habitat.ind3ve': 101.0, 'natura.natura.habitat.ind4ve': 0.0, 'natura.natura.habitat.ind5ve': 1.0, 'natura.natura.habitat.ind6ve': 1.0, 'natura.natura.habitat.ind7ve': 0.00558183, 'natura.natura.habitat.ind1se': 0.0, 'natura.natura.habitat.ind2se': 28.0, 'natura.natura.habitat.ind3se': 0.0, 'natura.natura.habitat.ind4se': 0.0, 'natura.natura.habitat.ind5se': 0.0, 'natura.natura.habitat.ind6se': 1.0, 'natura.natura.habitat.ind1pa': 6.64346977, 'natura.natura.habitat.ind2pa': 0.13978668, 'natura.natura.habitat.ind3pa': 531400.875, 'natura.natura.habitat.classe_ve': 'Alta', 'natura.natura.habitat.classe_se': 'Media', 'natura.natura.habitat.classe_pa': 'Bassa', 'natura.natura.habitat.classe_fg': 'Bassa', 'natura.natura.habitat.regione': 'TOS', 'natura.natura.habitat.classe_3ve': 'Alta', 'natura.natura.habitat.classe_4ve': 'Molto bassa', 'natura.natura.habitat.classe_7ve': 'Molto bassa', 'natura.natura.habitat.classe_2se': 'Alta', 'natura.natura.habitat.classe_3se': 'Molto bassa', 'natura.natura.habitat.classe_4se': 'Molto bassa', 'natura.natura.habitat.classe_1pa': 'Molto bassa', 'natura.natura.habitat.classe_2pa': 'Molto bassa', 'natura.natura.habitat.classe_3pa': 'Bassa', 'natura.natura.legenda_hab.nomeclasse': "Faggete dell'Appennino Settentrionale e Centrale", 'natura.natura.legenda_hab.classname': 'Southern medio-European beech forests\xa0', 'natura.natura.legenda_hab.cod_nome': "41.17-Faggete dell'Appennino Settentrionale e Centrale                                                                                                                                                  ", 'natura.natura.legenda_hab.cod_new': None}]
-  classi per natura.natura.habitat.objectid: 2000
-      {'b_objectid': 378961, 'n': 1}
-      {'b_objectid': 379031, 'n': 1}
-      {'b_objectid': 379034, 'n': 1}
-      {'b_objectid': 379036, 'n': 1}
-      {'b_objectid': 379102, 'n': 1}
-      {'b_objectid': 379103, 'n': 1}
-      {'b_objectid': 379104, 'n': 1}
-      {'b_objectid': 379105, 'n': 1}
-      {'b_objectid': 379106, 'n': 1}
-      {'b_objectid': 379107, 'n': 1}
-      {'b_objectid': 379108, 'n': 1}
-      {'b_objectid': 379109, 'n': 1}
-      {'b_objectid': 379110, 'n': 1}
-      {'b_objectid': 379126, 'n': 1}
-      {'b_objectid': 379129, 'n': 1}
-      {'b_objectid': 379159, 'n': 1}
-      {'b_objectid': 379161, 'n': 1}
-      {'b_objectid': 379190, 'n': 1}
-      {'b_objectid': 379427, 'n': 1}
-      {'b_objectid': 379428, 'n': 1}
-      {'b_objectid': 379429, 'n': 1}
-      {'b_objectid': 379582, 'n': 1}
-      {'b_objectid': 379585, 'n': 1}
-      {'b_objectid': 379589, 'n': 1}
-      {'b_objectid': 379595, 'n': 1}
-      {'b_objectid': 379596, 'n': 1}
-      {'b_objectid': 379598, 'n': 1}
-      {'b_objectid': 379599, 'n': 1}
-      {'b_objectid': 379601, 'n': 1}
-      {'b_objectid': 379602, 'n': 1}
-      {'b_objectid': 379603, 'n': 1}
-      {'b_objectid': 379604, 'n': 1}
-      {'b_objectid': 379605, 'n': 1}
-      {'b_objectid': 379606, 'n': 1}
-      {'b_objectid': 379607, 'n': 1}
-      {'b_objectid': 379608, 'n': 1}
-      {'b_objectid': 379609, 'n': 1}
-      {'b_objectid': 379610, 'n': 1}
-      {'b_objectid': 379611, 'n': 1}
-      {'b_objectid': 379612, 'n': 1}
-      {'b_objectid': 379616, 'n': 1}
-      {'b_objectid': 379617, 'n': 1}
-      {'b_objectid': 379620, 'n': 1}
-      {'b_objectid': 379623, 'n': 1}
-      {'b_objectid': 379627, 'n': 1}
-      {'b_objectid': 379628, 'n': 1}
-      {'b_objectid': 379630, 'n': 1}
-      {'b_objectid': 379631, 'n': 1}
-      {'b_objectid': 379633, 'n': 1}
-      {'b_objectid': 379634, 'n': 1}
-      {'b_objectid': 379635, 'n': 1}
-      {'b_objectid': 379636, 'n': 1}
-      {'b_objectid': 379640, 'n': 1}
-      {'b_objectid': 380920, 'n': 1}
-      {'b_objectid': 380923, 'n': 1}
-      {'b_objectid': 380924, 'n': 1}
-      {'b_objectid': 380925, 'n': 1}
-      {'b_objectid': 380926, 'n': 1}
-      {'b_objectid': 380927, 'n': 1}
-      {'b_objectid': 380929, 'n': 1}
-      {'b_objectid': 380936, 'n': 1}
-      {'b_objectid': 380946, 'n': 1}
-      {'b_objectid': 380949, 'n': 1}
-      {'b_objectid': 381145, 'n': 1}
-      {'b_objectid': 381146, 'n': 1}
-      {'b_objectid': 381672, 'n': 1}
-      {'b_objectid': 381925, 'n': 1}
-      {'b_objectid': 381931, 'n': 1}
-      {'b_objectid': 381932, 'n': 1}
-      {'b_objectid': 381933, 'n': 1}
-  classi per natura.natura.habitat.codice: 167
-      {'b_codice': '86.1_m', 'n': 5110}
-      {'b_codice': '38.2', 'n': 4582}
-      {'b_codice': '82.3', 'n': 3807}
-      {'b_codice': '84', 'n': 3118}
-      {'b_codice': '41.731', 'n': 2831}
-      {'b_codice': '42.G_n', 'n': 2826}
-      {'b_codice': '83.11', 'n': 2578}
-      {'b_codice': '41.741', 'n': 2547}
-      {'b_codice': '31.81', 'n': 2140}
-      {'b_codice': '83.21', 'n': 1931}
-      {'b_codice': '85', 'n': 1627}
-      {'b_codice': '41.9', 'n': 1511}
-      {'b_codice': '41.81', 'n': 1241}
-      {'b_codice': '34.32', 'n': 1108}
-      {'b_codice': '44.61', 'n': 1104}
-      {'b_codice': '41.L_n', 'n': 1087}
-      {'b_codice': '86.32', 'n': 1022}
-      {'b_codice': '34.8_m', 'n': 914}
-      {'b_codice': '67.1_n', 'n': 709}
-      {'b_codice': '34.332', 'n': 649}
-      {'b_codice': '83.325_m', 'n': 624}
-      {'b_codice': '41.17', 'n': 576}
-      {'b_codice': '45.32', 'n': 533}
-      {'b_codice': '31.4A11', 'n': 520}
-      {'b_codice': '31.8A', 'n': 484}
-      {'b_codice': '87', 'n': 469}
-      {'b_codice': '42.82', 'n': 430}
-      {'b_codice': '62.212_m', 'n': 375}
-      {'b_codice': '44.13', 'n': 374}
-      {'b_codice': '36.33', 'n': 356}
-      {'b_codice': '22.1_m', 'n': 332}
-      {'b_codice': '41.88_m', 'n': 328}
-      {'b_codice': '82.1', 'n': 322}
-      {'b_codice': '38.1', 'n': 275}
-      {'b_codice': '83.15_m', 'n': 272}
-      {'b_codice': '62.13', 'n': 260}
-      {'b_codice': '31.88_m', 'n': 259}
-      {'b_codice': '32.A', 'n': 246}
-      {'b_codice': '86.31', 'n': 244}
-      {'b_codice': '36.31', 'n': 243}
-      {'b_codice': '41.39', 'n': 240}
-      {'b_codice': '35.11', 'n': 236}
-      {'b_codice': '62.211_m', 'n': 229}
-      {'b_codice': '61.33', 'n': 222}
-      {'b_codice': '24.221_m', 'n': 211}
-      {'b_codice': '62.151_m', 'n': 210}
-      {'b_codice': '41.F1', 'n': 201}
-      {'b_codice': '31.22', 'n': 172}
-      {'b_codice': '81', 'n': 166}
-      {'b_codice': '42.59', 'n': 164}
-      {'b_codice': '86.1', 'n': 158}
-      {'b_codice': '83.321', 'n': 148}
-      {'b_codice': '31.844', 'n': 134}
-      {'b_codice': '53.1', 'n': 125}
-      {'b_codice': '44.21', 'n': 114}
-      {'b_codice': '67.2_n', 'n': 110}
-      {'b_codice': '4D_n', 'n': 107}
-      {'b_codice': '61.11', 'n': 107}
-      {'b_codice': '41.D', 'n': 98}
-      {'b_codice': '24.225_m', 'n': 96}
-      {'b_codice': '53.6', 'n': 86}
-      {'b_codice': '83.31_m', 'n': 80}
-      {'b_codice': '24.1_m', 'n': 80}
-      {'b_codice': '44.9', 'n': 73}
-      {'b_codice': '45.31', 'n': 70}
-      {'b_codice': '61.31', 'n': 65}
-      {'b_codice': '32.3_m', 'n': 64}
-      {'b_codice': '86.3', 'n': 64}
-      {'b_codice': '44.11', 'n': 62}
-      {'b_codice': '61.22_m', 'n': 62}
-  classi per natura.natura.habitat.id_poly: 2000
-      {'b_id_poly': 'EMR10001', 'n': 1}
-      {'b_id_poly': 'EMR10003', 'n': 1}
-      {'b_id_poly': 'EMR10004', 'n': 1}
-      {'b_id_poly': 'EMR10008', 'n': 1}
-      {'b_id_poly': 'EMR10009', 'n': 1}
-      {'b_id_poly': 'EMR10012', 'n': 1}
-      {'b_id_poly': 'EMR10013', 'n': 1}
-      {'b_id_poly': 'EMR10022', 'n': 1}
-      {'b_id_poly': 'EMR10025', 'n': 1}
-      {'b_id_poly': 'EMR10027', 'n': 1}
-      {'b_id_poly': 'EMR10029', 'n': 1}
-      {'b_id_poly': 'EMR10030', 'n': 1}
-      {'b_id_poly': 'EMR10031', 'n': 1}
-      {'b_id_poly': 'EMR10035', 'n': 1}
-      {'b_id_poly': 'EMR10037', 'n': 1}
-      {'b_id_poly': 'EMR10039', 'n': 1}
-      {'b_id_poly': 'EMR10042', 'n': 1}
-      {'b_id_poly': 'EMR10043', 'n': 1}
-      {'b_id_poly': 'EMR10046', 'n': 1}
-      {'b_id_poly': 'EMR10049', 'n': 1}
-      {'b_id_poly': 'EMR10051', 'n': 1}
-      {'b_id_poly': 'EMR10052', 'n': 1}
-      {'b_id_poly': 'EMR100566', 'n': 1}
-      {'b_id_poly': 'EMR100575', 'n': 1}
-      {'b_id_poly': 'EMR100579', 'n': 1}
-      {'b_id_poly': 'EMR100588', 'n': 1}
-      {'b_id_poly': 'EMR100590', 'n': 1}
-      {'b_id_poly': 'EMR100592', 'n': 1}
-      {'b_id_poly': 'EMR100598', 'n': 1}
-      {'b_id_poly': 'EMR100599', 'n': 1}
-      {'b_id_poly': 'EMR100602', 'n': 1}
-      {'b_id_poly': 'EMR100604', 'n': 1}
-      {'b_id_poly': 'EMR100605', 'n': 1}
-      {'b_id_poly': 'EMR100607', 'n': 1}
-      {'b_id_poly': 'EMR100608', 'n': 1}
-      {'b_id_poly': 'EMR100610', 'n': 1}
-      {'b_id_poly': 'EMR100613', 'n': 1}
-      {'b_id_poly': 'EMR100635', 'n': 1}
-      {'b_id_poly': 'EMR10064', 'n': 1}
-      {'b_id_poly': 'EMR100644', 'n': 1}
-      {'b_id_poly': 'EMR100649', 'n': 1}
-      {'b_id_poly': 'EMR100655', 'n': 1}
-      {'b_id_poly': 'EMR10066', 'n': 1}
-      {'b_id_poly': 'EMR100660', 'n': 1}
-      {'b_id_poly': 'EMR100662', 'n': 1}
-      {'b_id_poly': 'EMR100664', 'n': 1}
-      {'b_id_poly': 'EMR100667', 'n': 1}
-      {'b_id_poly': 'EMR100676', 'n': 1}
-      {'b_id_poly': 'EMR100680', 'n': 1}
-      {'b_id_poly': 'EMR100682', 'n': 1}
-      {'b_id_poly': 'EMR10069', 'n': 1}
-      {'b_id_poly': 'EMR100699', 'n': 1}
-      {'b_id_poly': 'EMR10070', 'n': 1}
-      {'b_id_poly': 'EMR100701', 'n': 1}
-      {'b_id_poly': 'EMR100708', 'n': 1}
-      {'b_id_poly': 'EMR100718', 'n': 1}
-      {'b_id_poly': 'EMR10072', 'n': 1}
-      {'b_id_poly': 'EMR100722', 'n': 1}
-      {'b_id_poly': 'EMR100742', 'n': 1}
-      {'b_id_poly': 'EMR100744', 'n': 1}
-      {'b_id_poly': 'EMR100749', 'n': 1}
-      {'b_id_poly': 'EMR100750', 'n': 1}
-      {'b_id_poly': 'EMR100757', 'n': 1}
-      {'b_id_poly': 'EMR100758', 'n': 1}
-      {'b_id_poly': 'EMR100762', 'n': 1}
-      {'b_id_poly': 'EMR100767', 'n': 1}
-      {'b_id_poly': 'EMR100770', 'n': 1}
-      {'b_id_poly': 'EMR100775', 'n': 1}
-      {'b_id_poly': 'EMR100778', 'n': 1}
-      {'b_id_poly': 'EMR10078', 'n': 1}
+renderer: uniqueValue natura.natura.habitat.codice 420
+    31.81 = 31.81-Cespuglieti temperati a latifoglie decidue dei suoli ricchi
+    31.82 = 31.82-Cespuglieti a Buxus sempervirens
+    31.844 = 31.844-Cespuglieti a ginestre collinari e montani italiani
+    31.845 = 31.845-Ginestreti a Genista aetnensis
+    31.863 = 31.863-Campi a Pteridium aquilinum
+    31.87 = 31.87-Aree recentemente disboscate da incendi, valanghe o eventi meteorici estremi
+    31.88 = 31.88-Formazioni a Juniperus communis
+    31.88_m = 31.88_m-Ginepreti collinari e montani
+    31.8A = 31.8A-Roveti
+    31.8B2 = 31.8B2-Cespuglieti illirici
+    31.8C = 31.8C-Cespuglieti e boscaglie a Corylus avellana
+    41.11 = 41.11-Faggete acidofile centroeuropee
+    41.11_m = 41.11_m-Faggete montane mesofile delle Alpi
+    41.13 = 41.13-Faggete neutrofile e mesofile delle Alpi
+    41.15 = 41.15-Faggete subalpine delle Alpi
+    41.16 = 41.16-Faggete montane xerofile delle Alpi
+    41.17 = 41.17-Faggete dell'Appennino settentrionale e centrale
+    41.171 = 41.171-Faggete acidofile e neutrofile dell'Appennino centro-settentrionale
+    41.174 = 41.174-Faggete neutrofile delle Alpi meridionali e dell’Appennino
+    41.175 = 41.175-Faggete calcifile dell'Appennino centro-settentrionale
+    41.18 = 41.18-Faggete dell'Italia meridionale
+    41.1C = 41.1C-Faggete illiriche
+    41.261 = 41.261-Querco-carpineti subcontinentali
+    41.28 = 41.28-Querco-carpineti prealpini e dell'Italia settentrionale
+    41.281 = 41.281-Querco-carpineti dei suoli idromorfi con Q. robur
+    41.282 = 41.282-Carpineti e querco-carpineti con Q. petraea dei suoli mesici
+    41.2A = 41.2A-Querco-carpineti illirici
+    41.2D_n = 41.2D_n-Querco-carpineti peninsulari
+    41.39 = 41.39-Boschi e boscaglie di invasione con Fraxinus excelsior
+    41.4 = 41.4-Boschi misti di forre, scarpate e versanti umidi
+    41.41 = 41.41-Boschi misti di forre e scarpate
+    41.51 = 41.51-Querceti acidofili con betulla prealpini e padani
+    41.59 = 41.59-Querceti a rovere dell'Italia settentrionale
+    41.711 = 41.711-Querceti xero-termofili a roverella delle Alpi occidentali
+    41.72 = 41.72-Querceti a roverella della Sardegna
+    41.731 = 41.731-Querceti temperati a roverella
+    41.732 = 41.732-Querceti mediterranei a roverella
+    41.737 = 41.737-Querceti xero-termofili a roverella
+    41.737B = 41.737B-Boschi submediterranei orientali di quercia bianca dell’Italia meridionale
+    41.74 = 41.74-Cerrete nord-italiane e dell'Appennino settentrionale
+    41.741 = 41.741-Querceti temperati a cerro
+    41.7511 = 41.7511-Querceti mediterranei a cerro
+    41.7512 = 41.7512-Querceti a cerro e farnetto
+    41.7513 = 41.7513-Querceti a rovere dell'Italia meridionale
+    41.782 = 41.782-Querceti a Quercus trojana
+    41.792 = 41.792-Querceti a Quercus ithaburensis subsp. macrolepis
+    41.8 = 41.8-Ostrieti, carpineti, frassineti, acereti e boschi misti termofili
+    41.81 = 41.81-Boschi di Ostrya carpinifolia
+    41.86 = 41.86-Frassineti termofili
+    41.88_m = 41.88_m-Boschi a frassini, aceri e carpini
+    41.9 = 41.9-Boschi a Castanea sativa
+    41.B = 41.B-Boschi a betulla
+    41.B3 = 41.B3-Boschi a Betula pendula
+    41.B6 = 41.B6-Boschi a Betula aetnensis
+    41.C1 = 41.C1-Boschi a Alnus cordata
+    41.D = 41.D-Boschi a Populus tremula
+    41.D1 = 41.D1-Formazioni a pioppo tremulo e betulla
+    41.F1 = 41.F1-Boschi e boscaglie a Ulmus minor
+    41.L_n = 41.L_n-Boschi e boscaglie di latifoglie alloctone o fuori dal loro areale
+    41.Lcn = 41.Lcn-Boschi di latifoglie esotiche o fuori dal loro areale
+    42.11_m = 42.11_m-Abetine delle Alpi
+    42.12 = 42.12-Abetine calcifile delle Alpi e dell'Appenino centro-settentrionale
+    42.12_m = 42.12_m-Abetine dell’Appennino settentrionale e centrale
+    42.13 = 42.13-Abetine acidofile delle Alpi e dell'Appenino centro-settentrionale
+    42.15 = 42.15-Abetine dell'Appennino meridionale
+    42.1A = 42.1A-Stazioni relitte di Abies nebrodensis
+    42.1B = 42.1B-Rimboschimenti a conifere indigene
+    42.21 = 42.21-Peccete subalpine delle Alpi
+    42.22 = 42.22-Peccete montane delle Alpi
+    42.221 = 42.221-Peccete montane acidofile
+    42.222 = 42.222-Peccete montane calcifile
+    42.242 = 42.242-Peccete dell'Appennino
+    42.31 = 42.31-Boschi acidofili di larice e di cembro delle Alpi orientali e centrali
+    42.31_m = 42.31_m-Lariceti acidofili delle Alpi orientali e centrali
+    42.321 = 42.321-Cembrete calcifile delle Alpi orientali e centrali
+    42.322 = 42.322-Lariceti calcifili delle Alpi orientali e centrali
+    42.331 = 42.331-Lariceti delle Alpi occidentali
+    42.332 = 42.332-Cembrete delle Alpi occidentali
+    42.34 = 42.34-Lariceti di invasione
+    42.37_n = 42.37_n-Cembrete acidofile delle Alpi orientali e centrali
+    42.4 = 42.4-Pinete a pino uncinato
+    42.41 = 42.41-Foreste di pino uncinato - Foreste subalpine delle Alpi occidentali
+    42.42 = 42.42-Foreste di pino uncinato - Pinete montane xeriche
+    42.52 = 42.52-Pinete acidofile di pino silvestre
+    42.52_m = 42.52_m-Pinete di pino silvestre delle Alpi
+    42.53 = 42.53-Pinete centro-alpine substeppiche a pino silvestre
+    42.54 = 42.54-Pineta orientale di pino silvestre
+    42.55 = 42.55-Pinete endalpiche delle Alpi sud-occidentali a pino silvestre
+    42.59 = 42.59-Pinete a pino silvestre dell'Appennino
+    42.5D = 42.5D-Pinete a pino silvestre dei terrazzi e dei greti fluviali dell'Italia settentrionale
+    42.611 = 42.611-Pinete di pino nero delle Alpi
+    42.612 = 42.612-Pinete di pino nero appenninico
+    42.614 = 42.614-Pinete di pino nero costiere dell’alto Adriatico
+    42.65 = 42.65-Pinete di pino laricio
+    42.711 = 42.711-Pinete di pino loricato
+    42.82 = 42.82-Pinete a pino marittimo
+    42.83 = 42.83-Pinete a pino domestico
+    42.84 = 42.84-Pinete a pino d'Aleppo
+    42.A1 = 42.A1-Boschi di cipresso
+    42.A28 = 42.A28-Stazioni relitte di Juniperus thurifera
+    42.A7 = 42.A7-Boschi di Taxus baccata
+    42.G_n = 42.G_n-Boschi di conifere alloctone o fuori dal loro areale
+    43.1 = 43.1-Boschi misti di faggio, peccio e abete delle Alpi interne
+    44.11 = 44.11-Saliceti arbustivi ripariali temperati
+    44.12 = 44.12-Saliceti arbustivi ripariali mediterranei
+    44.13 = 44.13-Boschi ripariali temperati di salici
+    44.14 = 44.14-Boschi ripariali mediterranei di salici
+    44.21 = 44.21-Boscaglie ripariali a Alnus incana
+    44.211 = 44.211-Boscaglie ripariali a Alnus incana delle Alpi
+    44.3 = 44.3-Boschi ripariali temperati a Alnus glutinosa e Fraxinus excelsior
+    44.31 = 44.31-Alno-frassineti dei rivi e sorgenti
+    44.4 = 44.4-Querceti a farnia delle piane alluvionali
+    44.44 = 44.44-Foreste padane a farnia, frassino ed ontano
+    44.513 = 44.513-Boschi ripariali mediterranei a Alnus glutinosa
+    44.61 = 44.61-Boschi ripariali a pioppi
+    44.62 = 44.62-Boschi ripariali a olmi
+    44.63 = 44.63-Boschi ripariali a Fraxinus angustifolia
+    44.71 = 44.71-Boschi ripariali a Platanus orientalis
+    44.713 = 44.713-Cañyons a platani in Sicilia
+    44.81 = 44.81-Boscaglie ripariali a tamerici, oleandri e agnocasti
+    44.9 = 44.9-Boschi e cespuglieti palustri a ontani e salici
+    44.91 = 44.91-Boschi palustri di ontano nero e salice cinerino
+    44.92 = 44.92-Cespuglieti palustri a Salix cinerea
+    44.A = 44.A-Torbiere boscate con betulle e conifere
+    44.D1_n = 44.D1_n-Cespuglieti ripariali di specie alloctone invasive
+    44.D2_n = 44.D2_n-Boschi e boscaglie ripariali di specie alloctone invasive
+    44.D2cn = 44.D2cn-Boschi e boscaglie ripariali di specie alloctone
+    45.1 = 45.1-Boschi e boscaglie a olivastro e carrubo
+    45.21 = 45.21-Sugherete
+    45.31 = 45.31-Leccete termo e mesomediterranee
+    45.317 = 45.317-Leccete sarde
+    45.318 = 45.318-Leccete dell'Italia centrale e settentrionale
+    45.31A = 45.31A-Leccete sud-italiane e siciliane
+    45.32 = 45.32-Leccete supramediterranee
+    45.323 = 45.323-Leccete supramediterranee della Sardegna
+    45.324 = 45.324-Leccete supramediterranee dell'Italia
+    45.42 = 45.42-Boscaglie a Quercus coccifera
+    45.8 = 45.8-Boschi di Ilex aquifolium
+    83.31 = 83.31-Piantagioni di conifere
+    83.31_m = 83.31_m-Piantagioni di conifere
+    83.321 = 83.321-Coltivazioni di pioppo
+    83.322 = 83.322-Piantagioni di eucalipti
+    83.324 = 83.324-Robinieti
+    83.325 = 83.325-Altre piantagioni di latifoglie
+    83.325_m = 83.325_m-Piantagioni di latifoglie
+   legenda: 31.81-Cespuglieti temperati a latifoglie decidue dei suoli ricchi ['31.81']
+   legenda: 31.82-Cespuglieti a Buxus sempervirens ['31.82']
+   legenda: 31.844-Cespuglieti a ginestre collinari e montani italiani ['31.844']
+   legenda: 31.845-Ginestreti a Genista aetnensis ['31.845']
+   legenda: 31.863-Campi a Pteridium aquilinum ['31.863']
+   legenda: 31.87-Aree recentemente disboscate da incendi, valanghe o eventi meteorici estremi ['31.87']
+   legenda: 31.88-Formazioni a Juniperus communis ['31.88']
+   legenda: 31.88_m-Ginepreti collinari e montani ['31.88_m']
+   legenda: 31.8A-Roveti ['31.8A']
+   legenda: 31.8B2-Cespuglieti illirici ['31.8B2']
+   legenda: 31.8C-Cespuglieti e boscaglie a Corylus avellana ['31.8C']
+   legenda: 41.11-Faggete acidofile centroeuropee ['41.11']
+   legenda: 41.11_m-Faggete montane mesofile delle Alpi ['41.11_m']
+   legenda: 41.13-Faggete neutrofile e mesofile delle Alpi ['41.13']
+   legenda: 41.15-Faggete subalpine delle Alpi ['41.15']
+   legenda: 41.16-Faggete montane xerofile delle Alpi ['41.16']
+   legenda: 41.17-Faggete dell'Appennino settentrionale e centrale ['41.17']
+   legenda: 41.171-Faggete acidofile e neutrofile dell'Appennino centro-settentrionale ['41.171']
+   legenda: 41.174-Faggete neutrofile delle Alpi meridionali e dell’Appennino ['41.174']
+   legenda: 41.175-Faggete calcifile dell'Appennino centro-settentrionale ['41.175']
+   legenda: 41.18-Faggete dell'Italia meridionale ['41.18']
+   legenda: 41.1C-Faggete illiriche ['41.1C']
+   legenda: 41.261-Querco-carpineti subcontinentali ['41.261']
+   legenda: 41.28-Querco-carpineti prealpini e dell'Italia settentrionale ['41.28']
+   legenda: 41.281-Querco-carpineti dei suoli idromorfi con Q. robur ['41.281']
+   legenda: 41.282-Carpineti e querco-carpineti con Q. petraea dei suoli mesici ['41.282']
+   legenda: 41.2A-Querco-carpineti illirici ['41.2A']
+   legenda: 41.2D_n-Querco-carpineti peninsulari ['41.2D_n']
+   legenda: 41.39-Boschi e boscaglie di invasione con Fraxinus excelsior ['41.39']
+   legenda: 41.4-Boschi misti di forre, scarpate e versanti umidi ['41.4']
+   legenda: 41.41-Boschi misti di forre e scarpate ['41.41']
+   legenda: 41.51-Querceti acidofili con betulla prealpini e padani ['41.51']
+   legenda: 41.59-Querceti a rovere dell'Italia settentrionale ['41.59']
+   legenda: 41.711-Querceti xero-termofili a roverella delle Alpi occidentali ['41.711']
+   legenda: 41.72-Querceti a roverella della Sardegna ['41.72']
+   legenda: 41.731-Querceti temperati a roverella ['41.731']
+   legenda: 41.732-Querceti mediterranei a roverella ['41.732']
+   legenda: 41.737-Querceti xero-termofili a roverella ['41.737']
+   legenda: 41.737B-Boschi submediterranei orientali di quercia bianca dell’Italia meridionale ['41.737B']
+   legenda: 41.74-Cerrete nord-italiane e dell'Appennino settentrionale ['41.74']
+   legenda: 41.741-Querceti temperati a cerro ['41.741']
+   legenda: 41.7511-Querceti mediterranei a cerro ['41.7511']
+   legenda: 41.7512-Querceti a cerro e farnetto ['41.7512']
+   legenda: 41.7513-Querceti a rovere dell'Italia meridionale ['41.7513']
+   legenda: 41.782-Querceti a Quercus trojana ['41.782']
+   legenda: 41.792-Querceti a Quercus ithaburensis subsp. macrolepis ['41.792']
+   legenda: 41.8-Ostrieti, carpineti, frassineti, acereti e boschi misti termofili ['41.8']
+   legenda: 41.81-Boschi di Ostrya carpinifolia ['41.81']
+   legenda: 41.86-Frassineti termofili ['41.86']
+   legenda: 41.88_m-Boschi a frassini, aceri e carpini ['41.88_m']
+   legenda: 41.9-Boschi a Castanea sativa ['41.9']
+   legenda: 41.B-Boschi a betulla ['41.B']
+   legenda: 41.B3-Boschi a Betula pendula ['41.B3']
+   legenda: 41.B6-Boschi a Betula aetnensis ['41.B6']
+   legenda: 41.C1-Boschi a Alnus cordata ['41.C1']
+   legenda: 41.D-Boschi a Populus tremula ['41.D']
+   legenda: 41.D1-Formazioni a pioppo tremulo e betulla ['41.D1']
+   legenda: 41.F1-Boschi e boscaglie a Ulmus minor ['41.F1']
+   legenda: 41.L_n-Boschi e boscaglie di latifoglie alloctone o fuori dal loro areale ['41.L_n']
+   legenda: 41.Lcn-Boschi di latifoglie esotiche o fuori dal loro areale ['41.Lcn']
+   legenda: 42.11_m-Abetine delle Alpi ['42.11_m']
+   legenda: 42.12-Abetine calcifile delle Alpi e dell'Appenino centro-settentrionale ['42.12']
+   legenda: 42.12_m-Abetine dell’Appennino settentrionale e centrale ['42.12_m']
+   legenda: 42.13-Abetine acidofile delle Alpi e dell'Appenino centro-settentrionale ['42.13']
+   legenda: 42.15-Abetine dell'Appennino meridionale ['42.15']
+   legenda: 42.1A-Stazioni relitte di Abies nebrodensis ['42.1A']
+   legenda: 42.1B-Rimboschimenti a conifere indigene ['42.1B']
+   legenda: 42.21-Peccete subalpine delle Alpi ['42.21']
+   legenda: 42.22-Peccete montane delle Alpi ['42.22']
+   legenda: 42.221-Peccete montane acidofile ['42.221']
+   legenda: 42.222-Peccete montane calcifile ['42.222']
+   legenda: 42.242-Peccete dell'Appennino ['42.242']
+   legenda: 42.31-Boschi acidofili di larice e di cembro delle Alpi orientali e centrali ['42.31']
+   legenda: 42.31_m-Lariceti acidofili delle Alpi orientali e centrali ['42.31_m']
+   legenda: 42.321-Cembrete calcifile delle Alpi orientali e centrali ['42.321']
+   legenda: 42.322-Lariceti calcifili delle Alpi orientali e centrali ['42.322']
+   legenda: 42.331-Lariceti delle Alpi occidentali ['42.331']
+   legenda: 42.332-Cembrete delle Alpi occidentali ['42.332']
+   legenda: 42.34-Lariceti di invasione ['42.34']
+   legenda: 42.37_n-Cembrete acidofile delle Alpi orientali e centrali ['42.37_n']
+   legenda: 42.4-Pinete a pino uncinato ['42.4']
+   legenda: 42.41-Foreste di pino uncinato - Foreste subalpine delle Alpi occidentali ['42.41']
+   legenda: 42.42-Foreste di pino uncinato - Pinete montane xeriche ['42.42']
+   legenda: 42.52-Pinete acidofile di pino silvestre ['42.52']
+   legenda: 42.52_m-Pinete di pino silvestre delle Alpi ['42.52_m']
+   legenda: 42.53-Pinete centro-alpine substeppiche a pino silvestre ['42.53']
+   legenda: 42.54-Pineta orientale di pino silvestre ['42.54']
+   legenda: 42.55-Pinete endalpiche delle Alpi sud-occidentali a pino silvestre ['42.55']
+   legenda: 42.59-Pinete a pino silvestre dell'Appennino ['42.59']
+   legenda: 42.5D-Pinete a pino silvestre dei terrazzi e dei greti fluviali dell'Italia settentrionale ['42.5D']
+   legenda: 42.611-Pinete di pino nero delle Alpi ['42.611']
+   legenda: 42.612-Pinete di pino nero appenninico ['42.612']
+   legenda: 42.614-Pinete di pino nero costiere dell’alto Adriatico ['42.614']
+   legenda: 42.65-Pinete di pino laricio ['42.65']
+   legenda: 42.711-Pinete di pino loricato ['42.711']
+   legenda: 42.82-Pinete a pino marittimo ['42.82']
+   legenda: 42.83-Pinete a pino domestico ['42.83']
+   legenda: 42.84-Pinete a pino d'Aleppo ['42.84']
+   legenda: 42.A1-Boschi di cipresso ['42.A1']
+   legenda: 42.A28-Stazioni relitte di Juniperus thurifera ['42.A28']
+   legenda: 42.A7-Boschi di Taxus baccata ['42.A7']
+   legenda: 42.G_n-Boschi di conifere alloctone o fuori dal loro areale ['42.G_n']
+   legenda: 43.1-Boschi misti di faggio, peccio e abete delle Alpi interne ['43.1']
+   legenda: 44.11-Saliceti arbustivi ripariali temperati ['44.11']
+   legenda: 44.12-Saliceti arbustivi ripariali mediterranei ['44.12']
+   legenda: 44.13-Boschi ripariali temperati di salici ['44.13']
+   legenda: 44.14-Boschi ripariali mediterranei di salici ['44.14']
+   legenda: 44.21-Boscaglie ripariali a Alnus incana ['44.21']
+   legenda: 44.211-Boscaglie ripariali a Alnus incana delle Alpi ['44.211']
+   legenda: 44.3-Boschi ripariali temperati a Alnus glutinosa e Fraxinus excelsior ['44.3']
+   legenda: 44.31-Alno-frassineti dei rivi e sorgenti ['44.31']
+   legenda: 44.4-Querceti a farnia delle piane alluvionali ['44.4']
+   legenda: 44.44-Foreste padane a farnia, frassino ed ontano ['44.44']
+   legenda: 44.513-Boschi ripariali mediterranei a Alnus glutinosa ['44.513']
+   legenda: 44.61-Boschi ripariali a pioppi ['44.61']
+   legenda: 44.62-Boschi ripariali a olmi ['44.62']
+   legenda: 44.63-Boschi ripariali a Fraxinus angustifolia ['44.63']
+   legenda: 44.71-Boschi ripariali a Platanus orientalis ['44.71']
+   legenda: 44.713-Cañyons a platani in Sicilia ['44.713']
+   legenda: 44.81-Boscaglie ripariali a tamerici, oleandri e agnocasti ['44.81']
+   legenda: 44.9-Boschi e cespuglieti palustri a ontani e salici ['44.9']
+   legenda: 44.91-Boschi palustri di ontano nero e salice cinerino ['44.91']
+   legenda: 44.92-Cespuglieti palustri a Salix cinerea ['44.92']
+   legenda: 44.A-Torbiere boscate con betulle e conifere ['44.A']
+   legenda: 44.D1_n-Cespuglieti ripariali di specie alloctone invasive ['44.D1_n']
+   legenda: 44.D2_n-Boschi e boscaglie ripariali di specie alloctone invasive ['44.D2_n']
+   legenda: 44.D2cn-Boschi e boscaglie ripariali di specie alloctone ['44.D2cn']
+   legenda: 45.1-Boschi e boscaglie a olivastro e carrubo ['45.1']
+   legenda: 45.21-Sugherete ['45.21']
+   legenda: 45.31-Leccete termo e mesomediterranee ['45.31']
+   legenda: 45.317-Leccete sarde ['45.317']
+   legenda: 45.318-Leccete dell'Italia centrale e settentrionale ['45.318']
+   legenda: 45.31A-Leccete sud-italiane e siciliane ['45.31A']
+   legenda: 45.32-Leccete supramediterranee ['45.32']
+   legenda: 45.323-Leccete supramediterranee della Sardegna ['45.323']
+   legenda: 45.324-Leccete supramediterranee dell'Italia ['45.324']
+   legenda: 45.42-Boscaglie a Quercus coccifera ['45.42']
+   legenda: 45.8-Boschi di Ilex aquifolium ['45.8']
+   legenda: 83.31-Piantagioni di conifere ['83.31']
+   legenda: 83.31_m-Piantagioni di conifere ['83.31_m']
+   legenda: 83.321-Coltivazioni di pioppo ['83.321']
+   legenda: 83.322-Piantagioni di eucalipti ['83.322']
+   legenda: 83.324-Robinieti ['83.324']
+   legenda: 83.325-Altre piantagioni di latifoglie ['83.325']
+   legenda: 83.325_m-Piantagioni di latifoglie ['83.325_m']
+  Emilia (Frassinoro): 36 aree entro 600 m: [('31.88_m', 'EMR'), ('34.32', 'EMR'), ('38.2', 'EMR'), ('41.17', 'EMR'), ('41.39', 'EMR'), ('41.731', 'EMR'), ('42.G_n', 'EMR'), ('44.21', 'EMR'), ('85', 'EMR'), ('86.1_m', 'EMR')]
+  Emilia (Pievepelago): 36 aree entro 600 m: [('24.221_m', 'EMR'), ('38.2', 'EMR'), ('41.39', 'EMR'), ('41.741', 'EMR'), ('41.9', 'EMR'), ('41.L_n', 'EMR'), ('44.11', 'EMR'), ('44.21', 'EMR'), ('44.61', 'EMR'), ('62.212_m', 'EMR'), ('82.3', 'EMR'), ('85', 'EMR')]
+  Emilia (Villa Minozzo): 20 aree entro 600 m: [('38.2', 'EMR'), ('41.731', 'EMR'), ('41.741', 'EMR'), ('41.D', 'EMR'), ('42.G_n', 'EMR'), ('44.61', 'EMR'), ('82.3', 'EMR'), ('83.325_m', 'EMR'), ('84', 'EMR'), ('85', 'EMR'), ('86.1_m', 'EMR')]
+  Liguria (Sarzana): 8 aree entro 600 m: [('24.225', 'LIG'), ('41.731', 'LIG'), ('82.3', 'LIG'), ('86.1', 'LIG'), ('86.3', 'LIG')]
+  Liguria (Castelnuovo Magra): 13 aree entro 600 m: [('41.731', 'LIG'), ('41.81', 'LIG'), ('41.9', 'LIG'), ('82.3', 'LIG'), ('83.11', 'LIG'), ('86.1', 'LIG')]
+  Lunigiana (Fivizzano): 11 aree entro 600 m: [('34.8_m', 'TOS'), ('41.741', 'TOS'), ('41.81', 'TOS'), ('41.9', 'TOS'), ('41.L_n', 'TOS'), ('44.61', 'TOS'), ('82.3', 'TOS'), ('84', 'TOS'), ('86.1_m', 'TOS')]
+  Garfagnana (Castelnuovo): 20 aree entro 600 m: [('24.225_m', 'TOS'), ('41.81', 'TOS'), ('41.9', 'TOS'), ('44.13', 'TOS'), ('44.61', 'TOS'), ('82.3', 'TOS'), ('84', 'TOS'), ('85', 'TOS'), ('86.1_m', 'TOS'), ('86.32', 'TOS'), ('87', 'TOS')]
+  Pistoiese (San Marcello): 9 aree entro 600 m: [('34.32', 'TOS'), ('41.17', 'TOS'), ('41.9', 'TOS'), ('85', 'TOS'), ('86.1_m', 'TOS')]
+  Pizzorne (S. Bartolomeo): 2 aree entro 600 m: [('41.9', 'TOS'), ('42.G_n', 'TOS')]
+maxRecordCount: 2000 capabilities: Query,Map,Data supportsPagination: True
 
-=== Regione Toscana, uso e copertura del suolo
-livelli: ['WMS', 'rt_ucs', 'rt_ucs.must250m.rt.2013.all', 'rt_ucs.must250m.rt.2010.all', 'rt_ucs.must250m.rt.2007.all', 'rt_ucs.grid250m.rt', 'rt_ucs.grid1km.rt', 'rt_ucs.iducs.10k.2019.rt.full', 'rt_ucs.iducs.10k.2019.rt.labelonly', 'rt_ucs.iducs.10k.2016.rt.full', 'rt_ucs.iducs.10k.2016.rt.labelonly', 'rt_ucs.iducs.10k.2013.rt.full', 'rt_ucs.iducs.10k.2013.rt.labelonly', 'rt_ucs.iducs.10k.2010.rt.full', 'rt_ucs.iducs.10k.2010.rt.labelonly', 'rt_ucs.iducs.10k.2007.rt.full', 'rt_ucs.iducs.10k.2007.rt.labelonly', 'rt_ucs.iducs.10k.2019-1954.rt', 'rt_ucs.iducs.10k.2019-1954.rt.labelonly', 'rt_ucs.iducs.10k.diff.2019-1954.rt', 'rt_ucs.iducs.10k.diff.2019-1954.rt.labelonly', 'rt_ucs.idift.rt.all', 'rt_ucs.idift.rt', 'rt_ucs.idift.rt.1', 'rt_ucs.idift.rt.10', 'rt_ucs.idift.rt.101', 'rt_ucs.idift.rt.102', 'rt_ucs.idift.rt.103', 'rt_ucs.idift.rt.104', 'rt_ucs.idift.rt.105', 'rt_ucs.idift.rt.106', 'rt_ucs.idift.rt.107', 'rt_ucs.idift.rt.2', 'rt_ucs.idift.rt.20', 'rt_ucs.idift.rt.201', 'rt_ucs.idift.rt.202', 'rt_ucs.idift.rt.203', 'rt_ucs.idift.rt.204', 'rt_ucs.idift.rt.205', 'rt_ucs.idift.rt.206', 'rt_ucs.idift.rt.207', 'rt_ucs.idift.rt.208', 'rt_ucs.idift.rt.3', 'rt_ucs.idift.rt.30', 'rt_ucs.idift.rt.301', 'rt_ucs.idift.rt.302', 'rt_ucs.idift.rt.303', 'rt_ucs.idift.rt.304', 'rt_ucs.idift.rt.305', 'rt_ucs.idift.rt.306', 'rt_ucs.idift.rt.307', 'rt_ucs.idift.rt.308', 'rt_ucs.idift.rt.309', 'rt_ucs.idift.rt.31', 'rt_ucs.idift.rt.310', 'rt_ucs.idift.rt.311', 'rt_ucs.idift.rt.4', 'rt_ucs.idift.rt.40', 'rt_ucs.idift.rt.401', 'rt_ucs.idift.rt.5', 'rt_ucs.idift.rt.50', 'rt_ucs.idift.rt.501', 'rt_ucs.idift.rt.502', 'rt_ucs.idift.rt.503', 'rt_ucs.idift.rt.504', 'rt_ucs.idift.rt.505', 'rt_ucs.idift.rt.506', 'rt_ucs.idift.rt.507', 'rt_ucs.idift.rt.508', 'rt_ucs.idift.rt.509', 'rt_ucs.idift.rt.51', 'rt_ucs.idift.rt.510', 'rt_ucs.idift.rt.511', 'rt_ucs.idift.rt.512', 'rt_ucs.idift.rt.513', 'rt_ucs.idift.rt.514', 'rt_ucs.idift.rt.515', 'rt_ucs.idift.rt.516', 'rt_ucs.idift.rt.517', 'rt_ucs.idift.rt.518', 'rt_ucs.idift.rt.519', 'rt_ucs.idift.rt.52', 'rt_ucs.idift.rt.520', 'rt_ucs.idift.rt.521', 'rt_ucs.idift.rt.522', 'rt_ucs.idift.rt.523', 'rt_ucs.idift.rt.524', 'rt_ucs.idift.rt.525', 'rt_ucs.idift.rt.526', 'rt_ucs.idift.rt.527', 'rt_ucs.idift.rt.528', 'rt_ucs.idift.rt.529', 'rt_ucs.idift.rt.6', 'rt_ucs.idift.rt.60', 'rt_ucs.idift.rt.601', 'rt_ucs.idift.rt.602', 'rt_ucs.idift.rt.603', 'rt_ucs.idift.rt.604', 'rt_ucs.idift.rt.605', 'rt_ucs.idift.rt.606', 'rt_ucs.idift.rt.7', 'rt_ucs.idift.rt.70', 'rt_ucs.idift.rt.701', 'rt_ucs.idift.rt.702', 'rt_ucs.idift.rt.703', 'rt_ucs.idift.rt.8', 'rt_ucs.idift.rt.80', 'rt_ucs.idift.rt.801', 'rt_ucs.idift.rt.9', 'rt_ucs.idift.rt.99', 'rt_ucs.idift.rt.999', 'rt_ucs.idvegfor.rt', 'rt_ucs.idvegfor.rt.1', 'rt_ucs.idvegfor.rt.2', 'rt_ucs.idvegfor.rt.3', 'rt_ucs.idvegfor.rt.4', 'rt_ucs.idvegfor.rt.5', 'rt_ucs.idvegfor.rt.6', 'rt_ucs.idvegfor.rt.7', 'rt_ucs.idvegfor.rt.8', 'rt_ucs.idvegfor.rt.9', 'rt_ucs.idvegfor.rt.10', 'rt_ucs.idvegfor.rt.11', 'rt_ucs.idvegfor.rt.12', 'rt_ucs.idvegfor.rt.13', 'rt_ucs.idvegfor.rt.14', 'rt_ucs.idvegfor.rt.15', 'rt_ucs.idvegfor.rt.16', 'rt_ucs.idvegfor.rt.17', 'rt_ucs.idvegfor.rt.18', 'rt_ucs.iducsrtppc.rt.1954', 'rt_ucs.iducsrtppc.rt.1954.111', 'rt_ucs.iducsrtppc.rt.1954.112', 'rt_ucs.iducsrtppc.rt.1954.1121', 'rt_ucs.iducsrtppc.rt.1954.121', 'rt_ucs.iducsrtppc.rt.1954.122', 'rt_ucs.iducsrtppc.rt.1954.123', 'rt_ucs.iducsrtppc.rt.1954.124', 'rt_ucs.iducsrtppc.rt.1954.131', 'rt_ucs.iducsrtppc.rt.1954.132', 'rt_ucs.iducsrtppc.rt.1954.133', 'rt_ucs.iducsrtppc.rt.1954.141', 'rt_ucs.iducsrtppc.rt.1954.142', 'rt_ucs.iducsrtppc.rt.1978', 'rt_ucs.iducsrtppc.rt.1978.111', 'rt_ucs.iducsrtppc.rt.1978.112', 'rt_ucs.iducsrtppc.rt.1978.1121', 'rt_ucs.iducsrtppc.rt.1978.121', 'rt_ucs.iducsrtppc.rt.1978.122', 'rt_ucs.iducsrtppc.rt.1978.123', 'rt_ucs.iducsrtppc.rt.1978.124', 'rt_ucs.iducsrtppc.rt.1978.131', 'rt_ucs.iducsrtppc.rt.1978.132', 'rt_ucs.iducsrtppc.rt.1978.133', 'rt_ucs.iducsrtppc.rt.1978.141', 'rt_ucs.iducsrtppc.rt.1978.142', 'rt_ucs.iducsrtppc.rt.1988', 'rt_ucs.iducsrtppc.rt.1988.111', 'rt_ucs.iducsrtppc.rt.1988.112', 'rt_ucs.iducsrtppc.rt.1988.1121', 'rt_ucs.iducsrtppc.rt.1988.121', 'rt_ucs.iducsrtppc.rt.1988.122', 'rt_ucs.iducsrtppc.rt.1988.123', 'rt_ucs.iducsrtppc.rt.1988.124', 'rt_ucs.iducsrtppc.rt.1988.131', 'rt_ucs.iducsrtppc.rt.1988.132', 'rt_ucs.iducsrtppc.rt.1988.133', 'rt_ucs.iducsrtppc.rt.1988.141', 'rt_ucs.iducsrtppc.rt.1988.142', 'rt_ucs.iducsrtppc.rt.1996', 'rt_ucs.iducsrtppc.rt.1996.111', 'rt_ucs.iducsrtppc.rt.1996.112', 'rt_ucs.iducsrtppc.rt.1996.1121', 'rt_ucs.iducsrtppc.rt.1996.121', 'rt_ucs.iducsrtppc.rt.1996.122', 'rt_ucs.iducsrtppc.rt.1996.123', 'rt_ucs.iducsrtppc.rt.1996.124', 'rt_ucs.iducsrtppc.rt.1996.131', 'rt_ucs.iducsrtppc.rt.1996.132', 'rt_ucs.iducsrtppc.rt.1996.133', 'rt_ucs.iducsrtppc.rt.1996.141', 'rt_ucs.iducsrtppc.rt.1996.142', 'rt_ucs.iducsrtppc.rt.2007', 'rt_ucs.iducsrtppc.rt.2007.111', 'rt_ucs.iducsrtppc.rt.2007.112', 'rt_ucs.iducsrtppc.rt.2007.1121', 'rt_ucs.iducsrtppc.rt.2007.121', 'rt_ucs.iducsrtppc.rt.2007.122', 'rt_ucs.iducsrtppc.rt.2007.123', 'rt_ucs.iducsrtppc.rt.2007.124', 'rt_ucs.iducsrtppc.rt.2007.131', 'rt_ucs.iducsrtppc.rt.2007.132', 'rt_ucs.iducsrtppc.rt.2007.133', 'rt_ucs.iducsrtppc.rt.2007.141', 'rt_ucs.iducsrtppc.rt.2007.142', 'rt_ucs.iducs.25k.1978.rt', 'classify', 'rt_ucs.iducs.25k.1978.rt.labelonly', 'rt_ucs.iducs.25k.1978.rt.aree_in_abbandono', 'rt_ucs.iducs.25k.1978.rt.copertura_densa', 'rt_ucs.iducs.25k.1978.rt.copertura_rada', 'rt_ucs.iducs.25k.1978.rt.copertura_degradata_o_aperta', 'rt_ucs.iducs.10k.aree_artif.2019.rt', 'rt_ucs.iducs.10k.aree_artif_camb.2019.rt', 'rt_ucs.iducs.10k.sist_iav_multi.2020.rt', 'rt_ucs.iducs.10k.sist_iav_grid.2020.rt', 'rt_ucs.tus-can.aggettivato.lucca.rt', 'classify', 'rt_ucs.tus-can.aggettivato.prato.rt', 'classify', 'rt_ucs.tus-can.class-sup.lucca.rt', 'rt_ucs.tus-can.class-sup.prato.rt', 'rt_ucs.tus-can.mat-artif.lucca.rt', 'rt_ucs.tus-can.mat-artif.prato.rt', 'rt_ucs.infc2005_nazionale_toscana', 'classify_1', 'rt_ucs.infc2005_nazionale_toscana.celle']
-formati GetFeatureInfo: ['text/gml', 'text/html', 'text/plain']
-  rt_ucs.iducs.10k.2019.rt.full @ S. Bartolomeo in Pizzorna: GetFeatureInfo results: Search returned no results. 
-  rt_ucs.iducs.10k.2019.rt.full @ Pizzorne 1 km O: GetFeatureInfo results: Layer 'rt_ucs.iducs.10k.2019.rt.full' Feature 2: msFID = '152449' pk_uid = '152449' codreg = '09' siglareg = 'RT' regione = 'TOSCANA' codprov = '046' siglaprov = 'LU' codistat = '046034' comune = 'VILLA BASILICA' areacom = '' areaprv = '' areareg = '' ucs2007 = '311' des2007 = 'Boschi di latifoglie' lv1_07 = '3' lv2_07 = '31' lv3_07 = '311' ucs2010 = '311' des2010 = 'Boschi di latifoglie' lv1_10 = '3' lv2_10 = '31' lv3_10 = '311' ucs2013 = '311' des2013 = 'Boschi di latifoglie' lv1_13 = '3' lv2_13 = '31' lv3_13 = '311' ucs2016 = '311' des2016 = 'Boschi di latifoglie' lv
-  rt_ucs.iducs.10k.2019.rt.full @ Pizzorne 1 km N: GetFeatureInfo results: Layer 'rt_ucs.iducs.10k.2019.rt.full' Feature 2: msFID = '150324' pk_uid = '150324' codreg = '09' siglareg = 'RT' regione = 'TOSCANA' codprov = '046' siglaprov = 'LU' codistat = '046034' comune = 'VILLA BASILICA' areacom = '' areaprv = '' areareg = '' ucs2007 = '311' des2007 = 'Boschi di latifoglie' lv1_07 = '3' lv2_07 = '31' lv3_07 = '311' ucs2010 = '311' des2010 = 'Boschi di latifoglie' lv1_10 = '3' lv2_10 = '31' lv3_10 = '311' ucs2013 = '311' des2013 = 'Boschi di latifoglie' lv1_13 = '3' lv2_13 = '31' lv3_13 = '311' ucs2016 = '311' des2016 = 'Boschi di latifoglie' lv
-  rt_ucs.iducs.10k.2019-1954.rt @ S. Bartolomeo in Pizzorna: <?xml version='1.0' encoding="UTF-8" standalone="no" ?> <!DOCTYPE ServiceExceptionReport SYSTEM "http://schemas.opengis.net/wms/1.1.1/exception_1_1_1.dtd"> <ServiceExceptionReport version="1.1.1"> <ServiceException code="LayerNotDefined"> msWMSLoadGetMapParams(): WMS server error. Invalid layer(s) given in the LAYERS parameter. A layer might be disabled for this request. Check wms/ows_enable_request settings. </ServiceException> </ServiceExceptionReport> 
-  rt_ucs.iducs.10k.2019-1954.rt @ Pizzorne 1 km O: <?xml version='1.0' encoding="UTF-8" standalone="no" ?> <!DOCTYPE ServiceExceptionReport SYSTEM "http://schemas.opengis.net/wms/1.1.1/exception_1_1_1.dtd"> <ServiceExceptionReport version="1.1.1"> <ServiceException code="LayerNotDefined"> msWMSLoadGetMapParams(): WMS server error. Invalid layer(s) given in the LAYERS parameter. A layer might be disabled for this request. Check wms/ows_enable_request settings. </ServiceException> </ServiceExceptionReport> 
-  rt_ucs.iducs.10k.2019-1954.rt @ Pizzorne 1 km N: <?xml version='1.0' encoding="UTF-8" standalone="no" ?> <!DOCTYPE ServiceExceptionReport SYSTEM "http://schemas.opengis.net/wms/1.1.1/exception_1_1_1.dtd"> <ServiceExceptionReport version="1.1.1"> <ServiceException code="LayerNotDefined"> msWMSLoadGetMapParams(): WMS server error. Invalid layer(s) given in the LAYERS parameter. A layer might be disabled for this request. Check wms/ows_enable_request settings. </ServiceException> </ServiceExceptionReport> 
-download citati: []
-servizi citati: []
+=== Regione Toscana, livello idift
+   rt_ucs.idift.rt.all = IFT layer unico
+   rt_ucs.idift.rt = IFT rev.- Codice 
+   rt_ucs.idift.rt.1 = IFT rev.- Codice 1
+   rt_ucs.idift.rt.10 = IFT rev.- Codice 10
+   rt_ucs.idift.rt.101 = IFT rev.- Codice 101
+   rt_ucs.idift.rt.102 = IFT rev.- Codice 102
+   rt_ucs.idift.rt.103 = IFT rev.- Codice 103
+   rt_ucs.idift.rt.104 = IFT rev.- Codice 104
+   rt_ucs.idift.rt.105 = IFT rev.- Codice 105
+   rt_ucs.idift.rt.106 = IFT rev.- Codice 106
+   rt_ucs.idift.rt.107 = IFT rev.- Codice 107
+   rt_ucs.idift.rt.2 = IFT rev.- Codice 2
+   rt_ucs.idift.rt.20 = IFT rev.- Codice 20
+   rt_ucs.idift.rt.201 = IFT rev.- Codice 201
+   rt_ucs.idift.rt.202 = IFT rev.- Codice 202
+   rt_ucs.idift.rt.203 = IFT rev.- Codice 203
+   rt_ucs.idift.rt.204 = IFT rev.- Codice 204
+   rt_ucs.idift.rt.205 = IFT rev.- Codice 205
+   rt_ucs.idift.rt.206 = IFT rev.- Codice 206
+   rt_ucs.idift.rt.207 = IFT rev.- Codice 207
+   rt_ucs.idift.rt.208 = IFT rev.- Codice 208
+   rt_ucs.idift.rt.3 = IFT rev.- Codice 3
+   rt_ucs.idift.rt.30 = IFT rev.- Codice 30
+   rt_ucs.idift.rt.301 = IFT rev.- Codice 301
+   rt_ucs.idift.rt.302 = IFT rev.- Codice 302
+   rt_ucs.idift.rt.303 = IFT rev.- Codice 303
+   rt_ucs.idift.rt.304 = IFT rev.- Codice 304
+   rt_ucs.idift.rt.305 = IFT rev.- Codice 305
+   rt_ucs.idift.rt.306 = IFT rev.- Codice 306
+   rt_ucs.idift.rt.307 = IFT rev.- Codice 307
+   rt_ucs.idift.rt.308 = IFT rev.- Codice 308
+   rt_ucs.idift.rt.309 = IFT rev.- Codice 309
+   rt_ucs.idift.rt.31 = IFT rev.- Codice 31
+   rt_ucs.idift.rt.310 = IFT rev.- Codice 310
+   rt_ucs.idift.rt.311 = IFT rev.- Codice 311
+   rt_ucs.idift.rt.4 = IFT rev.- Codice 4
+   rt_ucs.idift.rt.40 = IFT rev.- Codice 40
+   rt_ucs.idift.rt.401 = IFT rev.- Codice 401
+   rt_ucs.idift.rt.5 = IFT rev.- Codice 5
+   rt_ucs.idift.rt.50 = IFT rev.- Codice 50
+   rt_ucs.idift.rt.501 = IFT rev.- Codice 501
+   rt_ucs.idift.rt.502 = IFT rev.- Codice 502
+   rt_ucs.idift.rt.503 = IFT rev.- Codice 503
+   rt_ucs.idift.rt.504 = IFT rev.- Codice 504
+   rt_ucs.idift.rt.505 = IFT rev.- Codice 505
+   rt_ucs.idift.rt.506 = IFT rev.- Codice 506
+   rt_ucs.idift.rt.507 = IFT rev.- Codice 507
+   rt_ucs.idift.rt.508 = IFT rev.- Codice 508
+   rt_ucs.idift.rt.509 = IFT rev.- Codice 509
+   rt_ucs.idift.rt.51 = IFT rev.- Codice 51
+   rt_ucs.idift.rt.510 = IFT rev.- Codice 510
+   rt_ucs.idift.rt.511 = IFT rev.- Codice 511
+   rt_ucs.idift.rt.512 = IFT rev.- Codice 512
+   rt_ucs.idift.rt.513 = IFT rev.- Codice 513
+   rt_ucs.idift.rt.514 = IFT rev.- Codice 514
+   rt_ucs.idift.rt.515 = IFT rev.- Codice 515
+   rt_ucs.idift.rt.516 = IFT rev.- Codice 516
+   rt_ucs.idift.rt.517 = IFT rev.- Codice 517
+   rt_ucs.idift.rt.518 = IFT rev.- Codice 518
+   rt_ucs.idift.rt.519 = IFT rev.- Codice 519
+   rt_ucs.idift.rt.52 = IFT rev.- Codice 52
+   rt_ucs.idift.rt.520 = IFT rev.- Codice 520
+   rt_ucs.idift.rt.521 = IFT rev.- Codice 521
+   rt_ucs.idift.rt.522 = IFT rev.- Codice 522
+   rt_ucs.idift.rt.523 = IFT rev.- Codice 523
+   rt_ucs.idift.rt.524 = IFT rev.- Codice 524
+   rt_ucs.idift.rt.525 = IFT rev.- Codice 525
+   rt_ucs.idift.rt.526 = IFT rev.- Codice 526
+   rt_ucs.idift.rt.527 = IFT rev.- Codice 527
+   rt_ucs.idift.rt.528 = IFT rev.- Codice 528
+   rt_ucs.idift.rt.529 = IFT rev.- Codice 529
+   rt_ucs.idift.rt.6 = IFT rev.- Codice 6
+   rt_ucs.idift.rt.60 = IFT rev.- Codice 60
+   rt_ucs.idift.rt.601 = IFT rev.- Codice 601
+   rt_ucs.idift.rt.602 = IFT rev.- Codice 602
+   rt_ucs.idift.rt.603 = IFT rev.- Codice 603
+   rt_ucs.idift.rt.604 = IFT rev.- Codice 604
+   rt_ucs.idift.rt.605 = IFT rev.- Codice 605
+   rt_ucs.idift.rt.606 = IFT rev.- Codice 606
+   rt_ucs.idift.rt.7 = IFT rev.- Codice 7
+   rt_ucs.idift.rt.70 = IFT rev.- Codice 70
+   rt_ucs.idift.rt.701 = IFT rev.- Codice 701
+   rt_ucs.idift.rt.702 = IFT rev.- Codice 702
+   rt_ucs.idift.rt.703 = IFT rev.- Codice 703
+   rt_ucs.idift.rt.8 = IFT rev.- Codice 8
+   rt_ucs.idift.rt.80 = IFT rev.- Codice 80
+   rt_ucs.idift.rt.801 = IFT rev.- Codice 801
+   rt_ucs.idift.rt.9 = IFT rev.- Codice 9
+   rt_ucs.idift.rt.99 = IFT rev.- Codice 99
+   rt_ucs.idift.rt.999 = IFT rev.- Codice 999
+   descrizione: ['Inventario Forestale della Toscana. Prima fotointerpretazione 1978 integrata con rilievi a terra tramite indagine speditiva nei primi anni &#39;90. Archivio di tipo &#39;raster&#39; consistente in una griglia con maglia quadrata di 400 metri di lato. In ciascuna maglia della griglia sono riportate informazioni geomorfologiche quali quota, pendenza, esposizione, intensita&#39; di rilievo, uso del suolo e attributi relativi alla copertura arborea.']
+  idift @ S. Bartolomeo: GetFeatureInfo results: Layer 'rt_ucs.idift.rt.all' Feature 25723: AREA = '160002.34375' PERIMETER = '1600.01172' IFT_1C_ = '25724' IFT_1C_ID = '0' GID = '25717' MATRIX = '191732' QUOTA = '904' PEND = '12' ESPOSIZ = '150' INTENSIT = '155' USOSUO = '41222' GRADOCOP = '3' CODICE = '502' COMPSPE1 = '251' COMPSPE2 = '0' COMPSPE3 = '0' COPERTU1 = '100' COPERTU2 = '0' COPERTU3 = '0' COPCOMPL = '90' CATARBOSC = '1' COLTSTRU = '16' X_COORD = '1628750' Y_COORD = '4867020' CATFOR = 'Castagneti' CATFOR_AG = 'Castagno' TIPO = 'Bosco puro' CONIF_LAT = 'latifoglie' COLT_AGGR = 'Ceduo' SPECFOR_1 = 'Castagno' SPECFOR_2 = '-' SPECFOR_3 = '-' CODPROV = '046' CODCOM = '046034' NOME = 'VILLA BASILICA' UCS = 'Boschi a prevalenza di Castagno' 
+  idift @ Pizzorne 1 km O: GetFeatureInfo results: Layer 'rt_ucs.idift.rt.all' Feature 25714: AREA = '160003.90626' PERIMETER = '1600.01953' IFT_1C_ = '25715' IFT_1C_ID = '0' GID = '25715' MATRIX = '191730' QUOTA = '916' PEND = '27' ESPOSIZ = '222' INTENSIT = '218' USOSUO = '41222' GRADOCOP = '3' CODICE = '502' COMPSPE1 = '251' COMPSPE2 = '0' COMPSPE3 = '0' COPERTU1 = '100' COPERTU2 = '0' COPERTU3 = '0' COPCOMPL = '90' CATARBOSC = '1' COLTSTRU = '16' X_COORD = '1627950' Y_COORD = '4867020' CATFOR = 'Castagneti' CATFOR_AG = 'Castagno' TIPO = 'Bosco puro' CONIF_LAT = 'latifoglie' COLT_AGGR = 'Ceduo' SPECFOR_1 = 'Castagno' SPECFOR_2 = '-' SPECFOR_3 = '-' CODPROV = '046' CODCOM = '046034' NOME = 'VILLA BASILICA' UCS = 'Boschi a prevalenza di Castagno' 
