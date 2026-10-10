@@ -38,5 +38,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add docs/terreno/s docs/terreno/sentieri.json
           git commit -q -m "Sentieri e accessi al bosco: tessere calcolate" || exit 0
-          for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null; sleep 10; done
+          for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null || true; sleep 10; done
           exit 1
