@@ -248,19 +248,22 @@ function boscoCella(c){
     boschiPerCella=new Map();
     for (const f of forest){
       const k=Math.round((f.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((f.lon-GRIGLIA.lon0)/GRIGLIA.dlon);
-      let m=boschiPerCella.get(k); if (!m) boschiPerCella.set(k, m={});
-      m[f.bosco]=(m[f.bosco]||0)+1;
+      let m=boschiPerCella.get(k); if (!m) boschiPerCella.set(k, m={n:0, alberi:{}});
+      m.n++;
+      for (const [g,q] of Object.entries(f.miscela||{[f.bosco]:1})) m.alberi[g]=(m.alberi[g]||0)+q;
     }
   }
   const m=boschiPerCella.get(Math.round((c.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((c.lon-GRIGLIA.lon0)/GRIGLIA.dlon));
-  if (!m) return {bosco:tipoStimato(c.lat,c.lon,c.elev), boscoDa:"stima"};
-  const [tipo,n]=Object.entries(m).sort((a,b)=>b[1]-a[1])[0], tot=Object.values(m).reduce((a,b)=>a+b,0);
-  return {bosco:tipo, boscoDa:"carta", boscoQuota:Math.round(100*n/tot)};
+  if (!m) return {bosco:tipoStimato(c.lat,c.lon,c.elev), boscoDa:"stima", miscela:null};
+  // media delle maglie di bosco della cella: tengo i 3 gruppi principali sopra il 10%
+  let al=Object.entries(m.alberi).map(([g,q])=>[g,q/m.n]).sort((a,b)=>b[1]-a[1]).slice(0,3).filter(([,q])=>q>=.1);
+  const t=al.reduce((a,[,q])=>a+q,0), miscela=Object.fromEntries(al.map(([g,q])=>[g,q/t]));
+  return {bosco:tipoPrincipale(miscela), boscoDa:"carta", miscela, boscoMaglie:m.n};
 }
 function scoreCell(c){
   if (!c.days || !dayDates.length){ c.scores=null; return; }
   c.scores={};
-  c.scores.porcino=dayDates.map((_,k)=>valutaPorcino(c.days,startIdx+k,c.elev,c.bosco));
+  c.scores.porcino=dayDates.map((_,k)=>valutaPorcino(c.days,startIdx+k,c.elev,c.miscela||c.bosco));
 }
 function cellScore(c, spId, day){
   if (!c.scores) return null;
@@ -296,10 +299,14 @@ function caricaBoschi(){
 let tipiCaricati=false;
 async function caricaTipi(){
   if (tipiCaricati) return; tipiCaricati=true;
-  let T=null; try{ T=await (await fetch("dati/tipi_bosco.json")).json(); }catch(e){ return; }
+  let T=null, M=null;
+  try{ [T,M]=await Promise.all([fetch("dati/tipi_bosco.json").then(r=>r.json()), fetch("dati/boschi_misti.json").then(r=>r.json()).catch(()=>null)]); }catch(e){ return; }
   forest.forEach(fc=>{
     const R=Math.floor((fc.lat-T.lat0)/T.dlat), C=Math.floor((fc.lon-T.lon0)/T.dlon), ch=T.righe_dati[R]&&T.righe_dati[R][C], k=ch?parseInt(ch,16):0;
     if (k){ fc.bosco=TIPI[k-1]; fc.ispra=true; }
+    // boschi misti: alberi in proporzione (Carta degli Habitat, Corine e satellite), stessa griglia
+    const m=M && M.righe_dati[R] ? miscelaDaHex(M.righe_dati[R].substr(C*6,6)) : null;
+    if (m){ fc.miscela=m; fc.bosco=tipoPrincipale(m); fc.ispra=true; }
   });
   boschiPerCella=null;
 }
@@ -308,7 +315,7 @@ function rettangolo(fc){
   fc.rect=L.rectangle([[fc.lat-D.dlat/2,fc.lon-D.dlon/2],[fc.lat+D.dlat/2,fc.lon+D.dlon/2]],
     {stroke:false, fillColor:COL[0], fillOpacity:.3, renderer:forestRenderer});
   fc.rect.bindTooltip(()=>{ const s=cellScore(fc,state.sp,state.day);
-    return `${s? s.i+" · ":""}${fc.elev} m · ${BOSCHI[fc.bosco]}`; },{className:"cell-tip", sticky:true});
+    return `${s? s.i+" · ":""}${fc.elev} m · ${fc.miscela? testoMiscela(fc.miscela) : BOSCHI[fc.bosco]}`; },{className:"cell-tip", sticky:true});
   fc.rect.on("click",()=>select(fc));
   forestLayer.addLayer(fc.rect);
 }
@@ -319,7 +326,7 @@ function rettangolo(fc){
 const GRIGLIA={lat0:43.72, dlat:0.05, lon0:10.05, dlon:0.07};
 let cacheIndice=new Map(), cellaDa=null;
 function indiceCella(c, q, bosco){
-  const key=c.lat+"|"+c.lon+"|"+q+"|"+bosco;
+  const key=c.lat+"|"+c.lon+"|"+q+"|"+(bosco&&typeof bosco==="object" ? JSON.stringify(bosco) : bosco);
   let r=cacheIndice.get(key);
   if (!r){
     const dt=(c.elev-q)*0.0065;
@@ -333,12 +340,12 @@ function attachWeather(fc){
   let best=null, bd=1e9;
   for (const c of cells){ const d=(c.lat-fc.lat)**2+((c.lon-fc.lon)*.72)**2; if (d<bd){bd=d; best=c;} }
   if (!best || bd>0.0064){ fc.scores=null; return; }
-  const q=Math.round(fc.elev/50)*50, r=indiceCella(best, q, fc.bosco);
+  const q=Math.round(fc.elev/50)*50, r=indiceCella(best, q, fc.miscela||fc.bosco);
   if (!cellaDa) cellaDa=new Map(cells.map(c=>[Math.round((c.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((c.lon-GRIGLIA.lon0)/GRIGLIA.dlon), c]));
   const fi=(fc.lat-GRIGLIA.lat0)/GRIGLIA.dlat, fj=(fc.lon-GRIGLIA.lon0)/GRIGLIA.dlon, i0=Math.floor(fi), j0=Math.floor(fj), ty=fi-i0, tx=fj-j0;
   const parti=[];
   for (const [di,dj,w] of [[0,0,(1-ty)*(1-tx)],[0,1,(1-ty)*tx],[1,0,ty*(1-tx)],[1,1,ty*tx]]){
-    const c=cellaDa.get((i0+di)+","+(j0+dj)); if (c && w>0) parti.push([w, indiceCella(c, q, fc.bosco)]);   // celle di mare escluse
+    const c=cellaDa.get((i0+di)+","+(j0+dj)); if (c && w>0) parti.push([w, indiceCella(c, q, fc.miscela||fc.bosco)]);   // celle di mare escluse
   }
   const W=parti.reduce((s,[w])=>s+w,0);
   fc.wc=best; fc.days=r.days;
@@ -489,7 +496,7 @@ function renderTop(){
   arr.forEach(({c,s})=>{
     const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
     btn.innerHTML=`<span class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</span>
-      <span class="where"><b>${c.elev} m · ${BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E</small></span>
+      <span class="where"><b>${c.elev} m · ${c.miscela? testoMiscela(c.miscela) : BOSCHI[c.bosco]}</b><small>${c.lat.toFixed(3)} N, ${c.lon.toFixed(3)} E</small></span>
       <span class="freccia" aria-hidden="true">›</span>`;
     btn.onclick=()=>select(c,true); li.appendChild(btn); ul.appendChild(li);
   });
@@ -516,7 +523,7 @@ let ppAperto=null;
 function popupPieno(){
   const c=state.sel; if (!c) return;
   const P=state.punto||{lat:c.lat,lon:c.lon};
-  let h=`<div class="pp"><b>${c.forest?"Bosco · ":""}${c.elev} m · ${BOSCHI[c.bosco]}</b><span class="pp-m">${dayDates.length?fmtDay(dayDates[state.day]):""}</span>`;
+  let h=`<div class="pp"><b>${c.forest?"Bosco · ":""}${c.elev} m · ${c.miscela? testoMiscela(c.miscela) : BOSCHI[c.bosco]}</b><span class="pp-m">${dayDates.length?fmtDay(dayDates[state.day]):""}</span>`;
   if (c.scores){ const s=c.scores.porcino[state.day]; h+=`<div class="pp-r"><span>Indice di buttata · ${LAB[band(s.i)]}${s.specie?`<br><small class="pp-m">più probabile: ${NOME_SPECIE[s.specie].toLowerCase()}</small>`:""}</span><b class="score${chiaro(band(s.i))}" style="background:${COL[band(s.i)]}">${s.i}</b></div>`; }
   else h+=`<span class="pp-m">Il meteo di questa zona è ancora in arrivo.</span>`;
   h+=portamiQui(P.lat,P.lon)+`<button type="button" class="btn pp-det">Tutti i dettagli</button></div>`;
@@ -544,10 +551,11 @@ function renderDetail(){
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
   { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<div class="meta" style="margin:0">${portamiQui(P.lat,P.lon)}<span>Al punto toccato; in auto fino alla strada più vicina.</span></div>`; }
-  if (!c.forest) html+=`<p class="meta">Cella meteo di circa 5 km · ${c.boscoDa==="carta"?`bosco che prevale nella cella secondo le carte ISPRA (${c.boscoQuota}% delle maglie di bosco)`:"nessuna maglia di bosco nella cella: tipo stimato dalla quota"}. Avvicinati per vedere ogni bosco.</p>`;
-  if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${c.ispra?"tipo di bosco dalle carte ISPRA (Carta degli Habitat, Corine)":CLS_TXT[c.cls]}${c.wc?` · indice dalle celle meteo intorno pesate per distanza (la più vicina a ${c.wc.elev} m), temperature corrette per la quota`:""}</p>`;
+  if (!c.forest) html+=`<p class="meta">Cella meteo di circa 5 km · ${c.boscoDa==="carta"?`alberi: media delle ${c.boscoMaglie} maglie di bosco della cella`:"nessuna maglia di bosco nella cella: tipo stimato dalla quota"}. Avvicinati per vedere ogni bosco.</p>`;
+  if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${c.ispra?"alberi dalle carte ISPRA (Carta degli Habitat, Corine) e dal satellite":CLS_TXT[c.cls]}${c.wc?` · indice dalle celle meteo intorno pesate per distanza (la più vicina a ${c.wc.elev} m), temperature corrette per la quota`:""}</p>`;
   html+=`<p class="meta"><a href="bosco.html#${c.lat.toFixed(4)},${c.lon.toFixed(4)},15" style="color:var(--accent);font-weight:600">Guarda questa zona a 20 m</a> · dove conviene dentro il bosco</p>`;
-  html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;
+  if (c.miscela) html+=`<p class="meta"><b>Alberi:</b> ${testoMiscela(c.miscela)}</p>`;
+  html+=`<label class="meta">${c.miscela?"Prova un altro tipo di bosco":"Tipo di bosco"} <select id="boscoSel">${opts}</select></label>`;
   if (!c.scores) html+=`<p class="meta">Il meteo di questa zona è ancora in arrivo.</p>`;
   else SPECIE.forEach(sp=>{
     const s=c.scores[sp.id][state.day];
@@ -577,7 +585,7 @@ function renderDetail(){
   box.innerHTML=html; box.hidden=false;
   document.getElementById("diarioForm").onsubmit=e=>{ e.preventDefault(); salvaUscita(c); };
   document.getElementById("closeDet").onclick=()=>{ state.sel=null; if (selMarker){map.removeLayer(selMarker); selMarker=null;} renderDetail(); };
-  document.getElementById("boscoSel").onchange=e=>{ c.bosco=e.target.value;
+  document.getElementById("boscoSel").onchange=e=>{ c.bosco=e.target.value; c.miscela=null;
     if (c.forest) attachWeather(c); else scoreCell(c);
     render(); };
 }

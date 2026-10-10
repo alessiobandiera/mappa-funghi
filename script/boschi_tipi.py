@@ -69,7 +69,7 @@ if os.path.exists(HAB):
         for est, _ in anelli(f["geometry"]):
             habitat.append((area(est), t, est, []))
     habitat.sort(key=lambda t: -t[0])
-    print("poligoni Carta degli Habitat usati:", len(habitat))
+POLIGONI_CLC, POLIGONI_HAB = list(poligoni), habitat      # usati anche da script/boschi_misti.py
 poligoni += habitat
 
 
@@ -85,32 +85,38 @@ def disegna(W, H, a_pixel):
     return im
 
 
-# ---- tessere a 20 m
-IDX = json.load(open("docs/terreno/tessere.json"))
-os.makedirs("docs/terreno/f", exist_ok=True)
-tot = Counter()
-for t in IDX["tessere"]:
-    W, H = t["colonne"], t["righe"]
-    im = disegna(W, H, lambda lo, la: ((lo - t["ovest"]) / IDX["dlon"], (t["nord"] - la) / IDX["dlat"]))
-    im.save(f"docs/terreno/f/{t['id']}.png", optimize=True)
-    tot.update(im.getdata())
-print("tessere:", len(IDX["tessere"]), "pixel per tipo:", {(NOMI[k - 1] if k else "nessuno"): v for k, v in tot.most_common()})
+def main():
+    print("poligoni Corine:", len(POLIGONI_CLC), "Carta degli Habitat:", len(POLIGONI_HAB))
+    # ---- tessere a 20 m
+    IDX = json.load(open("docs/terreno/tessere.json"))
+    os.makedirs("docs/terreno/f", exist_ok=True)
+    tot = Counter()
+    for t in IDX["tessere"]:
+        W, H = t["colonne"], t["righe"]
+        im = disegna(W, H, lambda lo, la: ((lo - t["ovest"]) / IDX["dlon"], (t["nord"] - la) / IDX["dlat"]))
+        im.save(f"docs/terreno/f/{t['id']}.png", optimize=True)
+        tot.update(im.getdata())
+    print("tessere:", len(IDX["tessere"]), "pixel per tipo:", {(NOMI[k - 1] if k else "nessuno"): v for k, v in tot.most_common()})
 
-# ---- maglie da 600 m della mappa principale (griglia di BOSCHI_DATI in index.html), 10 x 10 campioni per maglia
-B = dict(lat0=43.7, lon0=10.0, righe=126, colonne=130, dlat=0.1 / 18, dlon=0.1 / 13)
-N = 10
-im = disegna(B["colonne"] * N, B["righe"] * N, lambda lo, la: ((lo - B["lon0"]) / B["dlon"] * N, (la - B["lat0"]) / B["dlat"] * N))
-px = im.load()
-car = "0123456789abcde"
-righe = []
-for R in range(B["righe"]):
-    s = ""
-    for C in range(B["colonne"]):
-        c = Counter(px[C * N + i, R * N + j] for i in range(N) for j in range(N))
-        bosco = [(n, k) for k, n in c.items() if k]
-        # tipo prevalente fra i campioni di bosco, se il bosco ISPRA copre almeno il 20% della maglia
-        s += car[max(bosco)[1]] if bosco and sum(n for n, _ in bosco) >= 0.2 * N * N else "0"
-    righe.append(s)
-json.dump({"fonte": "ISPRA, Carta della Natura - Carta degli Habitat 1:50.000; dove manca, Corine Land Cover 2018 IV livello", "codici": CODICI, "nomi": NOMI, **B, "righe_dati": righe},
-          open("docs/dati/tipi_bosco.json", "w"), ensure_ascii=False, separators=(",", ":"))
-print("maglie da 600 m con tipo:", sum(ch != "0" for r in righe for ch in r), "su", B["righe"] * B["colonne"])
+    # ---- maglie da 600 m della mappa principale (griglia di BOSCHI_DATI in index.html), 10 x 10 campioni per maglia
+    B = dict(lat0=43.7, lon0=10.0, righe=126, colonne=130, dlat=0.1 / 18, dlon=0.1 / 13)
+    N = 10
+    im = disegna(B["colonne"] * N, B["righe"] * N, lambda lo, la: ((lo - B["lon0"]) / B["dlon"] * N, (la - B["lat0"]) / B["dlat"] * N))
+    px = im.load()
+    car = "0123456789abcde"
+    righe = []
+    for R in range(B["righe"]):
+        s = ""
+        for C in range(B["colonne"]):
+            c = Counter(px[C * N + i, R * N + j] for i in range(N) for j in range(N))
+            bosco = [(n, k) for k, n in c.items() if k]
+            # tipo prevalente fra i campioni di bosco, se il bosco ISPRA copre almeno il 20% della maglia
+            s += car[max(bosco)[1]] if bosco and sum(n for n, _ in bosco) >= 0.2 * N * N else "0"
+        righe.append(s)
+    json.dump({"fonte": "ISPRA, Carta della Natura - Carta degli Habitat 1:50.000; dove manca, Corine Land Cover 2018 IV livello", "codici": CODICI, "nomi": NOMI, **B, "righe_dati": righe},
+              open("docs/dati/tipi_bosco.json", "w"), ensure_ascii=False, separators=(",", ":"))
+    print("maglie da 600 m con tipo:", sum(ch != "0" for r in righe for ch in r), "su", B["righe"] * B["colonne"])
+
+
+if __name__ == "__main__":
+    main()

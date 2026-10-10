@@ -38,6 +38,30 @@ const OSPITI = {
   pianura:    {aereus:.1,  reticulatus:.1,  edulis:.05, pinophilus:.05},
   prateria:   {aereus:.05, reticulatus:.1,  edulis:.2,  pinophilus:.2},
 };
+// boschi misti (10/10/2026): un bosco può essere una miscela {tipo: quota}, per esempio {castagno:.6, querce:.3, latifoglie:.1}
+// (script/boschi_misti.py: Carta degli Habitat, Corine e carte delle specie da satellite). Per ogni specie di porcino l'ospite è la
+// media degli ospiti pesata sulle quote.
+const NOMI_ALBERI = {castagno:"castagno", querce:"querce", leccio:"leccio", faggio:"faggio", latifoglie:"carpino nero e altre latifoglie",
+  igrofile:"salici, pioppi, ontani", robinia:"robinia", pini:"pini mediterranei", pinimontani:"pino nero e silvestre", abeti:"abeti",
+  larice:"larice", esotiche:"conifere esotiche", mistolat:"latifoglie miste", mistocon:"conifere miste", pianura:"pianura", prateria:"prateria"};
+function ospite(tipo, spId){
+  if (tipo && typeof tipo==="object"){
+    let s=0, t=0;
+    for (const [g,q] of Object.entries(tipo)){ s+=q*(OSPITI[g]||OSPITI.castagno)[spId]; t+=q; }
+    return t ? s/t : OSPITI.castagno[spId];
+  }
+  return (OSPITI[tipo]||OSPITI.castagno)[spId];
+}
+const tipoPrincipale = m => m && typeof m==="object" ? (Object.entries(m).sort((a,b)=>b[1]-a[1])[0]||["castagno"])[0] : m;
+const testoMiscela = m => Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([g,q])=>`${NOMI_ALBERI[g]||g} ${Math.round(100*q)}%`).join(" · ");
+// 6 caratteri esadecimali (gruppo, quota in 15esimi) ×3 → miscela; null se vuota
+function miscelaDaHex(s){
+  const m={}; let t=0;
+  for (let k=0;k<3;k++){ const g=parseInt(s[2*k],16), q=parseInt(s[2*k+1],16); if (g && q){ m[TIPI[g-1]]=(m[TIPI[g-1]]||0)+q; t+=q; } }
+  if (!t) return null;
+  for (const g in m) m[g]/=t;
+  return m;
+}
 // tipo stimato dove le carte ISPRA non hanno bosco (o per le celle meteo da 5 km): quota e, se c'è, il tipo di foglia di OpenStreetMap
 function tipoStimato(lat, lon, elev, osm){
   if (osm==="n") return elev<400 ? "pini" : "abeti";
@@ -77,7 +101,7 @@ function stagione(sp, iso){
 }
 // quanto la specie può esserci qui e ora: alberi × quota × stagione (0-1), con il limite più stretto
 function vincoliSpecie(sp, tipo, quota, iso){
-  const o=(OSPITI[tipo]||OSPITI.castagno)[sp.id], q=trap(quota,...sp.quotaSpecie), s=stagione(sp, iso);
+  const o=ospite(tipo, sp.id), q=trap(quota,...sp.quotaSpecie), s=stagione(sp, iso);
   const lim = o<=q && o<=s ? "bosco" : q<=s ? "quota" : "stagione";
   return {k:o*q*s, o, q, s, lim};
 }

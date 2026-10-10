@@ -320,3 +320,27 @@ il tipo cambia nel 49% delle maglie (castagno 2.898 → 3.923 maglie; «misti» 
 Effetto sull'indice, stessi dati meteo (10/10): oggi invariato (una maglia a 30); il 17/10 maglie ≥30 4.663 → 5.104, medie per quota +0…+3.
 Limiti: Pino nero dei rimboschimenti appenninici ricade spesso in «conifere alloctone o fuori areale» (42.G_n) insieme alla douglasia; i boschi misti
 restano di un solo tipo per area (possibile passo successivo: proporzioni dalle carte per specie a 30 m).
+
+## 10 ottobre 2026 (pomeriggio) — boschi misti: alberi in proporzione da tre fonti (applicato)
+**Confronto con l'Inventario Forestale Toscano** (Regione Toscana, griglia 400 m, foto 1978 e rilievi anni '90; `script/boschi_ift.py`,
+1.209 punti della parte toscana della mappa, `data/boschi/ift_punti.json`). Stesso tipo dell'Inventario: Carta degli Habitat 57%, Corine 56%
+(boschi puri 75/74%, a prevalenza 56/56%, misti 35/35%); castagneti 81% contro 72%, faggete 73/80%, ostrieti 31/48%, robinieti 15/29%,
+pino nero 0/37%. Solo il 40% dei boschi dell'Inventario è puro. LaMMA: il server cartografico pubblico non ha carte dei boschi.
+**Carte per specie da satellite** (Bonannella et al. 2022, 30 m, probabilità 2018-2020, CC BY 4.0; 12 specie: castagno, cerro, farnia,
+leccio, sughera, faggio, abete bianco e rosso, pino nero, silvestre, domestico, d'Aleppo; `script/boschi_specie.py` → `data/boschi/specie30m/`).
+Da sole sbagliano (cerro probabile quasi ovunque, pino nero poco riconosciuto, mancano roverella, carpino nero, robinia, pino marittimo).
+**Miscela** (`script/boschi_misti.py`): base = Habitat (peso 1) + Corine (peso 0,6), tipi misti divisi fra più gruppi; la quota sulle specie
+viste dal satellite (castagno, querce, leccio, faggio, abeti, pini montani) ripartita per 0,7·base + 0,3·satellite; quote <10% scartate,
+massimo 3 gruppi. Pesi scelti sulla composizione dell'Inventario (scarto medio negli ospiti delle 4 specie di porcino):
+| | scarto | gruppo principale uguale | castagno stimato nei castagneti |
+|---|---|---|---|
+| solo Carta degli Habitat | 0,171 | 58% | 0,76 |
+| solo Corine | 0,162 | 63% | 0,70 |
+| solo satellite | 0,181 | 42% | 0,34 |
+| **miscela scelta** | **0,154** | 61% | 0,66 |
+Esempi: San Bartolomeo in Pizzorna castagno 58-60%, querce 37-40% (come descritto dall'utente); Abetone faggio 75%, abete 23%; Monte Pisano
+pino marittimo 64%; Fosciandora castagno 85%. Quote complessive nell'area: castagno 28%, querce 25%, faggio 22%, altre latifoglie 9%.
+Mappa: ospite di ogni specie = media pesata (`ospite()` in `docs/porcini.js`); `docs/terreno/m/` (3 gruppi e quote per pixel),
+`docs/dati/boschi_misti.json` (maglie), celle da 5 km = media delle maglie; vista «Alberi» nella mappa a 20 m (macchie di ~100 m nelle proporzioni).
+Effetto, stessi dati del 10/10: oggi invariato (una maglia a 30); 17/10 maglie ≥30 5.114 → 3.330 (medie per quota −1…−2: i castagneti puri
+diventano castagno con querce o carpino). Mappa generale e 20 m il 17/10: correlazione 0,96-0,98, stessa fascia 83% (molte maglie vicine a 30).

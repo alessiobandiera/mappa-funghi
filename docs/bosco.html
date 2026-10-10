@@ -22,6 +22,9 @@
 .box b{font-weight:600}
 .ramp{height:10px;border-radius:5px}
 .ramp-lab{display:flex;justify-content:space-between;font-size:.78rem;color:var(--muted);padding-top:4px}
+.alberi-leg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.78rem;color:var(--muted)}
+.alberi-leg span{display:inline-flex;align-items:center;gap:5px}
+.alberi-leg i{width:12px;height:12px;border-radius:3px;display:inline-block;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .pop{min-width:220px}
 .pop h3{font-size:1.1rem;margin:0 0 8px}
 .pop table{border-collapse:collapse;width:100%}
@@ -63,6 +66,7 @@
         <button class="chip" data-v="acqua">Ristagno</button>
         <button class="chip" data-v="sole">Sole</button>
         <button class="chip" data-v="riparo">Riparo</button>
+        <button class="chip" data-v="alberi">Alberi</button>
       </div>
     </div>
 
@@ -114,7 +118,7 @@
     <p class="sub">Dentro il bosco, a 20 m: dove il terreno trattiene acqua, prende sole o resta riparato dalla tramontana, in base al meteo del giorno. Avvicinati sulla mappa per vederle.</p>
 
     <p class="note"><b>Come leggerla.</b> «Possibilità oggi» è l'indice della mappa principale (meteo del giorno) corretto dal terreno, al massimo del 30% in più o in meno: è la vista da guardare per decidere se andare. «Dove guardare nel bosco» confronta i punti tra loro con lo stesso meteo: marrone scuro = più favorevole di un bosco tipico, grigio-azzurro = meno (più è caldo il colore, meglio è, come nella scala dell'indice). Dove l'indice della zona è basso i colori sono spenti: il terreno aiuta a scegliere il punto solo quando una buttata è possibile.<br><br>
-    <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Ogni specie ha le sue soglie di freddo e caldo e il suo versante: il porcino nero cerca i versanti caldi, soleggiati e asciutti, il rosso e quello d'autunno quelli freschi e umidi (schede della Regione Piemonte e della Scuola Sant'Anna). Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
+    <b>Regole usate.</b> Con il terreno secco contano conche, fossi e versanti in ombra, che tengono l'umidità; con il terreno fradicio contano i punti che drenano. Con il freddo conta il sole, con il caldo l'ombra. Con la tramontana contano i versanti riparati. Gli alberi sono in proporzione: un bosco misto conta per le quote dei suoi alberi (vista «Alberi»: Carta degli Habitat, Corine e carte delle specie da satellite). Ogni specie ha le sue soglie di freddo e caldo e il suo versante: il porcino nero cerca i versanti caldi, soleggiati e asciutti, il rosso e quello d'autunno quelli freschi e umidi (schede della Regione Piemonte e della Scuola Sant'Anna). Sono regole dei cercatori, verificate per ora su poche uscite.<br><br>
     Quota: Terrarium/Mapzen (EU-DEM e SRTM, circa 30 m), ricampionata a 20 m. Boschi: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>; tipi di bosco: ISPRA, Carta della Natura (Carta degli Habitat 1:50.000) e Corine Land Cover 2018. Meteo: SIR/CFR Regione Toscana e Open-Meteo.</p>
   </aside>
   <div class="mapwrap"><div id="map" role="application" aria-label="Mappa"></div><div class="zoomhint" id="zoomhint">Avvicinati per vedere le zone a 20 m</div></div>
@@ -208,16 +212,20 @@ function soleDelGiorno(C, i, doy){
 async function caricaTessera(meta){
   const t={meta, pronta:false, usata:Date.now()}; tessere.set(meta.id, t);
   try{
-    const [a,b,c,ft]=await Promise.all([...["a","b","c"].map(k=>leggiPNG(`terreno/t/${meta.id}_${k}.png`)), leggiPNG(`terreno/f/${meta.id}.png`).catch(()=>null)]);
+    const [a,b,c,ft,mm]=await Promise.all([...["a","b","c"].map(k=>leggiPNG(`terreno/t/${meta.id}_${k}.png`)), leggiPNG(`terreno/f/${meta.id}.png`).catch(()=>null),
+      leggiPNG(`terreno/m/${meta.id}.png`).catch(()=>null)]);
     const n=meta.righe*meta.colonne;
     t.A={acqua:new Float32Array(n), riparo:new Float32Array(n)};
     t.B={quota:new Float32Array(n), bosco:new Uint8Array(n)};
     t.C={set:new Float32Array(n), ott:new Float32Array(n), nov:new Float32Array(n)};
     t.F=new Uint8Array(n);   // tipo di bosco: Carta degli Habitat ISPRA, dove manca Corine (1-14, 0 = non indicato: stimato da quota e OpenStreetMap)
+    // boschi misti (script/boschi_misti.py): fino a 3 gruppi di alberi (codici 1-12) e le loro quote in 15esimi
+    t.MC=new Uint8Array(n*3); t.MQ=new Uint8Array(n*3);
     for (let i=0;i<n;i++){ const o=i*4;
       t.A.acqua[i]=a[o]/255; t.A.riparo[i]=a[o+2]/255;
       t.B.quota[i]=(b[o]*256+b[o+1])/2; t.B.bosco[i]=b[o+2];
-      t.C.set[i]=c[o]/128; t.C.ott[i]=c[o+1]/128; t.C.nov[i]=c[o+2]/128; if (ft) t.F[i]=ft[o]; }
+      t.C.set[i]=c[o]/128; t.C.ott[i]=c[o+1]/128; t.C.nov[i]=c[o+2]/128; if (ft) t.F[i]=ft[o];
+      if (mm){ const R=mm[o], G=mm[o+1], B=mm[o+2], j=i*3; t.MC[j]=R>>4; t.MC[j+1]=R&15; t.MC[j+2]=G>>4; t.MQ[j]=G&15; t.MQ[j+1]=B>>4; t.MQ[j+2]=B&15; } }
     t.canvas=document.createElement("canvas"); t.canvas.width=meta.colonne; t.canvas.height=meta.righe;
     t.pronta=true; calcolaTessera(t); disegnaTessera(t); coloraAccessi(meta.id); renderTop(); aggiornaStato();
   }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id); }
@@ -270,14 +278,14 @@ function calcolaTessera(t){
       sD/=w; sV/=w; const stS=sS/w-q*0.0065, s=soleDelGiorno(t.C,p,doy);
       // specie migliore possibile qui: meteo × alberi (tipo di bosco) × quota × stagione × terreno. Il terreno è valutato per
       // ogni specie con le sue soglie di freddo e caldo e il suo versante preferito (il nero al sole, il rosso al fresco).
-      const tipo = t.F[p] ? TIPI[t.F[p]-1] : tipoStimato(lat, lon, q, t.B.bosco[p]===3?"n":"b"), osp=OSPITI[tipo]||OSPITI.castagno;
+      const tipo = miscelaPixel(t,p) || (t.F[p] ? TIPI[t.F[p]-1] : tipoStimato(lat, lon, q, t.B.bosco[p]===3?"n":"b"));
       const terr=k=>{ const sp=SPECIE_PORCINI[k], [ta,tb,tc,td]=sp.suoloT;
         let Dv=sD, Cv=clamp((tb-stS)/(tb-ta)), Hv=clamp((stS-tc)/(td-tc)), Vv=sV, ref=sR[k]/w;
         if (sc){ Dv=sc.D; Cv=Math.max(0,-sc.T); Hv=Math.max(0,sc.T); Vv=sc.V; ref=refScen[k]; }
         const f=fattoriTerreno(t.A.acqua[p], s, t.A.riparo[p], Dv, Cv, Hv, Vv, sp.versante); return {f, K:clamp(f.m/ref,.4,1.6)}; };
       let bx=-1, bk=-1, bv=0, bt=null;
       for (let k=0;k<NS;k++){
-        const sp=SPECIE_PORCINI[k], v=ib[k]/w*osp[sp.id]*stag[k]*trap(q,...sp.quotaSpecie); if (!(v>0)) continue;
+        const sp=SPECIE_PORCINI[k], v=ib[k]/w*ospite(tipo, sp.id)*stag[k]*trap(q,...sp.quotaSpecie); if (!(v>0)) continue;
         const tk=terr(k), x=v*clamp(1+.5*(tk.K-1),.7,1.3);
         if (x>bx){ bx=x; bk=k; bv=v; bt=tk; }
       }
@@ -300,7 +308,12 @@ const SEQ=[[247,244,232],[199,220,170],[110,170,110],[30,110,90],[10,60,90]];
 const SUN=[[40,60,110],[120,140,170],[240,235,215],[240,190,90],[200,110,30]];
 const coloreIndice=v=>COLI[v>=70?4: v>=50?3: v>=30?2: v>=10?1:0];
 const indiceQui=(t,p)=>Math.min(100, t.calc.base[p]*clamp(1+.5*(t.calc.K[p]-1), .7, 1.3));
+// colori degli alberi (vista «Alberi»): un colore per gruppo
+const COL_ALBERI={castagno:[150,104,38], querce:[205,176,70], leccio:[64,92,52], faggio:[214,118,44], latifoglie:[146,176,92],
+  igrofile:[110,168,196], robinia:[236,178,196], pini:[44,122,98], pinimontani:[30,76,60], abeti:[34,64,98], larice:[176,146,196],
+  esotiche:[128,100,160], mistolat:[170,170,110], mistocon:[60,90,90], pianura:[200,200,195], prateria:[200,200,195]};
 const LEGENDE={
+  alberi:{alberi:true},
   terreno:{stops:DIV, lab:["meno favorevole","come un bosco tipico","più favorevole"]},
   finale:{bande:true},
   acqua:{stops:SEQ, lab:["asciuga (crinali, dossi)","","trattiene acqua (fossi, conche)"]},
@@ -311,9 +324,16 @@ function disegnaTessera(t){
   if (!t.pronta || !t.calc) return;
   const m=t.meta, W=m.colonne, H=m.righe, cx=t.canvas.getContext("2d"), img=cx.createImageData(W,H), d=img.data;
   for (let p=0;p<W*H;p++){
-    if (!t.B.bosco[p] || (!t.calc.base[p] && !t.calc.K[p])) continue;
+    if (!t.B.bosco[p] || (st.v!=="alberi" && !t.calc.base[p] && !t.calc.K[p])) continue;
     let col;
     switch(st.v){
+      case "alberi": {
+        const mis=miscelaPixel(t,p);
+        if (!mis){ col=lerp([205,205,200], COL_ALBERI[t.F[p]?TIPI[t.F[p]-1]:"pianura"]||[205,205,200], .5); break; }
+        const gx=Math.round((m.ovest-9)/IDX.dlon)+p%W, gy=Math.round((45-m.nord)/IDX.dlat)+Math.floor(p/W);
+        let u=macchia(gx,gy), g=null;
+        for (const [k,q] of Object.entries(mis)){ g=k; u-=q; if (u<0) break; }
+        col=COL_ALBERI[g]||[205,205,200]; break; }
       case "terreno": {
         // il terreno conta solo se la zona ha una possibilità: con l'indice basso il colore si spegne verso il grigio
         col=rampa(DIV,(t.calc.K[p]-.55)/.9);
@@ -333,6 +353,12 @@ function disegnaTessera(t){
 }
 function legenda(){
   const L_=LEGENDE[st.v], el=$("legenda");
+  if (L_.alberi){
+    const G=["castagno","querce","faggio","latifoglie","leccio","robinia","igrofile","pini","pinimontani","abeti","esotiche"];
+    el.innerHTML=`<div class="alberi-leg" aria-label="Legenda degli alberi">${G.map(g=>`<span><i style="background:rgb(${COL_ALBERI[g]})"></i>${NOMI_ALBERI[g]}</span>`).join("")}</div>
+      <p class="sub" style="margin:.3rem 0 0">Boschi misti come macchie nelle proporzioni stimate (Carta degli Habitat, Corine, satellite). Le macchie mostrano le quote, non la posizione esatta di ogni pianta.</p>`;
+    return;
+  }
   if (L_.bande){
     const LAB=["fuori stagione","scarsa","possibile","buona","ottima"];
     el.innerHTML=`<div class="scala" aria-label="Legenda dell'indice">${COLI.map(c=>`<i style="background:rgb(${c})"></i>`).join("")}${LAB.map((l,i)=>`<span>${["0-9","10-29","30-49","50-69","70+"][i]}<br>${l}</span>`).join("")}</div>`;
@@ -378,7 +404,7 @@ function aggiornaStato(){
   if (V>.3) pref.push("lati riparati dalla tramontana");
   $("stato").innerHTML=(sc? "<b>Scenario.</b> " : `<b>${fmtDay(iso)}</b>, al centro della mappa: ${o.stato.secchi} giorni senza pioggia, `)+
     `terreno ${terr}, suolo ${temp}${V>.3?", tramontana":""}. Favoriti: ${pref.join(", ")}.`+
-    `<br>Indice della zona a ${cel.elev} m (${BOSCHI[tipoZona].toLowerCase()}): <b>${(()=>{ const b=Math.round(cel.elev/BIN); let m=0;
+    `<br>Indice della zona a ${cel.elev} m (${typeof tipoZona==="object" ? testoMiscela(tipoZona) : BOSCHI[tipoZona].toLowerCase()}): <b>${(()=>{ const b=Math.round(cel.elev/BIN); let m=0;
       SPECIE_PORCINI.forEach((sp,k)=>{ m=Math.max(m, o.bins[k][b]*vincoliSpecie(sp, tipoZona, cel.elev, iso).k); }); return Math.round(m); })()}</b>`+(iso>oggiISO?" · previsione":"");
 }
 
@@ -427,15 +453,39 @@ function visibili(){
 }
 map.on("moveend", visibili);
 
-// tipo di bosco che prevale entro ~500 m da un punto, dalle tessere caricate (carte ISPRA); null se non ce ne sono
+// miscela di alberi di un pixel {gruppo: quota}, null se non c'è
+function miscelaPixel(t,p){
+  const j=p*3; if (!t.MC || !t.MC[j]) return null;
+  const m={}; let s=0;
+  for (let k=0;k<3;k++){ const g=t.MC[j+k], q=t.MQ[j+k]; if (g && q){ m[TIPI[g-1]]=(m[TIPI[g-1]]||0)+q; s+=q; } }
+  if (!s) return null;
+  for (const g in m) m[g]/=s;
+  return m;
+}
+// alberi entro ~500 m da un punto (media delle miscele dei pixel di bosco, 3 gruppi principali); null se non ci sono tessere
 function tipoIntorno(lat, lon){
   const t=[...tessere.values()].find(t=>t.pronta&&lat<=t.meta.nord&&lat>=t.meta.sud&&lon>=t.meta.ovest&&lon<=t.meta.est);
   if (!t) return null;
   const W=t.meta.colonne, r0=Math.floor((t.meta.nord-lat)/IDX.dlat), c0=Math.floor((lon-t.meta.ovest)/IDX.dlon), n={};
+  let tot=0;
   for (let r=Math.max(0,r0-25); r<=Math.min(t.meta.righe-1,r0+25); r++) for (let c=Math.max(0,c0-25); c<=Math.min(W-1,c0+25); c++){
-    const p=r*W+c; if (t.B.bosco[p] && t.F[p]) n[t.F[p]]=(n[t.F[p]]||0)+1; }
-  const best=Object.entries(n).sort((a,b)=>b[1]-a[1])[0];
-  return best ? TIPI[best[0]-1] : null;
+    const p=r*W+c; if (!t.B.bosco[p]) continue;
+    const m=miscelaPixel(t,p) || (t.F[p] ? {[TIPI[t.F[p]-1]]:1} : null); if (!m) continue;
+    for (const [g,q] of Object.entries(m)) n[g]=(n[g]||0)+q; tot++; }
+  if (!tot) return null;
+  const al=Object.entries(n).map(([g,q])=>[g,q/tot]).sort((a,b)=>b[1]-a[1]).slice(0,3).filter(([,q])=>q>=.1), s=al.reduce((a,[,q])=>a+q,0);
+  return al.length ? Object.fromEntries(al.map(([g,q])=>[g,q/s])) : null;
+}
+// «macchie» della vista Alberi: celle irregolari di ~100 m (Voronoi su una griglia con punti a caso, fissi) con un numero a caso
+// per cella; ogni cella prende l'albero che quel numero indica secondo le quote del pixel. Così un bosco 60/30/10 appare
+// come macchie di castagno, querce e carpino in quelle proporzioni, e le macchie continuano da una tessera all'altra.
+function hash3(x,y,s){ let h=(Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(s,1442695041))|0; h=Math.imul(h^(h>>>13),1274126177); h^=h>>>16; return (h>>>0)/4294967296; }
+function macchia(gx,gy){
+  const S=5, cx=Math.floor(gx/S), cy=Math.floor(gy/S); let best=1e9, u=0;
+  for (let i=-1;i<=1;i++) for (let j=-1;j<=1;j++){
+    const X=cx+i, Y=cy+j, px=(X+hash3(X,Y,1))*S, py=(Y+hash3(X,Y,2))*S, d=(px-gx)**2+(py-gy)**2;
+    if (d<best){ best=d; u=hash3(X,Y,3); } }
+  return u;
 }
 function esposizione(t,p){
   const W=t.meta.colonne, r=Math.floor(p/W), c=p%W;
@@ -467,7 +517,8 @@ function apriPunto(ll){
     livello(rp,.35,.65,["esposto alla tramontana","riparo medio","riparato"])+": "+giud(t.calc.FR[p])];
   L.popup({maxWidth:300}).setLatLng(ll).setContent(`<div class="pop"><h3>${k>=1.15?"Più favorevole del normale":k<=.85?"Meno favorevole del normale":"Nella norma"}</h3>
     <table>
-      <tr><td>Bosco</td><td>${BOSCHI[t.F[p]?TIPI[t.F[p]-1]:tipoStimato(lat,lng,t.B.quota[p],t.B.bosco[p]===3?"n":"b")]}${t.F[p]?"":" (stimato)"}</td></tr>
+      ${(mis=>mis? `<tr><td>Alberi</td><td>${testoMiscela(mis)}</td></tr>` :
+        `<tr><td>Bosco</td><td>${BOSCHI[t.F[p]?TIPI[t.F[p]-1]:tipoStimato(lat,lng,t.B.quota[p],t.B.bosco[p]===3?"n":"b")]}${t.F[p]?"":" (stimato)"}</td></tr>`)(miscelaPixel(t,p))}
       <tr><td>Più probabile</td><td>${t.calc.SPX[p]?NOME_SPECIE[SPECIE_PORCINI[t.calc.SPX[p]-1].id]:"–"}</td></tr>
       <tr><td>Quota</td><td>${Math.round(t.B.quota[p])} m</td></tr>
       <tr><td>Esposizione</td><td>${es? es.dir+" · "+Math.round(es.pend)+"°" : "–"}</td></tr>
@@ -530,7 +581,7 @@ function disegnaTop(){
   r.zone.forEach(z=>{
     const es=esposizione(z.t,z.p), q=Math.round(z.t.B.quota[z.p]), tb=z.t.B.bosco[z.p];
     const acc=accessoVicino(z.lat,z.lon);
-    const det=[es? (es.dir==="piano"?"in piano":"versante "+es.dir) : null, z.t.F[z.p]?BOSCHI[TIPI[z.t.F[z.p]-1]].toLowerCase():(tb===3?"conifere":null),
+    const det=[es? (es.dir==="piano"?"in piano":"versante "+es.dir) : null, (m=>m? Object.entries(m).sort((x,y)=>y[1]-x[1]).slice(0,2).map(([g])=>NOMI_ALBERI[g]).join(" e ") : z.t.F[z.p]?BOSCHI[TIPI[z.t.F[z.p]-1]].toLowerCase():(tb===3?"conifere":null))(miscelaPixel(z.t,z.p)),
       acc? `accesso a ${Math.round(acc.d/10)*10} m${acc.a[3]?" (CAI "+acc.a[3]+")":""}` : null].filter(Boolean).join(" · ");
     const li=document.createElement("li"), btn=document.createElement("button"); btn.type="button";
     const col=coloreIndice(z.v);
