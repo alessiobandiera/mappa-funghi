@@ -9,3 +9,7 @@ Open-Meteo: 140/153 punti
 Open-Meteo: 153/153 punti
 Pioggia prevista, media dei modelli: 2295 giorni
 Suolo oltre l'8° giorno dall'andamento di ECMWF IFS: 1836 valori
+Tendenza ECMWF EC46 dal 2026-10-25
+Fusione: {'giorni_passati': 9180, 'pioggia_misurata': 8402, 'pioggia_esatta_cfr': 282, 'temperatura_misurata': 8665}
+Scritto docs/dati/meteo.json
+Archivio stazioni: {'giorno': '2026-10-09', 'stato': 'già archiviato', 'chiusi': []}
