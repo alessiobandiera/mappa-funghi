@@ -21,8 +21,8 @@
         `Previsione a ${k} giorn${k === 1 ? "o" : "i"}: pioggia già caduta (misurata) più le previsioni meteo dei prossimi giorni. Abbastanza affidabile: la buttata dipende soprattutto dalla pioggia di 1-3 settimane prima, già caduta.`,
         k <= 7
           ? `Tendenza a ${k} giorni: dal 4° giorno in avanti l'indice usa le previsioni meteo, meno affidabili. Pesa ancora la pioggia già caduta, ma temperature e piogge future possono cambiare.`
-          : `Tendenza a ${k} giorni: la pioggia prevista oltre la settimana ci prende poco. L'indice si regge sulla pioggia già caduta e su quella prevista nei prossimi giorni: se non piove come previsto, cambia. Ricontrolla nei giorni seguenti.`,
-        `Lungo termine, ${k} giorni: oltre le 2 settimane c'è solo il modello a lungo termine ECMWF (51 scenari, conta il più probabile). La buttata di questi giorni nasce dalla pioggia già caduta e da quella delle prossime 2 settimane, quindi è una tendenza da ricontrollare.`
+          : `Tendenza a ${k} giorni. Oltre gli 8 giorni la pioggia prevista ci prende poco: verificata sulle stazioni della Regione, verso i 10-12 giorni non fa meglio del caso. Guarda da quale pioggia nasce la buttata (dettaglio della zona nella mappa generale): se è già caduta la tendenza regge, se è solo prevista può sparire.`,
+        `Lungo termine, ${k} giorni: oltre le 2 settimane c'è solo il modello a lungo termine ECMWF (51 scenari; per la pioggia conta il più probabile). Il colore vale per la buttata della pioggia già caduta o prevista nei prossimi giorni (dettaglio della zona nella mappa generale): piogge nuove così lontane non si possono prevedere.`
       ][f.n];
     }
   };

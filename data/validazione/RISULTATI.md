@@ -344,3 +344,28 @@ Mappa: ospite di ogni specie = media pesata (`ospite()` in `docs/porcini.js`); `
 `docs/dati/boschi_misti.json` (maglie), celle da 5 km = media delle maglie; vista «Alberi» nella mappa a 20 m (macchie di ~100 m nelle proporzioni).
 Effetto, stessi dati del 10/10: oggi invariato (una maglia a 30); 17/10 maglie ≥30 5.114 → 3.330 (medie per quota −1…−2: i castagneti puri
 diventano castagno con querce o carpino). Mappa generale e 20 m il 17/10: correlazione 0,96-0,98, stessa fascia 83% (molte maglie vicine a 30).
+
+## 10 ottobre 2026 (sera) — previsione a 3 settimane (applicato)
+**Dati** (`script/aggiorna.py`): oggi + 14 giorni dalla previsione normale (pioggia: media dei modelli disponibili, dall'8° giorno ECMWF IFS
+e AIFS); umidità e temperatura del suolo oltre l'8° giorno (fin dove arriva ICON) prolungate con l'andamento di ECMWF IFS 9 km (`suolo_lungo`).
+Dal 15° al 21° giorno il modello a lungo termine **ECMWF EC46** (API stagionale di Open-Meteo, 51 membri, 36 km; `tendenza_ec46`): 12 punti
+per tutta la mappa, pioggia = mediana dei membri, temperature e umidità = media corretta con lo scarto dalla previsione normale nei giorni
+7-14 (al massimo ±4 °C, ±15%), suolo = ultimo valore + variazione della media; niente vento (niente tramontana in quei giorni). Scaricato
+nell'aggiornamento completo, copia in `data/cache/ec46.json` per i leggeri (ogni membro conta come variabile nei limiti di Open-Meteo).
+**Controlli**: con gli stessi dati, i valori fino a oggi + 7 e fino a oggi + 14 sono identici con e senza i giorni aggiunti (0 differenze su
+130.872 e 196.308 valori maglia-giorno). Pagine provate su telefono e computer (striscia di 28 giorni, fasi, testi, dettaglio, mappa a 20 m).
+**Quanto ci prende la pioggia prevista oltre la settimana** (`script/previsioni_lunghe.py`, `data/previsioni/LUNGHE.md`; corse passate complete
+della Single Runs API contro 15 stazioni SIR; «pioggia utile» ≥13 mm in 3 giorni; tra parentesi il CSI di chi dice sempre «sì»):
+| anticipo (giorni) | 2 | 5 | 7 | 8 | 9 | 10 | 11 | 12 | 13 |
+|---|---|---|---|---|---|---|---|---|---|
+| ECMWF IFS 9 km, apr-dic 2025 (0,28-0,29) | 0,59 | 0,49 | 0,42 | 0,32 | 0,30 | 0,27 | 0,23 | 0,20 | 0,23 |
+| media IFS + AIFS (quella della mappa), apr-ott 2026 (0,16-0,17) | 0,54 | 0,52 | 0,40 | 0,40 | 0,28 | 0,28 | 0,24 | 0,21 | 0,18 |
+| ECMWF AIFS da solo, 2026 | 0,56 | 0,50 | 0,37 | 0,36 | 0,25 | 0,25 | 0,22 | 0,19 | 0,19 |
+| GFS, 2026 | 0,44 | 0,31 | 0,24 | 0,18 | 0,13 | 0,12 | 0,11 | 0,08 | 0,06 |
+Utile fino a circa 8 giorni, poco oltre, verso i 10-12 giorni non meglio del caso. La media IFS + AIFS resta la migliore anche oltre i 7 giorni
+(GFS peggiora: non aggiunto). EC46 non si può verificare qui (nessun archivio delle corse passate). Per questo nella mappa: 1-3 giorni
+«previsione», 4-14 «tendenza» (testo diverso oltre l'8° giorno), 15-21 «lungo termine»; nel dettaglio la pioggia che fa partire la buttata è
+indicata come «già caduta» o «prevista: può cambiare». La buttata di un giorno lontano nasce dalla pioggia di 6-30 giorni prima, quindi i giorni
+15-21 dipendono soprattutto dalla pioggia già caduta e da quella dei prossimi giorni.
+Livello del 10/10 sera (aggiornamento delle 22:05): maglie ≥30 il 17/10 3.393, il 19-21/10 ~7.100 (≥50 3.900-4.800, massimo 84), 23-24/10 massimo 100;
+nei giorni EC46 (25-31/10) media 41-49.

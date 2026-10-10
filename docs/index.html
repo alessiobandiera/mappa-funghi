@@ -556,7 +556,8 @@ function renderDetail(){
   else SPECIE.forEach(sp=>{
     const s=c.scores[sp.id][state.day];
     const why=[];
-    if (s.ev) why.push(`${s.ev.mm} mm ${fmtDay(s.ev.data,true).toLowerCase()==="oggi"?"oggi":"il "+fmtDay(s.ev.data,true).toLowerCase()}, ${s.ev.att} giorni prima`);
+    if (s.ev) why.push(`${s.ev.mm} mm ${fmtDay(s.ev.data,true).toLowerCase()==="oggi"?"oggi":"il "+fmtDay(s.ev.data,true).toLowerCase()}, ${s.ev.att} giorni prima`+
+      (dayDates[state.day]>oggiISO? (s.ev.data<oggiISO? " (pioggia già caduta)" : " (pioggia prevista: può cambiare)") : ""));
     else why.push("nessuna pioggia utile nella finestra di attesa");
     if (s.lim) why.push(`limita: ${FATTORI[s.lim]}`);
     if (s.vincoli && s.vincoli.k<.6) why.push(`limita: ${s.vincoli.lim==="bosco"?"alberi poco adatti":s.vincoli.lim==="quota"?"quota":"stagione"}`);
