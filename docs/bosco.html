@@ -219,7 +219,7 @@ async function caricaTessera(meta){
       t.B.quota[i]=(b[o]*256+b[o+1])/2; t.B.bosco[i]=b[o+2];
       t.C.set[i]=c[o]/128; t.C.ott[i]=c[o+1]/128; t.C.nov[i]=c[o+2]/128; if (ft) t.F[i]=ft[o]; }
     t.canvas=document.createElement("canvas"); t.canvas.width=meta.colonne; t.canvas.height=meta.righe;
-    t.pronta=true; calcolaTessera(t); disegnaTessera(t); coloraAccessi(meta.id); renderTop();
+    t.pronta=true; calcolaTessera(t); disegnaTessera(t); coloraAccessi(meta.id); renderTop(); aggiornaStato();
   }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id); }
 }
 function scenario(){ return st.m==="scenario" ? {D:+$("sD").value/100, T:+$("sT").value/100, V:+$("sV").value/100} : null; }
@@ -369,6 +369,7 @@ function aggiornaStato(){
   if (!o){ $("stato").textContent="Centro della mappa fuori dall'area coperta."; return; }
   const sc=scenario(), D=sc? sc.D : o.stato.D, V=sc? sc.V : o.stato.V;
   const cel=celleMap.get(key), stS=o.stato.st0-cel.elev*0.0065, [ta,tb,tc,td]=SUOLO_RIF;
+  const tipoZona=tipoIntorno(c.lat, c.lng) || tipoStimato(cel.lat,cel.lon,cel.elev);
   const C=sc? Math.max(0,-sc.T) : clamp((tb-stS)/(tb-ta)), H=sc? Math.max(0,sc.T) : clamp((stS-tc)/(td-tc));
   const terr = D>.66? "asciutto" : D>.4? "medio" : "bagnato";
   const temp = C>.25? "freddo per i porcini" : H>.25? "caldo per i porcini" : "nella fascia giusta";
@@ -377,8 +378,8 @@ function aggiornaStato(){
   if (V>.3) pref.push("lati riparati dalla tramontana");
   $("stato").innerHTML=(sc? "<b>Scenario.</b> " : `<b>${fmtDay(iso)}</b>, al centro della mappa: ${o.stato.secchi} giorni senza pioggia, `)+
     `terreno ${terr}, suolo ${temp}${V>.3?", tramontana":""}. Favoriti: ${pref.join(", ")}.`+
-    `<br>Indice della zona a ${cel.elev} m (${BOSCHI[tipoStimato(cel.lat,cel.lon,cel.elev)].toLowerCase()}): <b>${(()=>{ const b=Math.round(cel.elev/BIN); let m=0;
-      SPECIE_PORCINI.forEach((sp,k)=>{ m=Math.max(m, o.bins[k][b]*vincoliSpecie(sp, tipoStimato(cel.lat,cel.lon,cel.elev), cel.elev, iso).k); }); return Math.round(m); })()}</b>`+(iso>oggiISO?" · previsione":"");
+    `<br>Indice della zona a ${cel.elev} m (${BOSCHI[tipoZona].toLowerCase()}): <b>${(()=>{ const b=Math.round(cel.elev/BIN); let m=0;
+      SPECIE_PORCINI.forEach((sp,k)=>{ m=Math.max(m, o.bins[k][b]*vincoliSpecie(sp, tipoZona, cel.elev, iso).k); }); return Math.round(m); })()}</b>`+(iso>oggiISO?" · previsione":"");
 }
 
 /* ---------------- mappa ---------------- */
@@ -426,6 +427,16 @@ function visibili(){
 }
 map.on("moveend", visibili);
 
+// tipo di bosco che prevale entro ~500 m da un punto, dalle tessere caricate (carte ISPRA); null se non ce ne sono
+function tipoIntorno(lat, lon){
+  const t=[...tessere.values()].find(t=>t.pronta&&lat<=t.meta.nord&&lat>=t.meta.sud&&lon>=t.meta.ovest&&lon<=t.meta.est);
+  if (!t) return null;
+  const W=t.meta.colonne, r0=Math.floor((t.meta.nord-lat)/IDX.dlat), c0=Math.floor((lon-t.meta.ovest)/IDX.dlon), n={};
+  for (let r=Math.max(0,r0-25); r<=Math.min(t.meta.righe-1,r0+25); r++) for (let c=Math.max(0,c0-25); c<=Math.min(W-1,c0+25); c++){
+    const p=r*W+c; if (t.B.bosco[p] && t.F[p]) n[t.F[p]]=(n[t.F[p]]||0)+1; }
+  const best=Object.entries(n).sort((a,b)=>b[1]-a[1])[0];
+  return best ? TIPI[best[0]-1] : null;
+}
 function esposizione(t,p){
   const W=t.meta.colonne, r=Math.floor(p/W), c=p%W;
   if (r<1||c<1||r>=t.meta.righe-1||c>=W-1) return null;

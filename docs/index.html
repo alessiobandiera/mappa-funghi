@@ -225,7 +225,7 @@ async function loadData(force){
 function computeAll(raw){
   const prev = state.sel && !state.sel.forest ? state.sel : null;
   const firstTime = !dayDates.length;
-  cells=raw.filter(c=>c.elev>3).map(c=>({...c, bosco:tipoStimato(c.lat,c.lon,c.elev), scores:null}));
+  cells=raw.filter(c=>c.elev>3).map(c=>({...c, ...boscoCella(c), scores:null}));
   if (!cells.length) return;
   const D0=cells[0].days;
   todayIdx=D0.findIndex(g=>g.d===oggiISO); if (todayIdx<0) todayIdx=D0.length-FUT;
@@ -239,6 +239,23 @@ function computeAll(raw){
   dayEl.value=state.day; GIORNI.aggiorna();
   if (prev) state.sel = cells.find(c=>c.lat===prev.lat&&c.lon===prev.lon) || null;
   aggiornaBoschi();
+}
+// tipo di bosco di una cella meteo da 5 km: quello che prevale fra le maglie di bosco da 600 m che contiene (tipo dalle carte ISPRA,
+// 10/10/2026); se non ne contiene, la stima dalla quota. Così anche la vista da lontano usa la carta dei boschi.
+let boschiPerCella=null;
+function boscoCella(c){
+  if (!boschiPerCella){
+    boschiPerCella=new Map();
+    for (const f of forest){
+      const k=Math.round((f.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((f.lon-GRIGLIA.lon0)/GRIGLIA.dlon);
+      let m=boschiPerCella.get(k); if (!m) boschiPerCella.set(k, m={});
+      m[f.bosco]=(m[f.bosco]||0)+1;
+    }
+  }
+  const m=boschiPerCella.get(Math.round((c.lat-GRIGLIA.lat0)/GRIGLIA.dlat)+","+Math.round((c.lon-GRIGLIA.lon0)/GRIGLIA.dlon));
+  if (!m) return {bosco:tipoStimato(c.lat,c.lon,c.elev), boscoDa:"stima"};
+  const [tipo,n]=Object.entries(m).sort((a,b)=>b[1]-a[1])[0], tot=Object.values(m).reduce((a,b)=>a+b,0);
+  return {bosco:tipo, boscoDa:"carta", boscoQuota:Math.round(100*n/tot)};
 }
 function scoreCell(c){
   if (!c.days || !dayDates.length){ c.scores=null; return; }
@@ -284,6 +301,7 @@ async function caricaTipi(){
     const R=Math.floor((fc.lat-T.lat0)/T.dlat), C=Math.floor((fc.lon-T.lon0)/T.dlon), ch=T.righe_dati[R]&&T.righe_dati[R][C], k=ch?parseInt(ch,16):0;
     if (k){ fc.bosco=TIPI[k-1]; fc.ispra=true; }
   });
+  boschiPerCella=null;
 }
 function rettangolo(fc){
   const D=BOSCHI_DATI;
@@ -521,11 +539,12 @@ function renderDetail(){
     let rain=0; for (let k=Math.max(0,startIdx+state.day-32); k<=startIdx+state.day; k++) rain+=c.days[k].p;
     html+=`<div class="meta">${fmtDay(dayDates[state.day])} · pioggia ultime 5 settimane ${Math.round(rain)} mm · suolo ${g.su.toFixed(2)} m³/m³, ${g.st.toFixed(1)} °C</div>`;
     const fonte=(c.forest?c.wc:c)||{}, stz=fonte.stazioni||{};
-    const giorniMis=c.days.slice(0,startIdx+state.day+1).filter(x=>x.fp).length, giorniPass=c.days.slice(0,startIdx+state.day+1).filter(x=>x.d<oggiISO).length;
+    const giorniMis=c.days.slice(0,startIdx+state.day+1).filter(x=>x.fp&&x.d<oggiISO).length, giorniPass=c.days.slice(0,startIdx+state.day+1).filter(x=>x.d<oggiISO).length;
     if (DATI_SITO) html+=`<div class="meta">${stz.pioggia&&stz.pioggia.length?`Pioggia misurata (${stz.pioggia.join(", ")}) in ${giorniMis} giorni su ${giorniPass}`:"Nessun pluviometro entro 12 km: pioggia stimata dal modello"}${stz.temperatura&&stz.temperatura.length?` · temperature da ${stz.temperatura[0]}`:""}. Previsione: Open-Meteo.</div>`;
   }
   html+=`</div><button class="btn" type="button" id="closeDet" aria-label="Chiudi dettaglio">✕</button></header>`;
   { const P=state.punto||{lat:c.lat,lon:c.lon}; html+=`<div class="meta" style="margin:0">${portamiQui(P.lat,P.lon)}<span>Al punto toccato; in auto fino alla strada più vicina.</span></div>`; }
+  if (!c.forest) html+=`<p class="meta">Cella meteo di circa 5 km · ${c.boscoDa==="carta"?`bosco che prevale nella cella secondo le carte ISPRA (${c.boscoQuota}% delle maglie di bosco)`:"nessuna maglia di bosco nella cella: tipo stimato dalla quota"}. Avvicinati per vedere ogni bosco.</p>`;
   if (c.forest) html+=`<p class="meta">Maglia di bosco di circa 600 m · ${c.ispra?"tipo di bosco dalle carte ISPRA (Carta degli Habitat, Corine)":CLS_TXT[c.cls]}${c.wc?` · indice dalle celle meteo intorno pesate per distanza (la più vicina a ${c.wc.elev} m), temperature corrette per la quota`:""}</p>`;
   html+=`<p class="meta"><a href="bosco.html#${c.lat.toFixed(4)},${c.lon.toFixed(4)},15" style="color:var(--accent);font-weight:600">Guarda questa zona a 20 m</a> · dove conviene dentro il bosco</p>`;
   html+=`<label class="meta">Tipo di bosco <select id="boscoSel">${opts}</select></label>`;
