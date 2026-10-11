@@ -1,11 +1,14 @@
 {
- "giorno": "2026-10-09",
+ "giorno": "2026-10-10",
  "stazioni_pronte": {
-  "pluvio": "140/141"
+  "igro": "70/70",
+  "anemo": "34/47",
+  "termo": "0/89",
+  "pluvio": "0/141"
  },
  "chiusi": [
-  "2026-10-09 pluvio"
+  "2026-10-10 igro"
  ],
- "secondi": 161,
- "quando": "2026-10-10T11:36+02:00"
+ "secondi": 433,
+ "quando": "2026-10-11T07:31+02:00"
 }
