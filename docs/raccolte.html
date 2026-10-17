@@ -17,8 +17,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
 <!--
-  Diario delle raccolte: data, ora e posizione GPS di ogni fungo trovato, e dei giri (anche quelli a vuoto).
-  I dati restano SOLO sul telefono (IndexedDB): niente viene inviato al sito o a GitHub. Per salvarli altrove: «Dati» > Esporta.
+  Diario delle raccolte: data, ora e posizione GPS di ogni fungo trovato, e dei giri (anche quelli a vuoto), con il percorso.
+  I dati restano sul telefono (IndexedDB) e non vanno MAI al sito pubblico. Se l'utente collega il suo archivio privato
+  (repository GitHub privato e una sua chiave, «Dati» > Archivio privato), l'app ci copia giri, percorsi, funghi e foto.
 -->
 <style>
 :root{
@@ -114,7 +115,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .conta{display:flex;align-items:center;gap:10px}
 .conta button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--chip);font-size:22px}
 .conta output{font:700 24px var(--display);min-width:40px;text-align:center}
-input[type=datetime-local],textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
+input[type=datetime-local],input[type=text],input[type=password],textarea{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%}
 textarea{min-height:64px;resize:vertical}
 .foto{display:flex;gap:8px;flex-wrap:wrap}
 .foto img{width:72px;height:72px;object-fit:cover;border-radius:10px}
@@ -178,9 +179,17 @@ html.mappa-piena #mappa{position:fixed!important;inset:env(safe-area-inset-top) 
       <div class="cifre" id="cifre"></div>
     </div>
     <div class="box">
+      <h2>Percorsi</h2>
+      <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" id="opt-percorso" style="width:22px;height:22px;margin:2px 0 0">
+        <span>Registra il percorso durante i giri. L'app tiene acceso lo schermo (consuma batteria: per giri lunghi porta una powerbank); se lo schermo si spegne o cambi app la traccia si ferma e riprende quando torni.</span></label>
+      <p class="nota" style="text-align:left">Percorso completo anche col telefono in tasca: registralo con un'app di tracce che esporta GPX e caricalo qui. Si aggancia da solo al giro con gli stessi orari.</p>
+      <label class="btn" style="align-self:flex-start">Importa percorso (GPX)…<input class="sr" type="file" id="importa-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml"></label>
+    </div>
+    <div class="box" id="archivio"></div>
+    <div class="box">
       <h2>Esporta</h2>
-      <p class="nota" style="text-align:left">I dati sono solo su questo telefono. Esportali ogni tanto (su iCloud, mail o al computer):
-        se cancelli i dati di Safari o cambi telefono, si perdono.</p>
+      <p class="nota" style="text-align:left">Senza archivio privato i dati sono solo su questo telefono: esportali ogni tanto (su iCloud, mail o al computer),
+        se cancelli i dati di Safari o cambi telefono si perdono.</p>
       <div class="riga">
         <button class="btn pieno" data-esporta="json" type="button">Copia completa (JSON)</button>
         <button class="btn" data-esporta="csv" type="button">Tabella (CSV)</button>
@@ -218,10 +227,15 @@ html.mappa-piena #mappa{position:fixed!important;inset:env(safe-area-inset-top) 
 <script>
 "use strict";
 // ---------------------------------------------------------------- archivio (IndexedDB, solo sul telefono)
+// versione 2 (17/10/2026): in più i percorsi dei giri («tracce», chiave = id del giro) e le impostazioni (archivio privato)
 const DB = new Promise((ok, ko) => {
-  const r = indexedDB.open("raccolte", 1);
-  r.onupgradeneeded = () => { r.result.createObjectStore("voci", { keyPath: "id" }); r.result.createObjectStore("foto", { keyPath: "id" }); };
-  r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+  const r = indexedDB.open("raccolte", 2);
+  r.onupgradeneeded = () => { const db = r.result;
+    for (const [nome, chiave] of [["voci", "id"], ["foto", "id"], ["tracce", "id"], ["impostazioni", "k"]])
+      if (!db.objectStoreNames.contains(nome)) db.createObjectStore(nome, { keyPath: chiave }); };
+  r.onsuccess = () => { r.result.onversionchange = () => r.result.close(); ok(r.result); };
+  r.onerror = () => ko(r.error);
+  r.onblocked = () => setTimeout(() => avviso("Chiudi le altre finestre dell'app Raccolte e riaprila"), 500);
 });
 async function op(store, modo, fn) {
   const db = await DB;
@@ -238,9 +252,20 @@ const salvaFoto = f => op("foto", "readwrite", s => s.put(f));
 const leggiFoto = id => op("foto", "readonly", s => s.get(id));
 const togliFoto = id => op("foto", "readwrite", s => s.delete(id));
 const nuovoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const salvaTracciaDB = x => op("tracce", "readwrite", s => s.put(x));
+const leggiTraccia = id => op("tracce", "readonly", s => s.get(id));
+const togliTraccia = id => op("tracce", "readwrite", s => s.delete(id));
+const tutteTracce = () => op("tracce", "readonly", s => s.getAll());
+const impostazione = k => op("impostazioni", "readonly", s => s.get(k)).then(x => x ? x.v : null);
+const imposta = (k, v) => op("impostazioni", "readwrite", s => s.put({ k, v }));
+const togliImpostazione = k => op("impostazioni", "readwrite", s => s.delete(k));
 
-let VOCI = [];
-async function ricarica() { VOCI = (await tutte()).sort((a, b) => b.t.localeCompare(a.t)); disegna(); }
+let VOCI = [], TRACCE = new Map();
+async function ricarica() {
+  VOCI = (await tutte()).sort((a, b) => b.t.localeCompare(a.t));
+  TRACCE = new Map((await tutteTracce()).map(x => [x.id, x])); if (traccia) TRACCE.set(traccia.id, traccia);
+  disegna(); programmaArchivio();
+}
 
 // ---------------------------------------------------------------- GPS
 const $ = s => document.querySelector(s);
@@ -277,16 +302,87 @@ const giroAttivo = () => VOCI.find(v => v.tipo === "giro" && !v.fine);
 async function iniziaGiro() {
   const g = { id: nuovoId(), tipo: "giro", t: new Date().toISOString(), fine: null, esito: null, nota: "" };
   await salva(g); await ricarica(); avviso("Giro iniziato");
-  posizione(20000, p => aggiorna(g.id, x => conPos(x, p)));
+  if (await registraPercorso()) avviaTraccia(g.id);          // dal tocco su «Inizia giro»: il browser permette di tenere acceso lo schermo
+  else posizione(20000, p => aggiorna(g.id, x => conPos(x, p)));
 }
 async function chiudiGiro() {
   const g = giroAttivo(); if (!g) return;
+  await fermaTraccia(g.id);
   g.fine = new Date().toISOString();
   const n = VOCI.filter(v => v.giro === g.id && v.tipo === "fungo").reduce((s, v) => s + (v.n || 1), 0);
   g.esito = g.esito || (n === 0 ? "niente" : n <= 5 ? "pochi" : n <= 20 ? "discreto" : "buttata");
-  await salva(g); await ricarica(); apri(g.id);
+  const tr = TRACCE.get(g.id); if (tr) Object.assign(g, misuraTraccia(tr));
+  await salva(g); await ricarica(); apri(g.id); programmaArchivio(5000);
   posizione(15000, p => aggiorna(g.id, x => { x.fine_lat = +p.coords.latitude.toFixed(6); x.fine_lon = +p.coords.longitude.toFixed(6); }));
 }
+
+// ---------------------------------------------------------------- percorso del giro (traccia GPS)
+// Su iPhone una pagina web a schermo spento non riceve il GPS: durante il giro l'app tiene acceso lo schermo (Wake Lock) e salva
+// i punti man mano (ogni 15 s), così se la pagina si chiude non si perde niente. Se lo schermo si spegne o si cambia app la traccia
+// si interrompe e riprende da sola al ritorno, con un nuovo tratto. Per la traccia completa in tasca: app di tracce + «Importa GPX».
+// Punto = [lat, lon, quota GPS, ora (ms), precisione m]; seg = indici dei punti dove comincia un nuovo tratto.
+let traccia = null, guardaT = null, schermo = null, salvataT = 0, schermoOk = null;
+const registraPercorso = async () => (await impostazione("percorso")) !== false;
+function metri(a, b) {   // [lat, lon] → metri
+  const k = Math.PI / 180, dl = (b[0] - a[0]) * k, dn = (b[1] - a[1]) * k * Math.cos((a[0] + b[0]) / 2 * k);
+  return 6371000 * Math.hypot(dl, dn);
+}
+function misuraTraccia(tr) {
+  let m = 0, su = 0; const P = tr.punti, S = new Set(tr.seg || [0]);
+  for (let i = 1; i < P.length; i++) {
+    if (S.has(i)) continue;
+    m += metri(P[i - 1], P[i]);
+    if (P[i][2] != null && P[i - 1][2] != null && P[i][2] > P[i - 1][2]) su += P[i][2] - P[i - 1][2];
+  }
+  const t = P.filter(x => x[3]).map(x => x[3]);
+  return { traccia_km: +(m / 1000).toFixed(2), traccia_punti: P.length, traccia_salita: Math.round(su),
+           traccia_min: t.length > 1 ? Math.round((t[t.length - 1] - t[0]) / 6e4) : null };
+}
+async function tieniAcceso() {
+  if (!("wakeLock" in navigator) || document.visibilityState !== "visible" || schermo) return;
+  try { schermo = await navigator.wakeLock.request("screen"); schermoOk = true; schermo.addEventListener("release", () => { schermo = null; }); }
+  catch (e) { schermoOk = false; }
+  disegnaGiro();
+}
+async function avviaTraccia(id) {
+  if (traccia && traccia.id === id && guardaT != null) return;
+  if (!traccia || traccia.id !== id) traccia = (await leggiTraccia(id)) || { id, fonte: "app", punti: [], seg: [0] };
+  if (traccia.fonte !== "app") { traccia = null; return; }          // c'è già una traccia importata da GPX
+  TRACCE.set(id, traccia);
+  tieniAcceso();
+  if (!navigator.geolocation) return;
+  if (guardaT != null) navigator.geolocation.clearWatch(guardaT);
+  guardaT = navigator.geolocation.watchPosition(nuovoPunto, e => {
+    mostraGps(null, e.code === 1 ? '<span style="color:var(--warn)">GPS non permesso</span>' : "GPS: nessun segnale");
+  }, { enableHighAccuracy: true, maximumAge: 0, timeout: 60000 });
+}
+function nuovoPunto(p) {
+  ultimaPos = p; mostraGps(p);
+  const g = giroAttivo(); if (!traccia || !g || g.id !== traccia.id) return;
+  const c = p.coords; if (c.accuracy > 35) return;                   // punto troppo impreciso
+  const P = traccia.punti, ult = P[P.length - 1], q = [c.latitude, c.longitude];
+  if (!g.lat) aggiorna(g.id, x => conPos(x, p));                     // punto di partenza del giro
+  if (ult) {
+    const d = metri(ult, q), dt = p.timestamp - ult[3];
+    if (d < Math.max(8, .8 * c.accuracy) && dt < 120000) return;    // fermo o quasi: niente punto nuovo (al massimo uno ogni 2 minuti)
+    if (dt > 180000 && traccia.seg[traccia.seg.length - 1] !== P.length) traccia.seg.push(P.length);   // buco di più di 3 minuti: nuovo tratto
+  }
+  P.push([+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude) : null, p.timestamp, Math.round(c.accuracy)]);
+  if (Date.now() - salvataT > 15000) salvaTraccia();
+  disegnaGiro(); if (mappa) disegnaTracce(); if (frame) disegnaSopra();
+}
+async function salvaTraccia() { if (!traccia) return; salvataT = Date.now(); traccia.aggiornata = new Date().toISOString(); try { await salvaTracciaDB(traccia); } catch {} }
+async function fermaTraccia(id) {
+  if (guardaT != null) { navigator.geolocation.clearWatch(guardaT); guardaT = null; }
+  if (schermo) { try { await schermo.release(); } catch {} schermo = null; }
+  if (traccia && traccia.id === id) { await salvaTraccia(); traccia = null; }
+}
+// lo schermo si spegne o si cambia app: si salva subito; al ritorno si riprende (nuovo tratto se il buco è lungo)
+document.addEventListener("visibilitychange", async () => {
+  if (document.visibilityState === "hidden") { await salvaTraccia(); return; }
+  const g = giroAttivo();
+  if (g && await registraPercorso()) { guardaT != null && navigator.geolocation.clearWatch(guardaT); guardaT = null; avviaTraccia(g.id); }
+});
 
 // ---------------------------------------------------------------- fungo trovato
 async function trovato() {
@@ -342,6 +438,9 @@ async function apri(id) {
         <div>La nostra mappa<b id="mappaval">${v.indice_mappa ?? "…"}</b></div>
       </div>
       <p class="nota" style="text-align:left;margin:0" id="mappanota">${v.indice_mappa != null ? "Porcino, cella della mappa più vicina al punto di partenza." : ""}</p></div>
+    <div class="campo"><span>Percorso</span><p style="margin:0" id="percorso">${percorsoTxt(v)}</p>
+      <div class="riga"><label class="btn">Importa percorso (GPX)…<input class="sr" type="file" id="gpx-giro" accept=".gpx,application/gpx+xml,application/xml,text/xml"></label>
+        ${TRACCE.get(v.id) && (!traccia || traccia.id !== v.id) ? `<button class="btn rosso" type="button" id="togli-traccia">Elimina percorso</button>` : ""}</div></div>
     ${!v.fine ? `<p class="avviso">Giro ancora aperto.</p>` : ""}`}
     <div class="campo"><label for="nota">Nota</label><textarea id="nota" placeholder="${fungo ? "es. sotto il faggio grande, versante nord" : "es. terreno secco, tanta gente"}">${esc(v.nota)}</textarea></div>
     <div class="campo"><label for="quando">Data e ora</label><input type="datetime-local" id="quando" value="${locale(v.t)}"></div>
@@ -371,6 +470,8 @@ async function apri(id) {
   $("#elimina").addEventListener("click", async () => {
     if (!confirm(fungo ? "Eliminare questo fungo?" : "Eliminare questo giro? I funghi restano.")) return;
     for (const k of (await leggi(v.id) || v).foto || []) await togliFoto(k);
+    if (!fungo) await togliTraccia(v.id);
+    await daCancellare(v);
     await togli(v.id); $("#foglio").close(); ricarica();
   });
   $("#sposta").addEventListener("click", () => { $("#foglio").close(); vai("mappa"); modoSegna = v.id; aggiornaNotaMappa(); });
@@ -380,6 +481,12 @@ async function apri(id) {
     $("#foglio").close(); apri(v.id);
   });
   if (fungo) mostraFoto(v);
+  const gg = $("#gpx-giro"); if (gg) gg.addEventListener("change", async e => { const f = e.target.files[0]; if (!f) return; await importaGPX(f, v.id); $("#foglio").close(); apri(v.id); });
+  const tt = $("#togli-traccia"); if (tt) tt.addEventListener("click", async () => {
+    if (!confirm("Eliminare il percorso di questo giro?")) return;
+    await togliTraccia(v.id); await aggiorna(v.id, x => { for (const k of ["traccia_km", "traccia_punti", "traccia_salita", "traccia_min"]) delete x[k]; });
+    $("#foglio").close(); apri(v.id);
+  });
   if (!$("#foglio").open) $("#foglio").showModal();
 }
 async function mostraFoto(v) {
@@ -416,7 +523,8 @@ document.querySelectorAll("nav button").forEach(b => b.addEventListener("click",
 const descr = v => v.tipo === "giro"
   ? `Giro${v.fine ? "" : " in corso"}${v.esito ? " · " + (ESITO.find(e => e[0] === v.esito) || [, v.esito])[1] : ""}`
   : `${v.n > 1 ? v.n + " × " : ""}${v.specie || "Porcino"}${v.stato ? " · " + v.stato.toLowerCase() : ""}`;
-const sotto = v => [v.tipo === "giro" && (v.fungaiolo != null || v.indice_mappa != null)
+const sotto = v => [v.autore && mioUtente && v.autore !== mioUtente ? "di " + v.autore : null, v.tipo === "giro" && v.traccia_km ? kmTxt(v.traccia_km) : null,
+    v.tipo === "giro" && (v.fungaiolo != null || v.indice_mappa != null)
     ? `Fungaiolo ${v.fungaiolo ?? "?"} · mappa ${v.indice_mappa ?? "?"}` : null, v.bosco, v.quota != null ? v.quota + " m" : null, v.lat == null ? "senza posizione" : v.manuale ? "posizione a mano" : v.prec > 30 ? "±" + v.prec + " m" : null]
   .filter(Boolean).join(" · ");
 function riga(v) {
@@ -426,16 +534,23 @@ function riga(v) {
 async function miniature(root) {
   for (const i of root.querySelectorAll("img[data-foto]")) { const r = await leggiFoto(i.dataset.foto); if (r) i.src = URL.createObjectURL(r.blob); }
 }
-function disegna() {
-  // giro
+const kmTxt = km => km < 1 ? Math.round(km * 1000) + " m" : km.toLocaleString("it-IT", { maximumFractionDigits: 1 }) + " km";
+function disegnaGiro() {
   const g = giroAttivo();
   if (g) {
     const n = VOCI.filter(v => v.giro === g.id && v.tipo === "fungo").reduce((s, v) => s + (v.n || 1), 0);
-    $("#giro").innerHTML = `<div><b>Giro in corso dalle ${ora(g.t)}</b><span>${n} funghi finora</span></div><button class="btn pieno" type="button" id="b-giro">Fine giro</button>`;
+    const tr = TRACCE.get(g.id), mis = tr && tr.punti.length ? misuraTraccia(tr) : null;
+    const perc = traccia && traccia.id === g.id
+      ? `Percorso ${mis ? kmTxt(mis.traccia_km) : "in attesa del GPS"}${schermoOk === false ? '<br><em style="color:var(--warn);font-style:normal">Lo schermo può spegnersi: tieni l\'app aperta (Impostazioni › Schermo e luminosità › Blocco automatico: Mai)</em>' : schermoOk ? " · schermo tenuto acceso" : ""}`
+      : tr && tr.fonte === "gpx" ? "Percorso da file GPX" : "Percorso non registrato";
+    $("#giro").innerHTML = `<div><b>Giro in corso dalle ${ora(g.t)}</b><span>${n} funghi finora · ${perc}</span></div><button class="btn pieno" type="button" id="b-giro">Fine giro</button>`;
   } else {
-    $("#giro").innerHTML = `<div><b>Esci a cercare?</b><span>Segna il giro: conta anche quando torni a mani vuote.</span></div><button class="btn" type="button" id="b-giro">Inizia giro</button>`;
+    $("#giro").innerHTML = `<div><b>Esci a cercare?</b><span>Segna il giro: conta anche quando torni a mani vuote. Il percorso si registra con l'app aperta.</span></div><button class="btn" type="button" id="b-giro">Inizia giro</button>`;
   }
   $("#b-giro").onclick = () => g ? chiudiGiro() : iniziaGiro();
+}
+function disegna() {
+  disegnaGiro();
   // oggi
   const oggi = new Date().toDateString(), di = VOCI.filter(v => new Date(v.t).toDateString() === oggi);
   $("#oggi").innerHTML = di.length ? `<div class="giorno"><h3>Oggi</h3>${di.map(riga).join("")}</div>` : "";
@@ -488,8 +603,22 @@ async function apriMappa() {
   setTimeout(() => mappa.invalidateSize(), 50);
   puntiMappa(true);
 }
+let stratoTracce = null;
+function disegnaTracce() {
+  if (!mappa) return;
+  if (!stratoTracce) stratoTracce = L.layerGroup().addTo(mappa);
+  stratoTracce.clearLayers();
+  for (const tr of TRACCE.values()) for (const tratto of tratti(tr))
+    L.polyline(tratto, { color: tr === traccia ? "#1d6fd8" : "#1e5149", weight: 4, opacity: .8, interactive: false }).addTo(stratoTracce);
+}
+// tratti della traccia: liste di [lat, lon], spezzate dove l'app non registrava
+function tratti(tr) {
+  const out = [], S = [...new Set([0, ...(tr.seg || [])])].sort((a, b) => a - b);
+  S.forEach((a, i) => { const b = i + 1 < S.length ? S[i + 1] : tr.punti.length; if (b - a > 1) out.push(tr.punti.slice(a, b).map(x => [x[0], x[1]])); });
+  return out;
+}
 function puntiMappa(adatta) {
-  if (!strato) return; strato.clearLayers();
+  if (!strato) return; strato.clearLayers(); disegnaTracce();
   const pts = [];
   VOCI.filter(v => v.lat != null).forEach(v => {
     const fungo = v.tipo === "fungo";
@@ -560,6 +689,8 @@ function disegnaSopra() {
   const { w, m } = mappaFrame(); if (!m || !w.L) return;
   if (!sopra || !m.hasLayer(sopra)) sopra = w.L.layerGroup().addTo(m);
   sopra.clearLayers();
+  for (const tr of TRACCE.values()) for (const tratto of tratti(tr))
+    w.L.polyline(tratto, { color: tr === traccia ? "#1d6fd8" : "#17302b", weight: 3, opacity: .75, dashArray: tr === traccia ? null : "6 5", interactive: false }).addTo(sopra);
   VOCI.filter(v => v.tipo === "fungo" && v.lat != null).forEach(v =>
     w.L.circleMarker([v.lat, v.lon], { radius: 6, color: "#7a3216", weight: 3, fillColor: "#fbefe3", fillOpacity: 1, pane: "markerPane" })
       .bindTooltip(`${new Date(v.t).toLocaleDateString("it-IT")} · ${descr(v)}`).on("click", () => apri(v.id)).addTo(sopra));
@@ -614,13 +745,14 @@ function esporta(tipo) {
     testo = JSON.stringify({ formato: "raccolte-funghi 1", esportato: new Date().toISOString(), voci: pulite }, null, 1);
   } else if (tipo === "csv") {
     nome = `raccolte-${oggi}.csv`; mime = "text/csv";
-    const col = ["id", "tipo", "data", "ora", "fine", "lat", "lon", "precisione_m", "quota_m", "specie", "quanti", "stato", "bosco", "esito", "giro", "nota", "posizione_a_mano", "fungaiolo", "indice_mappa"];
+    const col = ["id", "tipo", "data", "ora", "fine", "lat", "lon", "precisione_m", "quota_m", "specie", "quanti", "stato", "bosco", "esito", "giro", "nota", "posizione_a_mano", "fungaiolo", "indice_mappa", "percorso_km"];
     testo = "﻿" + col.join(";") + "\n" + pulite.slice().reverse().map(v => [v.id, v.tipo, locale(v.t).slice(0, 10), locale(v.t).slice(11), v.fine ? locale(v.fine).slice(11) : "",
-      v.lat, v.lon, v.prec, v.quota, v.specie, v.tipo === "fungo" ? v.n : "", v.stato, v.bosco, v.esito, v.giro, v.nota, v.manuale ? "si" : "", v.fungaiolo, v.indice_mappa].map(csvCampo).join(";")).join("\n");
+      v.lat, v.lon, v.prec, v.quota, v.specie, v.tipo === "fungo" ? v.n : "", v.stato, v.bosco, v.esito, v.giro, v.nota, v.manuale ? "si" : "", v.fungaiolo, v.indice_mappa, v.traccia_km].map(csvCampo).join(";")).join("\n");
   } else {
     nome = `raccolte-${oggi}.gpx`; mime = "application/gpx+xml";
     testo = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Raccolte funghi" xmlns="http://www.topografix.com/GPX/1/1">\n` +
-      pulite.filter(v => v.lat != null).reverse().map(v => `<wpt lat="${v.lat}" lon="${v.lon}">${v.quota != null ? `<ele>${v.quota}</ele>` : ""}<time>${v.t}</time><name>${esc(descr(v))}</name><desc>${esc([sotto(v), v.nota].filter(Boolean).join(" · "))}</desc></wpt>`).join("\n") + "\n</gpx>\n";
+      pulite.filter(v => v.lat != null).reverse().map(v => `<wpt lat="${v.lat}" lon="${v.lon}">${v.quota != null ? `<ele>${v.quota}</ele>` : ""}<time>${v.t}</time><name>${esc(descr(v))}</name><desc>${esc([sotto(v), v.nota].filter(Boolean).join(" · "))}</desc></wpt>`).join("\n") +
+      "\n" + pulite.filter(v => v.tipo === "giro" && TRACCE.get(v.id)).reverse().map(v => trkGPX(TRACCE.get(v.id), `Giro ${giornoTxt(v.t)} ${ora(v.t)}`)).join("\n") + "\n</gpx>\n";
   }
   const file = new File([testo], nome, { type: mime });
   if (navigator.canShare && navigator.canShare({ files: [file] })) navigator.share({ files: [file], title: nome }).catch(() => {});
@@ -639,6 +771,212 @@ $("#importa").addEventListener("change", async e => {
   e.target.value = "";
 });
 
+// ---------------------------------------------------------------- percorsi: testo, GPX in uscita e in entrata
+function percorsoTxt(v) {
+  const tr = TRACCE.get(v.id);
+  if (!tr || tr.punti.length < 2) return traccia && traccia.id === v.id ? "Registrazione in corso, in attesa del GPS." : "Nessun percorso per questo giro.";
+  const m = misuraTraccia(tr), h = m.traccia_min == null ? null : m.traccia_min < 60 ? `${m.traccia_min} min` : `${Math.floor(m.traccia_min / 60)} h ${String(m.traccia_min % 60).padStart(2, "0")} min`;
+  return [kmTxt(m.traccia_km), h, m.traccia_salita ? `salita ${m.traccia_salita} m` : null, `${m.traccia_punti} punti`,
+          tr.fonte === "gpx" ? "da file GPX" : (traccia && traccia.id === v.id ? "registrazione in corso" : "registrato dall'app"),
+          (tr.seg || []).length > 1 ? `${tr.seg.length} tratti` : null].filter(Boolean).join(" · ");
+}
+function trkGPX(tr, nome) {
+  const S = [...new Set([0, ...(tr.seg || [])])].sort((a, b) => a - b), pt = x =>
+    `<trkpt lat="${x[0]}" lon="${x[1]}">${x[2] != null ? `<ele>${x[2]}</ele>` : ""}${x[3] ? `<time>${new Date(x[3]).toISOString()}</time>` : ""}</trkpt>`;
+  return `<trk><name>${esc(nome)}</name>` + S.map((a, i) => tr.punti.slice(a, i + 1 < S.length ? S[i + 1] : tr.punti.length))
+    .filter(t => t.length).map(t => "<trkseg>" + t.map(pt).join("") + "</trkseg>").join("") + "</trk>";
+}
+// GPX di un'app di tracce: si aggancia al giro indicato o a quello con gli orari che si sovrappongono di più; se non c'è, nuovo giro
+async function importaGPX(file, giroId) {
+  let doc; try { doc = new DOMParser().parseFromString(await file.text(), "application/xml"); } catch { avviso("File GPX non valido"); return; }
+  const punti = [], seg = [];
+  const segmenti = [...doc.getElementsByTagNameNS("*", "trkseg")];
+  const gruppi = segmenti.length ? segmenti.map(x => [...x.getElementsByTagNameNS("*", "trkpt")]) : [[...doc.getElementsByTagNameNS("*", "rtept")]];
+  for (const g of gruppi) {
+    if (!g.length) continue; seg.push(punti.length);
+    for (const q of g) {
+      const la = +q.getAttribute("lat"), lo = +q.getAttribute("lon"); if (!isFinite(la) || !isFinite(lo)) continue;
+      const e = q.getElementsByTagNameNS("*", "ele")[0], t = q.getElementsByTagNameNS("*", "time")[0];
+      punti.push([+la.toFixed(6), +lo.toFixed(6), e ? Math.round(+e.textContent) : null, t ? Date.parse(t.textContent) || null : null, null]);
+    }
+  }
+  if (punti.length < 2) { avviso("Nel file non c'è un percorso"); return; }
+  const t0 = punti.find(x => x[3]), t1 = [...punti].reverse().find(x => x[3]);
+  let g = giroId ? VOCI.find(v => v.id === giroId) : null;
+  if (!g && t0) {
+    let meglio = 0;
+    for (const v of VOCI.filter(v => v.tipo === "giro")) {
+      const a = Math.max(Date.parse(v.t), t0[3]), b = Math.min(v.fine ? Date.parse(v.fine) : Date.now(), t1[3]);
+      if (b - a > meglio) { meglio = b - a; g = v; }
+    }
+  }
+  if (!g) {
+    if (!t0) { avviso("Il file non ha gli orari: aprilo dal giro giusto (Elenco › giro › Importa percorso)"); return; }
+    g = { id: nuovoId(), tipo: "giro", t: new Date(t0[3]).toISOString(), fine: new Date(t1[3]).toISOString(), esito: null, nota: "da percorso GPX",
+          lat: punti[0][0], lon: punti[0][1], prec: null, quota: punti[0][2], fine_lat: punti[punti.length - 1][0], fine_lon: punti[punti.length - 1][1] };
+    await salva(g);
+  } else if (TRACCE.get(g.id) && !confirm("Questo giro ha già un percorso: lo sostituisco con quello del file?")) return;
+  if (traccia && traccia.id === g.id) await fermaTraccia(g.id);
+  const tr = { id: g.id, fonte: "gpx", file: file.name, punti, seg, aggiornata: new Date().toISOString() };
+  await salvaTracciaDB(tr);
+  await aggiorna(g.id, x => Object.assign(x, misuraTraccia(tr), x.lat == null ? { lat: punti[0][0], lon: punti[0][1], prec: null } : {}));
+  avviso(`Percorso agganciato al giro del ${new Date(g.t).toLocaleDateString("it-IT")} (${kmTxt(misuraTraccia(tr).traccia_km)})`);
+}
+$("#importa-gpx").addEventListener("change", async e => { const f = e.target.files[0]; if (f) await importaGPX(f); e.target.value = ""; });
+(async () => { const c = $("#opt-percorso"); c.checked = await registraPercorso(); c.addEventListener("change", () => imposta("percorso", c.checked)); })();
+
+// ---------------------------------------------------------------- archivio privato (repository GitHub PRIVATO dell'utente)
+// L'utente crea il repository e una sua chiave (token «fine-grained» solo per quel repository, permesso Contents: lettura e
+// scrittura) e li scrive qui: la chiave resta in questo telefono e va solo a api.github.com. Un repository pubblico viene rifiutato.
+// File: giri/AAAA/AAAA-MM-GG_<id>.json (giro, funghi, percorso) e .gpx; funghi/AAAA/AAAA-MM-GG_<id>.json (funghi senza giro);
+// foto/<id>.jpg. Si caricano solo i file cambiati (confronto con l'impronta git dei file nel repository); le voci di altre
+// persone (scaricate dall'archivio comune) non si ricaricano.
+const GH = "https://api.github.com";
+let archivioT = null, sincronizzando = false, mioUtente = null;
+async function gh(A, metodo, perc, corpo, grezzo) {
+  const r = await fetch(GH + perc, { method: metodo, cache: "no-store", headers: { Authorization: "Bearer " + A.token,
+    Accept: grezzo ? "application/vnd.github.raw" : "application/vnd.github+json", ...(corpo ? { "Content-Type": "application/json" } : {}) },
+    body: corpo ? JSON.stringify(corpo) : undefined });
+  if (!r.ok) { const e = new Error(String(r.status)); e.stato = r.status; try { e.dettaglio = (await r.json()).message; } catch {} throw e; }
+  return grezzo ? r.blob() : r.status === 204 ? null : r.json();
+}
+const erroreGH = e => e.stato === 401 ? "la chiave non è valida o è scaduta: creane una nuova"
+  : e.stato === 403 ? "la chiave non ha il permesso di scrivere (serve Contents: Read and write) oppure troppe richieste: riprova fra poco"
+  : e.stato === 404 ? "repository non trovato: controlla il nome e che la chiave comprenda proprio quel repository"
+  : e.stato === 409 || e.stato === 422 ? "il repository è cambiato nel frattempo: riprova"
+  : e.stato ? `errore ${e.stato}${e.dettaglio ? " (" + e.dettaglio + ")" : ""}` : "GitHub non raggiungibile (rete assente o lenta)";
+async function shaGit(bytes) {
+  const h = new TextEncoder().encode(`blob ${bytes.length}\0`), b = new Uint8Array(h.length + bytes.length); b.set(h); b.set(bytes, h.length);
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-1", b))].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+function b64(bytes) { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); }
+const percorsoFile = p => p.split("/").map(encodeURIComponent).join("/");
+async function alberoRemoto(A) {
+  try { const t = await gh(A, "GET", `/repos/${A.repo}/git/trees/${encodeURIComponent(A.ramo || "main")}?recursive=1`);
+        const o = {}; for (const x of t.tree || []) if (x.type === "blob") o[x.path] = x.sha; return o; }
+  catch (e) { if (e.stato === 409) return {}; throw e; }                     // repository ancora vuoto
+}
+function gpxGiro(g, funghi, tr) {
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Raccolte funghi" xmlns="http://www.topografix.com/GPX/1/1">\n` +
+    [g, ...funghi].filter(v => v.lat != null).map(v => `<wpt lat="${v.lat}" lon="${v.lon}">${v.quota != null ? `<ele>${v.quota}</ele>` : ""}<time>${v.t}</time><name>${esc(descr(v))}</name><desc>${esc([sotto(v), v.nota].filter(Boolean).join(" · "))}</desc></wpt>`).join("\n") +
+    (tr && tr.punti.length > 1 ? "\n" + trkGPX(tr, `Giro ${giornoTxt(g.t)} ${ora(g.t)}`) : "") + "\n</gpx>\n";
+}
+function fileArchivio(A) {
+  const out = [], giorno = t => locale(t).slice(0, 10), mio = v => !v.autore || v.autore === A.utente;
+  const conAutore = v => ({ ...v, autore: v.autore || A.utente || undefined });
+  const giri = VOCI.filter(v => v.tipo === "giro"), idGiri = new Set(giri.map(v => v.id));
+  for (const g of giri.filter(mio)) {
+    const funghi = VOCI.filter(v => v.tipo === "fungo" && v.giro === g.id).reverse(), tr = TRACCE.get(g.id);
+    const base = `giri/${giorno(g.t).slice(0, 4)}/${giorno(g.t)}_${g.id}`;
+    out.push({ path: base + ".json", id: g.id, testo: JSON.stringify({ formato: "raccolte-funghi giro 1", giro: conAutore(g), funghi: funghi.map(conAutore),
+      percorso: tr ? { fonte: tr.fonte, punti: tr.punti, seg: tr.seg || [0] } : null }, null, 1) });
+    if ((tr && tr.punti.length > 1) || g.lat != null || funghi.some(f => f.lat != null)) out.push({ path: base + ".gpx", id: g.id, testo: gpxGiro(g, funghi, tr) });
+  }
+  for (const f of VOCI.filter(v => v.tipo === "fungo" && !(v.giro && idGiri.has(v.giro)) && mio(v)))
+    out.push({ path: `funghi/${giorno(f.t).slice(0, 4)}/${giorno(f.t)}_${f.id}.json`, id: f.id, testo: JSON.stringify({ formato: "raccolte-funghi fungo 1", fungo: conAutore(f) }, null, 1) });
+  if (A.foto !== false) for (const v of VOCI.filter(mio)) for (const k of v.foto || []) out.push({ path: `foto/${k}.jpg`, foto: k });
+  return out;
+}
+const LEGGIMI = `# Archivio privato delle raccolte\n\nScritto dall'app Raccolte (mappa-funghi). Tenere questo repository PRIVATO.\n\n` +
+  `- giri/AAAA/AAAA-MM-GG_<id>.json: giro, funghi trovati, percorso (punti: lat, lon, quota, ora in ms, precisione in m)\n` +
+  `- giri/AAAA/AAAA-MM-GG_<id>.gpx: lo stesso giro da aprire in altre app\n- funghi/AAAA/...: funghi segnati fuori da un giro\n- foto/<id>.jpg: foto\n`;
+function programmaArchivio(ms = 20000) { clearTimeout(archivioT); archivioT = setTimeout(() => sincronizza(false), ms); }
+async function daCancellare(v) {
+  if (!(await impostazione("archivio"))) return;
+  const l = (await impostazione("cancellati")) || []; l.push(v.id, ...(v.foto || []).map(k => `foto/${k}.jpg`)); await imposta("cancellati", l);
+}
+async function sincronizza(aMano) {
+  const A = await impostazione("archivio");
+  if (!A || !A.token || sincronizzando) return;
+  if (!navigator.onLine) { if (aMano) disegnaArchivio("Senza rete: salvo nell'archivio appena torna."); return; }
+  sincronizzando = true; if (aMano) disegnaArchivio("Salvo nell'archivio…");
+  try {
+    const remoti = await alberoRemoto(A), perId = {};
+    for (const p of Object.keys(remoti)) { const m = p.match(/_([a-z0-9]+)\.(json|gpx)$/); if (m) (perId[m[1]] ||= []).push(p); }
+    let n = 0;
+    for (const f of fileArchivio(A)) {
+      let bytes;
+      if (f.foto) { if (remoti[f.path]) continue; const r = await leggiFoto(f.foto); if (!r) continue; bytes = new Uint8Array(await r.blob.arrayBuffer()); }
+      else bytes = new TextEncoder().encode(f.testo);
+      const sha = await shaGit(bytes);
+      if (remoti[f.path] === sha) continue;
+      await gh(A, "PUT", `/repos/${A.repo}/contents/${percorsoFile(f.path)}`, { message: `${f.foto ? "Foto" : "Raccolte"}: ${f.path.split("/").pop()}`,
+        content: b64(bytes), ...(remoti[f.path] ? { sha: remoti[f.path] } : {}) });
+      remoti[f.path] = sha; n++;
+      for (const vecchio of perId[f.id] || [])           // stesso giro salvato con un'altra data (data cambiata a mano)
+        if (vecchio !== f.path && vecchio.slice(-4) === f.path.slice(-4) && remoti[vecchio]) {
+          await gh(A, "DELETE", `/repos/${A.repo}/contents/${percorsoFile(vecchio)}`, { message: `Raccolte: spostato ${vecchio.split("/").pop()}`, sha: remoti[vecchio] }); delete remoti[vecchio]; }
+    }
+    const canc = (await impostazione("cancellati")) || [];
+    for (const x of canc) for (const p of x.includes("/") ? [x] : perId[x] || [])
+      if (remoti[p]) { await gh(A, "DELETE", `/repos/${A.repo}/contents/${percorsoFile(p)}`, { message: `Raccolte: eliminato ${p.split("/").pop()}`, sha: remoti[p] }); delete remoti[p]; n++; }
+    if (canc.length) await imposta("cancellati", []);
+    if (!remoti["LEGGIMI.md"]) await gh(A, "PUT", `/repos/${A.repo}/contents/LEGGIMI.md`, { message: "Archivio delle raccolte", content: b64(new TextEncoder().encode(LEGGIMI)) });
+    A.ultimo = new Date().toISOString(); await imposta("archivio", A);
+    disegnaArchivio(n ? `Archivio aggiornato (${n} file).` : aMano ? "Tutto già salvato nell'archivio." : null);
+  } catch (e) { disegnaArchivio("Archivio: " + erroreGH(e)); }
+  finally { sincronizzando = false; }
+}
+async function scaricaArchivio() {
+  const A = await impostazione("archivio"); if (!A) return;
+  disegnaArchivio("Scarico dall'archivio…");
+  try {
+    const remoti = await alberoRemoto(A), locali = new Set(VOCI.map(v => v.id)); let nuove = 0, foto = 0;
+    for (const p of Object.keys(remoti).filter(p => /^(giri|funghi)\/.*\.json$/.test(p))) {
+      const m = p.match(/_([a-z0-9]+)\.json$/); if (!m || locali.has(m[1])) continue;     // c'è già sul telefono: vale quella
+      const js = JSON.parse(await (await gh(A, "GET", `/repos/${A.repo}/contents/${percorsoFile(p)}`, null, true)).text());
+      const voci = js.giro ? [js.giro, ...(js.funghi || [])] : js.fungo ? [js.fungo] : [];
+      for (const v of voci) if (v && v.id && v.t && !locali.has(v.id)) { await salva({ ...v, foto: v.foto || [] }); locali.add(v.id); nuove++; }
+      if (js.giro && js.percorso && js.percorso.punti) await salvaTracciaDB({ id: js.giro.id, ...js.percorso });
+      for (const v of voci) for (const k of v.foto || []) if (remoti[`foto/${k}.jpg`] && !(await leggiFoto(k))) {
+        await salvaFoto({ id: k, voce: v.id, blob: await gh(A, "GET", `/repos/${A.repo}/contents/foto/${encodeURIComponent(k)}.jpg`, null, true) }); foto++; }
+    }
+    await ricarica(); disegnaArchivio(nuove ? `Scaricate ${nuove} voci${foto ? ` e ${foto} foto` : ""}.` : "Niente di nuovo nell'archivio.");
+  } catch (e) { disegnaArchivio("Archivio: " + erroreGH(e)); }
+}
+async function collega() {
+  const repo = $("#arch-repo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, ""), token = $("#arch-token").value.trim();
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || !token) { disegnaArchivio("Scrivi il repository come nome/repository e incolla la chiave."); return; }
+  const A = { repo, token, foto: true }; $("#arch-collega").disabled = true;
+  try {
+    const info = await gh(A, "GET", `/repos/${repo}`);
+    if (!info.private) { disegnaArchivio(`${repo} è PUBBLICO: i tuoi posti sarebbero visibili a tutti. Usa un repository privato.`); return; }
+    const io = await gh(A, "GET", "/user").catch(() => null);
+    A.utente = (io && io.login) || null; A.ramo = info.default_branch || "main"; A.repo = info.full_name || repo;
+    await imposta("archivio", A); mioUtente = A.utente;
+    disegnaArchivio("Collegato."); await sincronizza(true);
+  } catch (e) { disegnaArchivio("Non collegato: " + erroreGH(e)); }
+}
+async function disegnaArchivio(msg) {
+  const A = await impostazione("archivio"), box = $("#archivio");
+  const vecchio = $("#arch-msg") && $("#arch-msg").textContent;
+  if (!A) {
+    box.innerHTML = `<h2>Archivio privato</h2>
+      <p class="nota" style="text-align:left">Copia giri, percorsi, funghi e foto in un tuo repository GitHub <b>privato</b>: li vedi solo tu e chi inviti, e non si perdono se cambi telefono. La chiave resta su questo telefono e apre solo quel repository.</p>
+      <label class="campo"><span>Repository privato (nome/repository)</span><input type="text" id="arch-repo" placeholder="alessiobandiera/funghi-privato" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
+      <label class="campo"><span>Chiave (token di GitHub)</span><input type="password" id="arch-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <button class="btn pieno" type="button" id="arch-collega" style="align-self:flex-start">Collega</button>
+      <p class="nota" style="text-align:left" id="arch-msg">${esc(msg || "")}</p>`;
+    $("#arch-collega").onclick = collega; return;
+  }
+  const ultimo = A.ultimo ? new Date(A.ultimo).toLocaleString("it-IT", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : null;
+  box.innerHTML = `<h2>Archivio privato</h2>
+    <p>Collegato a <b>${esc(A.repo)}</b>${A.utente ? ` come ${esc(A.utente)}` : ""}. Si salva da solo quando c'è rete.</p>
+    <p class="nota" style="text-align:left" id="arch-msg">${esc(msg || vecchio || (ultimo ? `Ultimo salvataggio: ${ultimo}.` : "Non ancora salvato."))}</p>
+    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="arch-foto" style="width:22px;height:22px"${A.foto !== false ? " checked" : ""}>Salva anche le foto</label>
+    <div class="riga"><button class="btn pieno" type="button" id="arch-salva">Salva ora</button><button class="btn" type="button" id="arch-scarica">Scarica dall'archivio</button>
+      <button class="btn rosso" type="button" id="arch-scollega">Scollega</button></div>`;
+  $("#arch-salva").onclick = () => sincronizza(true);
+  $("#arch-scarica").onclick = scaricaArchivio;
+  $("#arch-foto").onchange = async e => { const x = await impostazione("archivio"); x.foto = e.target.checked; await imposta("archivio", x); };
+  $("#arch-scollega").onclick = async () => {
+    if (!confirm("Scollegare l'archivio? La chiave viene tolta da questo telefono; i dati restano sia qui sia nel repository.")) return;
+    await togliImpostazione("archivio"); mioUtente = null; disegnaArchivio("Scollegato.");
+  };
+}
+addEventListener("online", () => programmaArchivio(3000));
+impostazione("archivio").then(A => { mioUtente = A ? A.utente : null; disegnaArchivio(); });
+
 // ---------------------------------------------------------------- varie
 let tt; function avviso(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 2600); }
 $("#trovato").addEventListener("click", trovato);
@@ -652,7 +990,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("raccolte-sw.
 // GPS acceso mentre la pagina è aperta: al tocco la posizione è già pronta
 function sveglia() { if (document.visibilityState === "visible") posizione(30000); }
 document.addEventListener("visibilitychange", sveglia);
-ricarica().then(() => { statoApp(); sveglia(); });
+ricarica().then(async () => { statoApp(); const g = giroAttivo(); if (g && await registraPercorso()) avviaTraccia(g.id); else sveglia(); });
 </script>
 </body>
 </html>
