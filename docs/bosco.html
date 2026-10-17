@@ -703,6 +703,7 @@ $("percorsi").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; mo
 let SENZA_RETE=false, salvateLayer=null;
 const fileTessera=id=>[`terreno/t/${id}_a.png`,`terreno/t/${id}_b.png`,`terreno/t/${id}_c.png`,`terreno/f/${id}.png`,`terreno/m/${id}.png`,`terreno/s/${id}.json`];
 async function tessereSalvate(){
+  if (window.AppCopie) return window.AppCopie.elenco();                 // app per iPhone (app-ios/app-nativa.js)
   if (!("caches" in window)) return {ids:[], byte:0};
   const c=await caches.open("mappa-zone"), ks=await c.keys(), ids=new Set(); let byte=0;
   for (const k of ks){ const m=k.url.match(/terreno\/t\/(.+)_a\.png$/); if (m) ids.add(m[1]); }
@@ -711,7 +712,7 @@ async function tessereSalvate(){
 }
 async function infoZone(){
   if (!IDX) return;
-  if (!("caches" in window) || !("serviceWorker" in navigator)){ $("salvaZona").disabled=true; $("zoneInfo").textContent="Questo browser non permette di salvare le zone sul telefono."; return; }
+  if (!window.AppCopie && (!("caches" in window) || !("serviceWorker" in navigator))){ $("salvaZona").disabled=true; $("zoneInfo").textContent="Questo browser non permette di salvare le zone sul telefono."; return; }
   const {ids, byte}=await tessereSalvate();
   $("eliminaZone").hidden=!ids.length;
   if (salvateLayer){ map.removeLayer(salvateLayer); salvateLayer=null; }
@@ -729,20 +730,21 @@ $("salvaZona").onclick=async()=>{
   bt.disabled=true;
   try{
     if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
-    const c=await caches.open("mappa-zone"); let n=0;
     const tutti=ids.flatMap(fileTessera);
+    if (window.AppCopie) await window.AppCopie.salva(tutti, f=>{ bt.textContent=`Salvo… ${Math.round(100*f)}%`; });
+    else { const c=await caches.open("mappa-zone"); let n=0;
     for (const u of tutti){
       bt.textContent=`Salvo… ${Math.round(100*n/tutti.length)}%`;
       const r=await fetch(u,{cache:"no-cache"});
       if (r.ok) await c.put(new URL(u,location.href).href, r);
       else if (u.includes("/t/")) throw new Error(u+" "+r.status);
       n++;
-    }
+    } }
     await infoZone();
   }catch(e){ console.error(e); $("zoneInfo").textContent="Salvataggio non riuscito: servono la rete e un po' di spazio sul telefono. Riprova."; }
   bt.disabled=false; bt.textContent="Salva questa zona";
 };
-$("eliminaZone").onclick=async()=>{ await caches.delete("mappa-zone"); $("zoneInfo").textContent="Zone salvate eliminate."; await infoZone(); };
+$("eliminaZone").onclick=async()=>{ if (window.AppCopie) await window.AppCopie.elimina(); else await caches.delete("mappa-zone"); $("zoneInfo").textContent="Zone salvate eliminate."; await infoZone(); };
 
 $("opac").oninput=e=>{ $("opaclbl").textContent=e.target.value+"%"; for (const t of tessere.values()) if (t.overlay) t.overlay.setOpacity(e.target.value/100); };
 

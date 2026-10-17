@@ -322,6 +322,8 @@ async function chiudiGiro() {
 // si interrompe e riprende da sola al ritorno, con un nuovo tratto. Per la traccia completa in tasca: app di tracce + «Importa GPX».
 // Punto = [lat, lon, quota GPS, ora (ms), precisione m]; seg = indici dei punti dove comincia un nuovo tratto.
 let traccia = null, guardaT = null, schermo = null, salvataT = 0, schermoOk = null;
+// app per iPhone (app-ios/): GPS anche a schermo spento con il plugin nativo, niente schermo acceso
+const gpsNativo = () => window.APP_NATIVA && window.capacitorExports ? (window.__gpsNativo ||= window.capacitorExports.registerPlugin("BackgroundGeolocation")) : null;
 const registraPercorso = async () => (await impostazione("percorso")) !== false;
 function metri(a, b) {   // [lat, lon] → metri
   const k = Math.PI / 180, dl = (b[0] - a[0]) * k, dn = (b[1] - a[1]) * k * Math.cos((a[0] + b[0]) / 2 * k);
@@ -349,6 +351,18 @@ async function avviaTraccia(id) {
   if (!traccia || traccia.id !== id) traccia = (await leggiTraccia(id)) || { id, fonte: "app", punti: [], seg: [0] };
   if (traccia.fonte !== "app") { traccia = null; return; }          // c'è già una traccia importata da GPX
   TRACCE.set(id, traccia);
+  if (gpsNativo()) {
+    if (guardaT != null) return;
+    guardaT = "in avvio"; schermoOk = "app"; disegnaGiro();
+    try {
+      guardaT = await gpsNativo().addWatcher({ backgroundMessage: "Raccolte sta registrando il percorso del giro", backgroundTitle: "Giro in corso",
+        requestPermissions: true, stale: false, distanceFilter: 8 }, (q, err) => {
+          if (err) { if (err.code === "NOT_AUTHORIZED") mostraGps(null, '<span style="color:var(--warn)">Posizione non permessa: Impostazioni › Raccolte › Posizione</span>'); return; }
+          if (q) nuovoPunto({ coords: { latitude: q.latitude, longitude: q.longitude, accuracy: q.accuracy, altitude: q.altitude, altitudeAccuracy: q.altitudeAccuracy }, timestamp: q.time || Date.now() });
+        });
+    } catch (e) { guardaT = null; schermoOk = false; disegnaGiro(); }
+    return;
+  }
   tieniAcceso();
   if (!navigator.geolocation) return;
   if (guardaT != null) navigator.geolocation.clearWatch(guardaT);
@@ -373,6 +387,7 @@ function nuovoPunto(p) {
 }
 async function salvaTraccia() { if (!traccia) return; salvataT = Date.now(); traccia.aggiornata = new Date().toISOString(); try { await salvaTracciaDB(traccia); } catch {} }
 async function fermaTraccia(id) {
+  if (guardaT != null && gpsNativo()) { try { await gpsNativo().removeWatcher({ id: guardaT }); } catch {} guardaT = null; }
   if (guardaT != null) { navigator.geolocation.clearWatch(guardaT); guardaT = null; }
   if (schermo) { try { await schermo.release(); } catch {} schermo = null; }
   if (traccia && traccia.id === id) { await salvaTraccia(); traccia = null; }
@@ -380,6 +395,7 @@ async function fermaTraccia(id) {
 // lo schermo si spegne o si cambia app: si salva subito; al ritorno si riprende (nuovo tratto se il buco è lungo)
 document.addEventListener("visibilitychange", async () => {
   if (document.visibilityState === "hidden") { await salvaTraccia(); return; }
+  if (gpsNativo()) return;                                   // nell'app il GPS continua da solo anche in background
   const g = giroAttivo();
   if (g && await registraPercorso()) { guardaT != null && navigator.geolocation.clearWatch(guardaT); guardaT = null; avviaTraccia(g.id); }
 });
@@ -541,7 +557,7 @@ function disegnaGiro() {
     const n = VOCI.filter(v => v.giro === g.id && v.tipo === "fungo").reduce((s, v) => s + (v.n || 1), 0);
     const tr = TRACCE.get(g.id), mis = tr && tr.punti.length ? misuraTraccia(tr) : null;
     const perc = traccia && traccia.id === g.id
-      ? `Percorso ${mis ? kmTxt(mis.traccia_km) : "in attesa del GPS"}${schermoOk === false ? '<br><em style="color:var(--warn);font-style:normal">Lo schermo può spegnersi: tieni l\'app aperta (Impostazioni › Schermo e luminosità › Blocco automatico: Mai)</em>' : schermoOk ? " · schermo tenuto acceso" : ""}`
+      ? `Percorso ${mis ? kmTxt(mis.traccia_km) : "in attesa del GPS"}${schermoOk === "app" ? " · registra anche a schermo spento" : schermoOk === false ? '<br><em style="color:var(--warn);font-style:normal">Lo schermo può spegnersi: tieni l\'app aperta (Impostazioni › Schermo e luminosità › Blocco automatico: Mai)</em>' : schermoOk ? " · schermo tenuto acceso" : ""}`
       : tr && tr.fonte === "gpx" ? "Percorso da file GPX" : "Percorso non registrato";
     $("#giro").innerHTML = `<div><b>Giro in corso dalle ${ora(g.t)}</b><span>${n} funghi finora · ${perc}</span></div><button class="btn pieno" type="button" id="b-giro">Fine giro</button>`;
   } else {
@@ -641,7 +657,7 @@ let frame = null, sopra = null, primaVolta = true, aprendo = false;
 async function apriPrevisioni() {
   if (frame) { disegnaSopra(); return; }
   if (aprendo) return;
-  if (!navigator.onLine) {
+  if (!navigator.onLine && !window.APP_NATIVA) {
     // senza rete: la mappa si apre se è salvata sul telefono (docs/mappa-sw.js tiene l'ultima previsione scaricata)
     aprendo = true;
     let salvata = false; try { salvata = !!(await caches.match(new URL("index.html", location.href).href)); } catch {}
@@ -848,7 +864,25 @@ const erroreGH = e => e.stato === 401 ? "la chiave non è valida o è scaduta: c
   : e.stato ? `errore ${e.stato}${e.dettaglio ? " (" + e.dettaglio + ")" : ""}` : "GitHub non raggiungibile (rete assente o lenta)";
 async function shaGit(bytes) {
   const h = new TextEncoder().encode(`blob ${bytes.length}\0`), b = new Uint8Array(h.length + bytes.length); b.set(h); b.set(bytes, h.length);
+  if (!(window.crypto && crypto.subtle)) return sha1(b);      // nell'app per iPhone crypto.subtle potrebbe mancare
   return [...new Uint8Array(await crypto.subtle.digest("SHA-1", b))].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+function sha1(m) {   // SHA-1 semplice (solo per confrontare i file con quelli del repository)
+  const n = m.length, l = ((n + 8) >> 6) + 1, w = new Uint32Array(l * 16);
+  for (let i = 0; i < n; i++) w[i >> 2] |= m[i] << (24 - (i % 4) * 8);
+  w[n >> 2] |= 0x80 << (24 - (n % 4) * 8); w[l * 16 - 1] = n * 8; w[l * 16 - 2] = Math.floor(n / 0x20000000);
+  let [a, b, c, d, e] = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0]; const W = new Uint32Array(80), rot = (x, k) => (x << k) | (x >>> (32 - k));
+  for (let i = 0; i < w.length; i += 16) {
+    for (let t = 0; t < 80; t++) W[t] = t < 16 ? w[i + t] : rot(W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16], 1);
+    let [A, B, C, D, E] = [a, b, c, d, e];
+    for (let t = 0; t < 80; t++) {
+      const f = t < 20 ? (B & C) | (~B & D) : t < 40 ? B ^ C ^ D : t < 60 ? (B & C) | (B & D) | (C & D) : B ^ C ^ D;
+      const k = t < 20 ? 0x5a827999 : t < 40 ? 0x6ed9eba1 : t < 60 ? 0x8f1bbcdc : 0xca62c1d6;
+      const x = (rot(A, 5) + f + E + k + W[t]) >>> 0; E = D; D = C; C = rot(B, 30) >>> 0; B = A; A = x;
+    }
+    a = (a + A) >>> 0; b = (b + B) >>> 0; c = (c + C) >>> 0; d = (d + D) >>> 0; e = (e + E) >>> 0;
+  }
+  return [a, b, c, d, e].map(x => x.toString(16).padStart(8, "0")).join("");
 }
 function b64(bytes) { let s = ""; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); }
 const percorsoFile = p => p.split("/").map(encodeURIComponent).join("/");
@@ -984,6 +1018,7 @@ impostazione("archivio").then(A => { mioUtente = A ? A.utente : null; disegnaArc
 let tt; function avviso(t) { const el = $("#toast"); el.textContent = t; el.classList.add("on"); clearTimeout(tt); tt = setTimeout(() => el.classList.remove("on"), 2600); }
 $("#trovato").addEventListener("click", trovato);
 async function statoApp() {
+  if (window.APP_NATIVA) { $("#stato-app").innerHTML = "✓ App per iPhone: il percorso si registra anche a schermo spento." + (gpsNativo() ? "" : " (GPS in background non disponibile)"); return; }
   const casa = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
   let pers = false; try { pers = navigator.storage && (await navigator.storage.persisted() || await navigator.storage.persist()); } catch {}
   $("#stato-app").innerHTML = casa ? "✓ Aperta dalla schermata Home." + (pers ? " Dati protetti." : "")

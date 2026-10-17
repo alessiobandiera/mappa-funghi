@@ -1,0 +1,12 @@
+{
+  "appId": "it.alessiobandiera.raccolte",
+  "appName": "Raccolte",
+  "webDir": "www",
+  "server": {
+    "appStartPath": "raccolte.html"
+  },
+  "ios": {
+    "contentInset": "never"
+  },
+  "loggingBehavior": "none"
+}
