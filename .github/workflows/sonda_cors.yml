@@ -1,0 +1,34 @@
+name: Sonda CORS dello sfondo delle mappe
+
+# Solo a mano: gli sfondi delle mappe rispondono con CORS? (serve per tenerli nella copia senza rete). Salva l'uscita in data/prove/cors.txt.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p data/prove
+          O="Origin: https://alessiobandiera.github.io"
+          for u in "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/12/1490/2163" \
+                   "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/1490/2163" \
+                   "https://a.tile.opentopomap.org/12/2163/1490.png" \
+                   "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" \
+                   "https://fonts.gstatic.com/s/barlow/v12/7cHpv4kjgoGqM7E_DMs5.woff2" \
+                   "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap"; do
+            echo "== $u"; curl -sS -o /dev/null -D - -H "$O" -A "Mozilla/5.0 mappa-funghi" "$u" | grep -iE "^HTTP|access-control|cache-control|content-type|content-length|expires" || echo "errore"
+          done 2>&1 | tee data/prove/cors.txt
+      - name: Salva
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/prove/cors.txt
+          git commit -q -m "Sonda CORS [skip ci]" || exit 0
+          for i in 1 2 3 4 5 6; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null || true; sleep 7; done
