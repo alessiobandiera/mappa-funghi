@@ -1,0 +1,42 @@
+== https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/12/1490/2163
+HTTP/1.1 200 OK
+Content-Type: image/jpeg
+Content-Length: 5352
+Cache-Control: max-age=86400
+Access-Control-Allow-Origin: *
+== https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/12/1490/2163
+HTTP/1.1 200 OK
+Content-Type: image/jpeg
+Content-Length: 4672
+Cache-Control: max-age=86400
+Access-Control-Allow-Origin: *
+== https://a.tile.opentopomap.org/12/2163/1490.png
+HTTP/2 200 
+content-type: image/png
+content-length: 5913
+cache-control: max-age=604800
+expires: Fri, 23 Oct 2026 06:45:30 GMT
+access-control-allow-methods: GET, OPTIONS
+access-control-allow-headers: Origin, Authorization, Accept
+access-control-allow-origin: *
+== https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js
+HTTP/2 200 
+content-type: application/javascript; charset=utf-8
+access-control-allow-origin: *
+cache-control: no-transform, public, s-maxage=30672000, max-age=30672000, immutable
+x-content-type-options: nosniff
+== https://fonts.gstatic.com/s/barlow/v12/7cHpv4kjgoGqM7E_DMs5.woff2
+HTTP/2 200 
+access-control-allow-origin: *
+content-length: 21144
+x-content-type-options: nosniff
+expires: Sat, 16 Oct 2027 20:01:29 GMT
+cache-control: public, max-age=31536000
+content-type: font/woff2
+== https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap
+HTTP/2 200 
+content-type: text/css; charset=utf-8
+access-control-allow-origin: *
+expires: Sat, 17 Oct 2026 10:21:36 GMT
+cache-control: private, max-age=86400
+x-content-type-options: nosniff
