@@ -834,9 +834,10 @@ $("#importa-gpx").addEventListener("change", async e => { const f = e.target.fil
 const GH = "https://api.github.com";
 let archivioT = null, sincronizzando = false, mioUtente = null;
 async function gh(A, metodo, perc, corpo, grezzo) {
-  const r = await fetch(GH + perc, { method: metodo, cache: "no-store", headers: { Authorization: "Bearer " + A.token,
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 25000);     // mai un'attesa senza fine
+  const r = await fetch(GH + perc, { method: metodo, cache: "no-store", signal: ctl.signal, headers: { Authorization: "Bearer " + A.token,
     Accept: grezzo ? "application/vnd.github.raw" : "application/vnd.github+json", ...(corpo ? { "Content-Type": "application/json" } : {}) },
-    body: corpo ? JSON.stringify(corpo) : undefined });
+    body: corpo ? JSON.stringify(corpo) : undefined }).finally(() => clearTimeout(tm));
   if (!r.ok) { const e = new Error(String(r.status)); e.stato = r.status; try { e.dettaglio = (await r.json()).message; } catch {} throw e; }
   return grezzo ? r.blob() : r.status === 204 ? null : r.json();
 }
@@ -936,16 +937,18 @@ async function scaricaArchivio() {
 }
 async function collega() {
   const repo = $("#arch-repo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/+$/, ""), token = $("#arch-token").value.trim();
-  if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || !token) { disegnaArchivio("Scrivi il repository come nome/repository e incolla la chiave."); return; }
-  const A = { repo, token, foto: true }; $("#arch-collega").disabled = true;
+  const msg = (t, errore) => { const m = $("#arch-msg"); m.textContent = t; m.className = errore ? "avviso" : "nota"; m.style.textAlign = "left"; m.scrollIntoView({ block: "center", behavior: "smooth" }); };
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo) || !token) { msg("Scrivi il repository come nome/repository (es. alessiobandiera/funghi-privato) e incolla la chiave.", true); return; }
+  const A = { repo, token, foto: true }, bt = $("#arch-collega"); bt.disabled = true; bt.textContent = "Collego…"; msg("Controllo il repository su GitHub…");
+  const fine = () => { bt.disabled = false; bt.textContent = "Collega"; };
   try {
     const info = await gh(A, "GET", `/repos/${repo}`);
-    if (!info.private) { disegnaArchivio(`${repo} è PUBBLICO: i tuoi posti sarebbero visibili a tutti. Usa un repository privato.`); return; }
+    if (!info.private) { fine(); msg(`${repo} è PUBBLICO: i tuoi posti sarebbero visibili a tutti. Usa un repository privato.`, true); return; }
     const io = await gh(A, "GET", "/user").catch(() => null);
     A.utente = (io && io.login) || null; A.ramo = info.default_branch || "main"; A.repo = info.full_name || repo;
     await imposta("archivio", A); mioUtente = A.utente;
-    disegnaArchivio("Collegato."); await sincronizza(true);
-  } catch (e) { disegnaArchivio("Non collegato: " + erroreGH(e)); }
+    disegnaArchivio("Collegato. Salvo nell'archivio…"); await sincronizza(true);
+  } catch (e) { fine(); msg("Non collegato: " + erroreGH(e) + (e.stato ? ` [codice ${e.stato}]` : e.name === "AbortError" ? " [nessuna risposta in 25 s]" : ""), true); }
 }
 async function disegnaArchivio(msg) {
   const A = await impostazione("archivio"), box = $("#archivio");
@@ -954,7 +957,7 @@ async function disegnaArchivio(msg) {
     box.innerHTML = `<h2>Archivio privato</h2>
       <p class="nota" style="text-align:left">Copia giri, percorsi, funghi e foto in un tuo repository GitHub <b>privato</b>: li vedi solo tu e chi inviti, e non si perdono se cambi telefono. La chiave resta su questo telefono e apre solo quel repository.</p>
       <label class="campo"><span>Repository privato (nome/repository)</span><input type="text" id="arch-repo" placeholder="alessiobandiera/funghi-privato" autocapitalize="off" autocorrect="off" spellcheck="false"></label>
-      <label class="campo"><span>Chiave (token di GitHub)</span><input type="password" id="arch-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label class="campo"><span>Chiave (token di GitHub)</span><input type="text" id="arch-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="-webkit-text-security:disc"></label>
       <button class="btn pieno" type="button" id="arch-collega" style="align-self:flex-start">Collega</button>
       <p class="nota" style="text-align:left" id="arch-msg">${esc(msg || "")}</p>`;
     $("#arch-collega").onclick = collega; return;

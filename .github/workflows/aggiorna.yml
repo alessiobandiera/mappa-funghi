@@ -40,6 +40,8 @@ jobs:
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then m="${{ inputs.modo }}";
           elif [ "${{ github.event.schedule }}" = "15 7-19/3 * * *" ] && [ -f data/cache/sir.json ]; then m=leggero;
+          # una modifica alle pagine (push) va online prima: basta l'aggiornamento leggero, il completo resta quello del mattino
+          elif [ "${{ github.event_name }}" = "push" ] && [ -f data/cache/sir.json ]; then m=leggero;
           else m=completo; fi
           echo "modo=$m" >> "$GITHUB_OUTPUT"; echo "Aggiornamento: $m"
 
