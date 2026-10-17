@@ -21,7 +21,10 @@ jobs:
                    "https://a.tile.opentopomap.org/12/2163/1490.png" \
                    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" \
                    "https://fonts.gstatic.com/s/barlow/v12/7cHpv4kjgoGqM7E_DMs5.woff2" \
-                   "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap"; do
+                   "https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&display=swap" \
+                   "https://alessiobandiera.github.io/mappa-funghi/dati/meteo.json" \
+                   "https://alessiobandiera.github.io/mappa-funghi/terreno/tessere.json" \
+                   "https://api.github.com/repos/alessiobandiera/mappa-funghi"; do
             echo "== $u"; curl -sS -o /dev/null -D - -H "$O" -A "Mozilla/5.0 mappa-funghi" "$u" | grep -iE "^HTTP|access-control|cache-control|content-type|content-length|expires" || echo "errore"
           done 2>&1 | tee data/prove/cors.txt
       - name: Salva

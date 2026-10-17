@@ -8,7 +8,9 @@
 // - window.AppCopie: zone salvate per il bosco (usato da bosco.html al posto della Cache del browser).
 (function () {
   const C = window.Capacitor;
-  if (!(C && typeof C.isNativePlatform === "function" && C.isNativePlatform())) return;
+  // nell'app le pagine arrivano da capacitor://localhost (anche quelle nel riquadro delle Previsioni, dove il ponte nativo
+  // di Capacitor potrebbe mancare): basta questo per sapere che siamo nell'app
+  if (!(location.protocol === "capacitor:" || (C && typeof C.isNativePlatform === "function" && C.isNativePlatform()))) return;
   window.APP_NATIVA = true;
   const SITO = window.APP_SITO || "https://alessiobandiera.github.io/mappa-funghi/";
   const TERRENO_MAX = 150, SFONDO_MAX = 1500, ATTESA = 6000;
