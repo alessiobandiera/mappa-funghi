@@ -177,6 +177,7 @@ async function datiDalSito(){
   const r=await fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000), {cache:"no-store"});
   if (!r.ok) throw new Error("dati del sito non disponibili");
   const js=await r.json(); DATI_SITO=js;
+  DATI_SITO.copia=r.headers.get("X-Copia-Salvata");      // senza rete: copia salvata sul telefono (docs/mappa-sw.js)
   const K=js.campi;
   return js.celle.map(c=>({lat:c.lat, lon:c.lon, elev:c.elev, stazioni:c.stazioni,
     days:c.giorni.map(a=>{ const o={}; K.forEach((k,i)=>o[k]=a[i]); return o; })}));
@@ -186,7 +187,9 @@ async function loadData(force){
     try{
       const celle=await datiDalSito();
       const q=new Date(DATI_SITO.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-      setStatus(`Meteo aggiornato ${q}. Pioggia e temperature dei giorni passati misurate da ${DATI_SITO.stazioni_sir.pioggia} pluviometri e ${DATI_SITO.stazioni_sir.temperatura} termometri della Regione Toscana.`, 1);
+      if (DATI_SITO.copia) setStatus(`Senza rete o con rete troppo lenta: previsione salvata sul telefono, meteo aggiornato ${q}.`+
+        (DATI_SITO.oggi<oggiISO? ` Dal ${fmtDay(DATI_SITO.oggi,true).toLowerCase()} in poi i giorni erano ancora previsioni.` : ""), 1);
+      else setStatus(`Meteo aggiornato ${q}. Pioggia e temperature dei giorni passati misurate da ${DATI_SITO.stazioni_sir.pioggia} pluviometri e ${DATI_SITO.stazioni_sir.temperatura} termometri della Regione Toscana.`, 1);
       return celle;
     }catch(e){ setStatus("Dati del sito non raggiungibili: scarico il meteo da Open-Meteo…", 0); }
   }
@@ -408,6 +411,7 @@ layers["Topografica (Esri)"].addTo(map);
 // se la rete blocca le tile Esri (es. proxy aziendale) passa da sola a OpenTopoMap
 let tileErr=0, tileOk=0;
 layers["Topografica (Esri)"].on("tileload",()=>tileOk++).on("tileerror",()=>{
+  if (!navigator.onLine || (DATI_SITO && DATI_SITO.copia)) return;          // senza rete mancano le parti mai guardate: è normale
   if (++tileErr===4 && tileOk===0){ map.removeLayer(layers["Topografica (Esri)"]); layers["Sentieri (OpenTopoMap)"].addTo(map);
     setStatus("La mappa Esri non si carica da questa rete: uso OpenTopoMap.", null); } });
 const gridLayer=L.layerGroup().addTo(map);
@@ -685,6 +689,8 @@ buildChips();
 renderModo();
 renderDiario();
 start(false);
+// senza rete nel bosco: l'ultima previsione scaricata resta sul telefono (docs/mappa-sw.js)
+if ("serviceWorker" in navigator && location.protocol!=="file:") navigator.serviceWorker.register("mappa-sw.js",{scope:"./"}).catch(()=>{});
 </script>
 </body>
 </html>

@@ -94,6 +94,15 @@
       <p class="sub" style="margin:6px 0 0">Accessi: dove un sentiero o una forestale entra nel bosco, entro 1 km da una strada o da un parcheggio. Il colore è quello della zona migliore raggiungibile a piedi entro 400 m. Si vedono da vicino (zoom 13).</p>
     </div>
 
+    <div id="senzarete">
+      <p class="label">Senza rete nel bosco</p>
+      <div class="row" style="gap:10px;flex-wrap:wrap">
+        <button class="btn-primario" type="button" id="salvaZona">Salva questa zona</button>
+        <button class="btn" type="button" id="eliminaZone" hidden>Elimina le zone salvate</button>
+      </div>
+      <p class="sub" id="zoneInfo" style="margin:6px 0 0">L'ultima previsione scaricata resta sul telefono. Per vedere senza rete anche il bosco a 20 m, salva la zona prima di partire (riquadri di circa 10 km, mezzo MB l'uno). Lo sfondo della mappa resta solo per le parti che hai già guardato: prima di partire scorri la zona agli ingrandimenti che userai.</p>
+    </div>
+
     <div>
       <p class="label">Condizioni usate</p>
       <div class="chips" id="modo" role="group" aria-label="Condizioni">
@@ -156,7 +165,7 @@ async function carica(){
   const [idx, camp, met] = await Promise.all([
     fetch("terreno/tessere.json",{cache:"no-store"}).then(r=>r.json()),
     fetch("terreno/campione.json").then(r=>r.ok?r.json():null).catch(()=>null),
-    fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"}).then(r=>r.json())]);
+    fetch("dati/meteo.json?t="+Math.floor(Date.now()/600000),{cache:"no-store"}).then(async r=>{ const j=await r.json(); j.copia=r.headers.get("X-Copia-Salvata"); return j; })]);
   IDX=idx; CAMPIONE=camp&&camp.punti; EC46_DAL=met.ec46_dal||null; OGGI_DATI=met.oggi||null;
   const K=met.campi;
   met.celle.forEach(x=>{
@@ -172,7 +181,10 @@ async function carica(){
   contorni=L.layerGroup(IDX.tessere.map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
     {color:"#3d6b2f",weight:1,opacity:.5,fill:false,interactive:false}))).addTo(map);
   const q=new Date(met.aggiornato).toLocaleString("it-IT",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-  $("status").textContent=`Meteo aggiornato ${q}. ${IDX.tessere.length} tessere di bosco a ${IDX.res_m} m.`;
+  SENZA_RETE=!!met.copia;
+  $("status").textContent = met.copia ? `Senza rete o con rete troppo lenta: previsione salvata sul telefono, meteo aggiornato ${q}.`+(met.oggi<oggiISO? ` Dal ${fmtDay(met.oggi,true).toLowerCase()} in poi i giorni erano ancora previsioni.` : "")
+    : `Meteo aggiornato ${q}. ${IDX.tessere.length} tessere di bosco a ${IDX.res_m} m.`;
+  infoZone();
   aggiornaStato(); visibili(); if (typeof mostraSentieri==="function") mostraSentieri(); renderTop();
 }
 
@@ -230,7 +242,8 @@ async function caricaTessera(meta){
       if (mm){ const R=mm[o], G=mm[o+1], B=mm[o+2], j=i*3; t.MC[j]=R>>4; t.MC[j+1]=R&15; t.MC[j+2]=G>>4; t.MQ[j]=G&15; t.MQ[j+1]=B>>4; t.MQ[j+2]=B&15; } }
     t.canvas=document.createElement("canvas"); t.canvas.width=meta.colonne; t.canvas.height=meta.righe;
     t.pronta=true; calcolaTessera(t); disegnaTessera(t); coloraAccessi(meta.id); renderTop(); aggiornaStato();
-  }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id); }
+  }catch(e){ console.error("tessera",meta.id,e); tessere.delete(meta.id);
+    if (SENZA_RETE || !navigator.onLine){ $("zoomhint").textContent="Senza rete: questa zona a 20 m non è salvata sul telefono"; $("zoomhint").style.display="block"; } }
 }
 function scenario(){ return st.m==="scenario" ? {D:+$("sD").value/100, T:+$("sT").value/100, V:+$("sV").value/100} : null; }
 // fattore del terreno per un punto (a = ristagno, s = sole rispetto al piano, rp = riparo)
@@ -436,7 +449,7 @@ let contorni=null;
 function visibili(){
   if (!IDX) return;
   const z=map.getZoom();
-  $("zoomhint").style.display = z>=ZOOM_MIN ? "none" : "block";
+  $("zoomhint").textContent="Avvicinati per vedere le zone a 20 m"; $("zoomhint").style.display = z>=ZOOM_MIN ? "none" : "block";
   history.replaceState(null,"",`#${map.getCenter().lat.toFixed(4)},${map.getCenter().lng.toFixed(4)},${z}`);
   { const a=document.querySelector(".testa .vai"); if (a) a.href=`./#${map.getCenter().lat.toFixed(4)},${map.getCenter().lng.toFixed(4)},${Math.max(9,Math.min(14,z-1))}`; }
   if (z<ZOOM_MIN){ for (const t of tessere.values()) if (t.overlay){ map.removeLayer(t.overlay); t.overlay=null; } return; }
@@ -686,9 +699,56 @@ $("giorno").oninput=e=>{ st.g=+e.target.value; etichettaGiorno(date[st.g]); rica
 ["sD","sT","sV"].forEach(id=>$(id).oninput=ricalcola);
 $("percorsi").onclick=e=>{ const b=e.target.closest("button"); if(!b) return; mostraPerc=b.dataset.p==="si";
   [...$("percorsi").children].forEach(x=>x.setAttribute("aria-pressed",x===b)); mostraSentieri(); };
+/* ---------------- senza rete: zone salvate sul telefono (docs/mappa-sw.js, cache «mappa-zone») ---------------- */
+let SENZA_RETE=false, salvateLayer=null;
+const fileTessera=id=>[`terreno/t/${id}_a.png`,`terreno/t/${id}_b.png`,`terreno/t/${id}_c.png`,`terreno/f/${id}.png`,`terreno/m/${id}.png`,`terreno/s/${id}.json`];
+async function tessereSalvate(){
+  if (!("caches" in window)) return {ids:[], byte:0};
+  const c=await caches.open("mappa-zone"), ks=await c.keys(), ids=new Set(); let byte=0;
+  for (const k of ks){ const m=k.url.match(/terreno\/t\/(.+)_a\.png$/); if (m) ids.add(m[1]); }
+  for (const k of ks){ const r=await c.match(k); if (r) byte+=(await r.blob()).size; }
+  return {ids:[...ids], byte};
+}
+async function infoZone(){
+  if (!IDX) return;
+  if (!("caches" in window) || !("serviceWorker" in navigator)){ $("salvaZona").disabled=true; $("zoneInfo").textContent="Questo browser non permette di salvare le zone sul telefono."; return; }
+  const {ids, byte}=await tessereSalvate();
+  $("eliminaZone").hidden=!ids.length;
+  if (salvateLayer){ map.removeLayer(salvateLayer); salvateLayer=null; }
+  if (ids.length){
+    salvateLayer=L.layerGroup(IDX.tessere.filter(t=>ids.includes(t.id)).map(t=>L.rectangle([[t.sud,t.ovest],[t.nord,t.est]],
+      {color:"#1f5e4e",weight:2.5,dashArray:"6 5",opacity:.9,fill:false,interactive:false}))).addTo(map);
+    $("zoneInfo").textContent=`Salvati sul telefono ${ids.length} riquadr${ids.length===1?"o":"i"} a 20 m (${(byte/1048576).toLocaleString("it-IT",{maximumFractionDigits:1})} MB, tratteggiati sulla mappa). Lo sfondo della mappa resta solo per le parti che hai già guardato: prima di partire scorri la zona agli ingrandimenti che userai.`;
+  }
+}
+$("salvaZona").onclick=async()=>{
+  const bt=$("salvaZona"), b=map.getBounds().pad(.05);
+  const ids=IDX.tessere.filter(t=>t.sud<b.getNorth()&&t.nord>b.getSouth()&&t.ovest<b.getEast()&&t.est>b.getWest()).map(t=>t.id);
+  if (!ids.length){ $("zoneInfo").textContent="Qui non ci sono riquadri a 20 m: sposta la mappa sulla zona dove vai."; return; }
+  if (ids.length>6){ $("zoneInfo").textContent=`La zona inquadrata prende ${ids.length} riquadri: avvicinati un po' (al massimo 6 alla volta).`; return; }
+  bt.disabled=true;
+  try{
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+    const c=await caches.open("mappa-zone"); let n=0;
+    const tutti=ids.flatMap(fileTessera);
+    for (const u of tutti){
+      bt.textContent=`Salvo… ${Math.round(100*n/tutti.length)}%`;
+      const r=await fetch(u,{cache:"no-cache"});
+      if (r.ok) await c.put(new URL(u,location.href).href, r);
+      else if (u.includes("/t/")) throw new Error(u+" "+r.status);
+      n++;
+    }
+    await infoZone();
+  }catch(e){ console.error(e); $("zoneInfo").textContent="Salvataggio non riuscito: servono la rete e un po' di spazio sul telefono. Riprova."; }
+  bt.disabled=false; bt.textContent="Salva questa zona";
+};
+$("eliminaZone").onclick=async()=>{ await caches.delete("mappa-zone"); $("zoneInfo").textContent="Zone salvate eliminate."; await infoZone(); };
+
 $("opac").oninput=e=>{ $("opaclbl").textContent=e.target.value+"%"; for (const t of tessere.values()) if (t.overlay) t.overlay.setOpacity(e.target.value/100); };
 
 carica().catch(err=>{ $("status").textContent="Errore nel caricamento: "+err.message; console.error(err); });
+// senza rete nel bosco: l'ultima previsione scaricata e le zone salvate restano sul telefono (docs/mappa-sw.js)
+if ("serviceWorker" in navigator && location.protocol!=="file:") navigator.serviceWorker.register("mappa-sw.js",{scope:"./"}).catch(()=>{});
 </script>
 </body>
 </html>

@@ -508,12 +508,20 @@ function aggiornaNotaMappa() {
 $("#aggiungi-mappa").onclick = () => { modoSegna = modoSegna ? null : "nuovo"; aggiornaNotaMappa(); };
 
 // ---------------------------------------------------------------- previsioni (pagina del sito in un riquadro, stessa origine)
-let frame = null, sopra = null, primaVolta = true;
-function apriPrevisioni() {
+let frame = null, sopra = null, primaVolta = true, aprendo = false;
+async function apriPrevisioni() {
   if (frame) { disegnaSopra(); return; }
+  if (aprendo) return;
   if (!navigator.onLine) {
-    const d = document.createElement("div"); d.className = "senzarete"; d.textContent = "Previsioni non disponibili senza rete. Il pulsante «Fungo trovato» funziona lo stesso.";
-    $("#v-previsioni").prepend(d); addEventListener("online", () => { d.remove(); apriPrevisioni(); }, { once: true }); return;
+    // senza rete: la mappa si apre se è salvata sul telefono (docs/mappa-sw.js tiene l'ultima previsione scaricata)
+    aprendo = true;
+    let salvata = false; try { salvata = !!(await caches.match(new URL("index.html", location.href).href)); } catch {}
+    aprendo = false;
+    if (frame) return;
+    if (!salvata) {
+      const d = document.createElement("div"); d.className = "senzarete"; d.textContent = "Previsioni non disponibili senza rete: aprile una volta con la rete e restano salvate sul telefono. Il pulsante «Fungo trovato» funziona lo stesso.";
+      $("#v-previsioni").prepend(d); addEventListener("online", () => { d.remove(); apriPrevisioni(); }, { once: true }); return;
+    }
   }
   frame = document.createElement("iframe"); frame.id = "previsioni"; frame.title = "Previsioni buttate";
   frame.src = "./"; $("#v-previsioni").prepend(frame);
