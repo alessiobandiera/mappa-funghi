@@ -1,0 +1,68 @@
+name: App per iPhone (IPA da installare con AltStore)
+
+# Solo a mano. Costruisce l'app «Raccolte» per iPhone (app-ios/, Capacitor) su un Mac di GitHub, SENZA firma: la firma la mette
+# AltStore con l'ID Apple dell'utente al momento dell'installazione. Il file Raccolte.ipa va in una release del repository
+# (app-iphone-AAAAMMGG-HHMM), da scaricare sull'iPhone e aprire con AltStore. Non tocca il sito.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: app-ios
+  cancel-in-progress: false
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Pagine dell'app e dipendenze
+        working-directory: app-ios
+        run: |
+          npm ci --no-audit --no-fund
+          node prepara.mjs
+      - name: Progetto Xcode
+        working-directory: app-ios
+        run: |
+          set -e
+          xcodebuild -version
+          npx cap add ios --packagemanager CocoaPods
+          PL=ios/App/App/Info.plist
+          B=/usr/libexec/PlistBuddy
+          $B -c "Add :NSLocationWhenInUseUsageDescription string 'Raccolte usa la posizione per segnare dove trovi i funghi e il percorso del giro.'" $PL
+          $B -c "Add :NSLocationAlwaysAndWhenInUseUsageDescription string 'Raccolte registra il percorso del giro anche con lo schermo spento e il telefono in tasca.'" $PL
+          $B -c "Add :UIBackgroundModes array" -c "Add :UIBackgroundModes:0 string location" $PL
+          $B -c "Set :CFBundleDisplayName Raccolte" $PL
+          $B -c "Set :CFBundleShortVersionString 1.0" -c "Set :CFBundleVersion $(date -u +%Y%m%d%H%M)" $PL
+          # icona: quella delle Raccolte, ingrandita a 1024 px
+          ICONE=ios/App/App/Assets.xcassets/AppIcon.appiconset
+          ls -la $ICONE
+          for f in $ICONE/*.png; do sips -s format png -z 1024 1024 www/raccolte-icona-512.png --out "$f" >/dev/null; done
+          npx cap sync ios
+          plutil -p $PL
+      - name: Costruzione senza firma
+        working-directory: app-ios/ios/App
+        run: |
+          set -o pipefail
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -40
+          APP=build/Build/Products/Release-iphoneos/App.app
+          test -d "$APP"
+          mkdir -p Payload && cp -R "$APP" Payload/
+          zip -qry ../../Raccolte.ipa Payload
+          ls -la ../../Raccolte.ipa
+      - name: Pubblica la release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=app-iphone-$(TZ=Europe/Rome date +%Y%m%d-%H%M)
+          gh release create "$TAG" app-ios/Raccolte.ipa --target "${{ github.sha }}" --prerelease \
+            --title "App Raccolte per iPhone ($(TZ=Europe/Rome date '+%d/%m/%Y %H:%M'))" \
+            --notes "Da installare con AltStore: scarica Raccolte.ipa sull'iPhone, poi AltStore › My Apps › + e scegli il file. Costruita da ${{ github.sha }} (ramo ${{ github.ref_name }})."
+          echo "Release $TAG"
