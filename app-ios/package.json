@@ -1,0 +1,16 @@
+{
+  "name": "raccolte-iphone",
+  "private": true,
+  "version": "1.0.0",
+  "description": "App per iPhone delle Raccolte (pagine di docs/ dentro Capacitor, GPS anche a schermo spento). Vedi LEGGIMI.md.",
+  "scripts": {
+    "prepara": "node prepara.mjs"
+  },
+  "dependencies": {
+    "@capacitor-community/background-geolocation": "1.2.26",
+    "@capacitor/cli": "7.6.9",
+    "@capacitor/core": "7.6.9",
+    "@capacitor/ios": "7.6.9",
+    "leaflet": "1.9.4"
+  }
+}
