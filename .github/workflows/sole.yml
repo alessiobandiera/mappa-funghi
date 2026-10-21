@@ -1,0 +1,44 @@
+name: Sole e nuvole per le verifiche (GBIF e Lucchesia)
+
+# A mano, e ogni 2 ore finché non ha finito (se è già tutto scaricato finisce subito): ore di sole, radiazione e nuvolosità
+# (Open-Meteo archive, ERA5) negli stessi punti e giorni delle verifiche. Serve per vedere se le giornate senza sole rallentano
+# la buttata (data/validazione/RISULTATI.md). Non tocca la mappa.
+on:
+  schedule:
+    - cron: "41 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      minuti:
+        description: "minuti massimi"
+        default: "110"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sole
+  cancel-in-progress: false
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    timeout-minutes: 125
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Sole dei punti
+        env:
+          MINUTI: ${{ inputs.minuti || '110' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python script/sole_scarica.py
+      - name: Salva
+        if: always()
+        run: |
+          git add data/gbif/sole data/validazione/sole.json 2>/dev/null || true
+          git commit -q -m "Sole e nuvole per le verifiche [skip ci]" || exit 0
+          for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null || true; sleep 10; done
+          exit 1
