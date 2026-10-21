@@ -46,10 +46,11 @@ function togliStagione(D, k) {
 const media = (D, i, a, b, k) => { let t = 0; for (let j = i - b; j <= i - a; j++) t += D[j][k]; return t / (b - a + 1); };
 const FIN = [[2, 7], [8, 14], [15, 21], [22, 28], [2, 14], [2, 21]];
 const NOMI = ["fr0", "fr1", ...FIN.map(([a, b]) => `fr_${a}_${b}`), ...FIN.map(([a, b]) => `nuv_${a}_${b}`), "nuv0", "nuv1", "p0", "p1",
-  ...FIN.map(([a, b]) => `p_${a}_${b}`), ...FIN.map(([a, b]) => `ur_${a}_${b}`)];
+  ...FIN.map(([a, b]) => `p_${a}_${b}`), ...FIN.map(([a, b]) => `ur_${a}_${b}`), "sole_ass_2_7", "sole_ass_2_14", "sole_ass_8_14"];
 function variabili(D, i) {
   return [D[i].fr_r, D[i - 1].fr_r, ...FIN.map(([a, b]) => media(D, i, a, b, "fr_r")), ...FIN.map(([a, b]) => media(D, i, a, b, "nuv_r")),
-          D[i].nuv_r, D[i - 1].nuv_r, D[i].p, D[i - 1].p, ...FIN.map(([a, b]) => media(D, i, a, b, "p")), ...FIN.map(([a, b]) => media(D, i, a, b, "ur"))].map(v => Math.round(v * 1000) / 1000);
+          D[i].nuv_r, D[i - 1].nuv_r, D[i].p, D[i - 1].p, ...FIN.map(([a, b]) => media(D, i, a, b, "p")), ...FIN.map(([a, b]) => media(D, i, a, b, "ur")),
+          media(D, i, 2, 7, "fr"), media(D, i, 2, 14, "fr"), media(D, i, 8, 14, "fr")]   // sole relativo vero (senza togliere la stagione), per provarlo come fattore.map(v => Math.round(v * 1000) / 1000);
 }
 
 const giorni = new Map(), visti = new Set(), cache = {}, righe = [], strati = [];

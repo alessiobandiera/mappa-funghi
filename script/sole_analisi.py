@@ -108,3 +108,44 @@ for nome, tar, ver in [("pari → dispari", anno % 2 == 0, anno % 2 == 1), ("dis
     a, b = m1.params[0], m1.params[-1]
     s1 = a * LI + b * V["fr_2_14"]
     print(f"  {nome:22s} b={b * .1:+.3f} per +10 punti   AUC indice {auc(V['indice'], ver):.4f}  corretto {auc(s1, ver):.4f}")
+
+# La proposta da verificare: «il grigio rallenta». Indice × fattore che scende fino a m quando il sole relativo dei giorni prima
+# è sotto la soglia (come gli altri fattori della mappa), su tutti i ritrovamenti e per stagione.
+def trap_basso(x, s, m):
+    return m + (1 - m) * np.clip(x / s, 0, 1)
+
+
+print("\nIndice × fattore «poco sole» (sole relativo 2-7 o 2-14 giorni prima sotto la soglia → fino a ×m): AUC")
+prove = [("indice com'è", None, None, None)] + [(f"{w}, sotto {int(s * 100)}% fino a ×{m}", w, s, m)
+                                                for w in ("sole_ass_2_7", "sole_ass_2_14") for s in (.3, .5) for m in (.5, .8)]
+sottoinsiemi = [("tutti", np.ones(len(S), bool)), ("Italia", paese == "IT"), ("ott-dic", mese >= 10), ("settembre", mese == 9),
+                ("anni pari", anno % 2 == 0), ("anni dispari", anno % 2 == 1)]
+print("  " + " " * 34 + "".join(f"{n:>11s}" for n, _ in sottoinsiemi))
+for nome, w, s_, m in prove:
+    sc = V["indice"] if w is None else V["indice"] * trap_basso(V[w], s_, m)
+    print(f"  {nome:34s}" + "".join(f"{auc(sc, k):11.4f}" for _, k in sottoinsiemi))
+
+# Autunno (set-dic): il sole di 8-14 giorni prima a parità di pioggia e umidità (l'unico segnale stabile fra anni pari e dispari)
+aut = mese >= 9
+print("\nSettembre-dicembre, a parità di indice, pioggia e umidità della stessa finestra")
+for nome, k in [("tutti", aut), ("anni pari", aut & (anno % 2 == 0)), ("anni dispari", aut & (anno % 2 == 1)), ("Italia", aut & (paese == "IT")),
+                ("Austria", aut & (paese == "AT")), ("Francia", aut & (paese == "FR")), ("senza Austria", aut & (paese != "AT"))]:
+    if len(np.unique(S[k])) < 80: continue
+    r = []
+    for f in ["fr_2_7", "fr_8_14", "fr_15_21"]:
+        b, se, p = prova(k, f, True); r.append(f"{f} {b:+.3f}±{1.96 * se:.3f} p{p:.3f}")
+    print(f"  {nome:15s} n={len(np.unique(S[k])):5d}  " + "   ".join(r))
+# ... e come fattore della mappa (solo in autunno): tarato su metà dei dati, provato sull'altra metà
+x = V["sole_ass_8_14"]
+def con_sole(s_, m):
+    return np.where(aut, V["indice"] * (m + (1 - m) * np.clip(x / s_, 0, 1)), V["indice"])
+griglia = [(s_, m) for s_ in (.2, .3, .4, .5, .6) for m in (.5, .7, .85)]
+print(f"\nFattore «poco sole 8-14 giorni prima» solo da settembre a dicembre (sole relativo set-dic: 10°/50°/90° percentile "
+      f"{' / '.join(f'{v:.2f}' for v in np.percentile(x[aut], [10, 50, 90]))})")
+for nome, tar, ver in [("pari → dispari", anno % 2 == 0, anno % 2 == 1), ("dispari → pari", anno % 2 == 1, anno % 2 == 0),
+                       ("senza Italia → Italia", paese != "IT", paese == "IT")]:
+    t, v = aut & tar, aut & ver
+    if len(np.unique(S[v])) < 80: continue
+    b = max(griglia, key=lambda q: auc(con_sole(*q), t))
+    print(f"  {nome:22s} scelto: sotto {b[0]:.0%} fino a ×{b[1]}   taratura {auc(V['indice'], t):.4f} → {auc(con_sole(*b), t):.4f}"
+          f"   verifica {auc(V['indice'], v):.4f} → {auc(con_sole(*b), v):.4f}")

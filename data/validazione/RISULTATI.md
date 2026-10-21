@@ -369,3 +369,40 @@ indicata come «già caduta» o «prevista: può cambiare». La buttata di un gi
 15-21 dipendono soprattutto dalla pioggia già caduta e da quella dei prossimi giorni.
 Livello del 10/10 sera (aggiornamento delle 22:05): maglie ≥30 il 17/10 3.393, il 19-21/10 ~7.100 (≥50 3.900-4.800, massimo 84), 23-24/10 massimo 100;
 nei giorni EC46 (25-31/10) media 41-49.
+
+## 21 ottobre 2026 — sole e giornate nuvolose (non applicato)
+Domanda dell'utente: le giornate senza sole rallentano la buttata? Nell'indice il sole non c'è come tale: le nuvole contano solo attraverso
+temperatura del suolo, notti e umidità dell'aria. Unica fonte trovata sul meccanismo: la cercinatura degli alberi (Högberg et al. 2001, zuccheri
+della fotosintesi tagliati alle radici) fa quasi sparire i funghi simbionti (4 contro ~250 per area), ma è un taglio totale per una stagione,
+non qualche giorno grigio; lo studio di dieci anni sui porcini nelle faggete (bioRxiv 2025) ha usato solo temperatura e pioggia.
+
+**Dati** (`script/sole_scarica.py`, workflow «Sole e nuvole per le verifiche»): radiazione, ore di sole e nuvolosità ERA5 (Open-Meteo archive)
+negli stessi punti e giorni delle verifiche. Le «ore di sole» ERA5 sono troppo alte (es. 14,3 ore su 15,3 con il 66% di nuvole): si usa il
+**sole relativo dalla radiazione** (FAO-56: Ra dalla latitudine e dal giorno, poi Ångström-Prescott n/N = (Rs/Ra − 0,25)/0,5; 0 = coperto, 1 = sereno).
+Nei confronti GBIF il sole è tolto dell'andamento della stagione nel punto (parabola sui ~100 giorni della serie): con sole casuale, senza questa
+correzione, la prova trovava un «effetto» falso (i giorni di confronto sono simmetrici, ma una stagione curva sposta la media).
+**Trappola**: il giorno del ritrovamento è più soleggiato dei giorni di confronto (AUC 0,535): si esce a cercare e fotografare quando è bello.
+Sole e pioggia del giorno e del giorno prima restano quindi come correzione e si misura il sole dei giorni precedenti.
+
+**Lucchesia** (49 casi, pioggia SIR, `script/sole_lucchesia.js`): nei 2-14 giorni prima il sole era *minore* nei casi con funghi (mediana 0,64
+contro 0,73 senza; AUC del sole da solo 0,31: le settimane grigie sono quelle piovose). Rallentare l'indice con poco sole non migliora mai:
+0,694 → 0,694 / 0,691 / 0,687 / 0,678 (soglie 30-50%, fino a ×0,5-0,7).
+
+**Ritrovamenti GBIF** (`script/sole_confronti.js` + `script/sole_analisi.py`; regressione logistica condizionata sugli strati, con log(1+indice),
+sole e pioggia del giorno e del giorno prima; coefficiente per +10 punti di sole relativo, ±1,96 errori standard). Prima analisi su 4.502 ritrovamenti
+(Italia, Svizzera, Slovenia, Croazia, Austria e quasi tutta la Francia; il resto in scaricamento):
+| finestra prima del giorno | 2-7 | 8-14 | 15-21 | 2-21 |
+|---|---|---|---|---|
+| a parità di indice | +0,014 ±0,021 | **−0,075** ±0,023 | **−0,112** ±0,023 | **−0,257** ±0,049 |
+| … e di pioggia e umidità della stessa finestra | +0,046 ±0,031 | +0,029 ±0,033 | −0,034 ±0,034 | −0,073 ±0,061 |
+| set-dic, … e di pioggia e umidità | +0,014 ±0,038 | **+0,094** ±0,041 | −0,007 ±0,043 | |
+- Senza altri controlli **più sole nelle 1-3 settimane prima = meno ritrovamenti**: le settimane nuvolose sono quelle bagnate (come in Lucchesia).
+- A parità di pioggia e umidità l'effetto è piccolo e cambia segno fra finestre e stagioni (estate 2-7 giorni +0,10, 8-21 giorni −0,08).
+  L'unico segnale stabile: **in autunno un po' di sole 8-14 giorni prima aiuta** (anni pari +0,071, dispari +0,115, Austria +0,105, Francia +0,093;
+  Italia +0,010 ±0,138, pochi dati). I giorni nuvolosi subito prima (2-7) non contano in nessuna stagione.
+- **Come fattore della mappa non migliora**: indice × «poco sole» (sole relativo 2-7 o 2-14 giorni prima sotto 30-50%, fino a ×0,5-0,8):
+  tutti 0,6161 → 0,6081…0,6162, ott-dic 0,6049 → 0,5926…0,6066. Fattore d'autunno sul sole 8-14 giorni prima, tarato su metà dei dati e provato
+  sull'altra: anni dispari 0,6138 → 0,6139, pari 0,6237 → 0,6229, Italia 0,6335 → 0,6322. (Il confronto per AUC favorisce il sole per l'abitudine di
+  uscire col bello, e nemmeno così migliora.)
+Conclusione: **il dato non è abbastanza forte da cambiare la mappa**. Il grigio di pochi giorni non frena la buttata; conta la pioggia (che le
+nuvole portano) e la temperatura del suolo, già nell'indice. Da riprendere con i ritrovamenti mancanti e con le uscite dell'app.
