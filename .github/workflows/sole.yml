@@ -1,11 +1,9 @@
 name: Sole e nuvole per le verifiche (GBIF e Lucchesia)
 
-# A mano, e ogni 2 ore finché non ha finito (se è già tutto scaricato finisce subito): ore di sole, radiazione e nuvolosità
+# Solo a mano (scaricamento completo il 21/10/2026; la programmazione ogni 2 ore è stata tolta): ore di sole, radiazione e nuvolosità
 # (Open-Meteo archive, ERA5) negli stessi punti e giorni delle verifiche. Serve per vedere se le giornate senza sole rallentano
 # la buttata (data/validazione/RISULTATI.md). Non tocca la mappa.
 on:
-  schedule:
-    - cron: "41 */2 * * *"
   workflow_dispatch:
     inputs:
       minuti:

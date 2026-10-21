@@ -389,20 +389,22 @@ contro 0,73 senza; AUC del sole da solo 0,31: le settimane grigie sono quelle pi
 0,694 → 0,694 / 0,691 / 0,687 / 0,678 (soglie 30-50%, fino a ×0,5-0,7).
 
 **Ritrovamenti GBIF** (`script/sole_confronti.js` + `script/sole_analisi.py`; regressione logistica condizionata sugli strati, con log(1+indice),
-sole e pioggia del giorno e del giorno prima; coefficiente per +10 punti di sole relativo, ±1,96 errori standard). Prima analisi su 4.502 ritrovamenti
-(Italia, Svizzera, Slovenia, Croazia, Austria e quasi tutta la Francia; il resto in scaricamento):
+sole e pioggia del giorno e del giorno prima; coefficiente per +10 punti di sole relativo, ±1,96 errori standard). Tutti i 7.012 ritrovamenti
+(prima analisi del pomeriggio su 4.502: stesse conclusioni):
 | finestra prima del giorno | 2-7 | 8-14 | 15-21 | 2-21 |
 |---|---|---|---|---|
-| a parità di indice | +0,014 ±0,021 | **−0,075** ±0,023 | **−0,112** ±0,023 | **−0,257** ±0,049 |
-| … e di pioggia e umidità della stessa finestra | +0,046 ±0,031 | +0,029 ±0,033 | −0,034 ±0,034 | −0,073 ±0,061 |
-| set-dic, … e di pioggia e umidità | +0,014 ±0,038 | **+0,094** ±0,041 | −0,007 ±0,043 | |
-- Senza altri controlli **più sole nelle 1-3 settimane prima = meno ritrovamenti**: le settimane nuvolose sono quelle bagnate (come in Lucchesia).
-- A parità di pioggia e umidità l'effetto è piccolo e cambia segno fra finestre e stagioni (estate 2-7 giorni +0,10, 8-21 giorni −0,08).
-  L'unico segnale stabile: **in autunno un po' di sole 8-14 giorni prima aiuta** (anni pari +0,071, dispari +0,115, Austria +0,105, Francia +0,093;
-  Italia +0,010 ±0,138, pochi dati). I giorni nuvolosi subito prima (2-7) non contano in nessuna stagione.
+| a parità di indice | +0,010 ±0,017 | **−0,056** ±0,018 | **−0,109** ±0,018 | **−0,225** ±0,038 |
+| … e di pioggia e umidità della stessa finestra | +0,024 ±0,024 | +0,019 ±0,026 | −0,034 ±0,026 | −0,090 ±0,047 |
+| set-dic, … e di pioggia e umidità | +0,006 ±0,029 | **+0,060** ±0,031 | −0,026 ±0,032 | |
+- Senza altri controlli **più sole nelle 1-3 settimane prima = meno ritrovamenti** (in ogni paese, stagione e metà degli anni): le settimane
+  nuvolose sono quelle bagnate (come in Lucchesia).
+- A parità di pioggia e umidità l'effetto è piccolo e cambia segno fra finestre e stagioni (estate 2-7 giorni +0,07, 8-21 giorni −0,06).
+  Unico segnale: **in autunno un po' di sole 8-14 giorni prima aiuta di poco** (+0,060: circa +6% di probabilità per +10 punti di sole; anni pari
+  +0,041 ±0,044, dispari +0,077, Austria +0,105, Francia +0,079; Italia +0,010 ±0,138, pochi dati; senza l'Austria +0,039 ±0,038).
+  I giorni nuvolosi subito prima (2-7) non contano in nessuna stagione.
 - **Come fattore della mappa non migliora**: indice × «poco sole» (sole relativo 2-7 o 2-14 giorni prima sotto 30-50%, fino a ×0,5-0,8):
-  tutti 0,6161 → 0,6081…0,6162, ott-dic 0,6049 → 0,5926…0,6066. Fattore d'autunno sul sole 8-14 giorni prima, tarato su metà dei dati e provato
-  sull'altra: anni dispari 0,6138 → 0,6139, pari 0,6237 → 0,6229, Italia 0,6335 → 0,6322. (Il confronto per AUC favorisce il sole per l'abitudine di
-  uscire col bello, e nemmeno così migliora.)
+  tutti 0,6232 → 0,6138…0,6232, ott-dic 0,6108 → 0,5992…0,6116, Italia 0,6038 → 0,6034…0,6089 (525 ritrovamenti). Fattore d'autunno sul sole 8-14 giorni
+  prima, tarato su metà dei dati e provato sull'altra: anni dispari 0,6291 → 0,6298, pari 0,6307 → 0,6302, Italia 0,6335 → 0,6335. (Il confronto per
+  AUC favorisce il sole per l'abitudine di uscire col bello, e nemmeno così migliora.)
 Conclusione: **il dato non è abbastanza forte da cambiare la mappa**. Il grigio di pochi giorni non frena la buttata; conta la pioggia (che le
-nuvole portano) e la temperatura del suolo, già nell'indice. Da riprendere con i ritrovamenti mancanti e con le uscite dell'app.
+nuvole portano) e la temperatura del suolo, già nell'indice. Da riprendere con le uscite dell'app (sole e nuvole dei giorni dei giri).
