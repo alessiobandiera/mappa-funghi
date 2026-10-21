@@ -66,8 +66,10 @@ def fit(k, nomi):
     return f
 
 
-def prova(k, fin):
-    base = fit(k, CORR); m = fit(k, CORR + [fin])
+def prova(k, fin, pari_pioggia=False):
+    """pari_pioggia: anche pioggia e umidità dell'aria della stessa finestra fra i controlli (nuvole = spesso pioggia)."""
+    extra = [fin.replace("fr_", "p_"), fin.replace("fr_", "ur_")] if pari_pioggia else []
+    base = fit(k, CORR + extra); m = fit(k, CORR + extra + [fin])
     b, se = m.params[-1], m.bse[-1]
     lr = 2 * (m.llf - base.llf); p = stats.chi2.sf(lr, 1)
     return b * .1, se * .1, p
@@ -84,23 +86,25 @@ for nome, k in GRUPPI:
     print(f"  {nome:15s} n={n:5d}  indice {auc(V['indice'], k):.3f}  sole del giorno {auc(V['fr0'], k):.3f}  sole 2-7 giorni prima "
           f"{auc(V['fr_2_7'], k):.3f}  8-14 {auc(V['fr_8_14'], k):.3f}  15-21 {auc(V['fr_15_21'], k):.3f}")
 
-print("\nEffetto del sole a parità di indice (log odds per +10 punti di frazione di sole; >0 = il sole aiuta) — p")
-print("  " + " " * 15 + "".join(f"{f:>22s}" for f in FIN))
-for nome, k in GRUPPI:
-    if len(np.unique(S[k])) < 80: continue
-    riga = []
-    for f in FIN:
-        try:
-            b, se, p = prova(k, f); riga.append(f"{b:+.3f}±{1.96 * se:.3f} p{p:.3f}")
-        except Exception as e:
-            riga.append("errore")
-    print(f"  {nome:15s}" + "".join(f"{x:>22s}" for x in riga))
+for titolo, pp in [("a parità di indice", False), ("a parità di indice, pioggia e umidità dell'aria della stessa finestra", True)]:
+    print(f"\nEffetto del sole {titolo} (log odds per +10 punti di sole relativo; >0 = il sole aiuta, <0 = il sole frena) — p")
+    print("  " + " " * 15 + "".join(f"{f:>22s}" for f in FIN))
+    for nome, k in GRUPPI:
+        if len(np.unique(S[k])) < 80: continue
+        riga = []
+        for f in FIN:
+            try:
+                b, se, p = prova(k, f, pp); riga.append(f"{b:+.3f}±{1.96 * se:.3f} p{p:.3f}")
+            except Exception as e:
+                riga.append("errore")
+        print(f"  {nome:15s}" + "".join(f"{x:>22s}" for x in riga))
 
 # Quanto cambierebbe la verifica: indice × correzione col sole, coefficiente stimato su metà anni e provato sull'altra metà
 print("\nIndice corretto col sole (log(1+indice) + b·sole 2-14 giorni prima), tarato su metà degli anni e provato sull'altra metà")
 for nome, tar, ver in [("pari → dispari", anno % 2 == 0, anno % 2 == 1), ("dispari → pari", anno % 2 == 1, anno % 2 == 0),
                        ("senza Italia → Italia", paese != "IT", paese == "IT")]:
-    m0 = fit(tar, CORR); m1 = fit(tar, CORR + ["fr_2_14"])
+    if len(np.unique(S[tar])) < 80 or len(np.unique(S[ver])) < 80: continue
+    m1 = fit(tar, CORR + ["fr_2_14"])
     a, b = m1.params[0], m1.params[-1]
     s1 = a * LI + b * V["fr_2_14"]
     print(f"  {nome:22s} b={b * .1:+.3f} per +10 punti   AUC indice {auc(V['indice'], ver):.4f}  corretto {auc(s1, ver):.4f}")
