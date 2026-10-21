@@ -8,7 +8,7 @@ Righe R (una per giorno, dal giorno s): [ore di sole, radiazione MJ/m², nuvolos
 Riprende da dove era arrivato; si ferma da solo al limite giornaliero di Open-Meteo o quando finisce il tempo (MINUTI) e salva.
 Ordine GBIF: prima i paesi più simili ai nostri boschi (PRIMA_PAESI), poi gli altri.
 """
-import json, os, subprocess, sys, time, urllib.error, urllib.parse, urllib.request
+import http.client, json, os, subprocess, sys, time, urllib.parse
 from datetime import date, timedelta
 
 sys.path.insert(0, os.path.dirname(__file__))
@@ -31,31 +31,52 @@ class Basta(Exception):
     pass
 
 
+# una sola connessione tenuta aperta: dal registro del 21/10 quasi tutto il tempo se ne andava in strette di mano TLS
+# scadute (90 s l'una) aprendo una connessione nuova per ogni richiesta
+_conn = None
+
+
+def _get(path):
+    global _conn
+    if _conn is None:
+        _conn = http.client.HTTPSConnection("archive-api.open-meteo.com", timeout=30)
+    try:
+        _conn.request("GET", path, headers=UA)
+        r = _conn.getresponse()
+        return r.status, r.read()
+    except Exception:
+        try:
+            _conn.close()
+        except Exception:
+            pass
+        _conn = None
+        raise
+
+
 def scarica(la, lo, s, e, var):
     q = urllib.parse.urlencode(dict(latitude=la, longitude=lo, start_date=s, end_date=e, daily=",".join(var), timezone="auto"))
     for t in range(6):
         try:
-            with urllib.request.urlopen(urllib.request.Request("https://archive-api.open-meteo.com/v1/archive?" + q, headers=UA),
-                                        timeout=90) as r:
-                D = json.loads(r.read())["daily"]
+            stato, corpo = _get("/v1/archive?" + q)
+        except Exception as ex:
+            log("errore", repr(ex)[:150]); time.sleep(3 * (t + 1)); continue
+        if stato == 200:
+            D = json.loads(corpo)["daily"]
             n = len(D["time"])
             col = [D.get(v, [None] * n) for v in VAR]
             conv = [lambda x: round(x / 3600, 2), lambda x: round(x, 2), lambda x: round(x)]
             return {"s": D["time"][0], "R": [[(conv[j](col[j][i]) if col[j][i] is not None else None) for j in range(len(VAR))]
                                              for i in range(n)]}
-        except urllib.error.HTTPError as ex:
-            corpo = ex.read().decode("utf-8", "replace")[:300]
-            if ex.code == 429:
-                if "Daily" in corpo:
-                    raise Basta("limite giornaliero di Open-Meteo raggiunto")
-                attesa = 65 if "Minutely" in corpo else 900
-                log(f"429 ({corpo[:120]}): aspetto {attesa} s"); time.sleep(attesa)
-            elif ex.code == 400 and "cloud_cover_mean" in corpo and "cloud_cover_mean" in var:
-                return None   # variabile non disponibile: lo dice il chiamante
-            else:
-                log("errore", ex.code, corpo[:150]); time.sleep(5 * (t + 1))
-        except Exception as ex:
-            log("errore", ex); time.sleep(5 * (t + 1))
+        testo = corpo.decode("utf-8", "replace")[:300]
+        if stato == 429:
+            if "Daily" in testo:
+                raise Basta("limite giornaliero di Open-Meteo raggiunto")
+            attesa = 65 if "Minutely" in testo else 900
+            log(f"429 ({testo[:120]}): aspetto {attesa} s"); time.sleep(attesa)
+        elif stato == 400 and "cloud_cover_mean" in testo and "cloud_cover_mean" in var:
+            return None   # variabile non disponibile: lo dice il chiamante
+        else:
+            log("errore", stato, testo[:150]); time.sleep(5 * (t + 1))
     raise RuntimeError(f"Open-Meteo non risponde per {la},{lo} {s}..{e}")
 
 
@@ -116,7 +137,10 @@ def main():
                 print("tempo finito"); break
             m = M[anno][k]
             e = (date.fromisoformat(m["s"]) + timedelta(days=len(m["R"]) - 1)).isoformat()
-            G.setdefault(anno, {})[k] = scarica(float(la), float(lo), m["s"], e, VAR); nuovi += 1
+            try:
+                G.setdefault(anno, {})[k] = scarica(float(la), float(lo), m["s"], e, VAR); nuovi += 1
+            except RuntimeError as ex:
+                log(ex); continue
             time.sleep(0.25)
             if nuovi % 50 == 0:
                 log(f"{nuovi} nuovi gruppi ({(time.time() - t0) / 60:.0f} min)")
