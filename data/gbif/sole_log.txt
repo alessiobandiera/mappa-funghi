@@ -1,0 +1,11 @@
+2026-10-21 17:25:32 inizio: gruppi GBIF 4412, già scaricati 306
+2026-10-21 17:27:07 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:28:49 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:30:31 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:32:13 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:33:55 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:34:00 50 nuovi gruppi (8 min)
+2026-10-21 17:35:36 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:37:18 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:39:00 errore <urlopen error _ssl.c:993: The handshake operation timed out>
+2026-10-21 17:40:41 errore <urlopen error _ssl.c:993: The handshake operation timed out>
