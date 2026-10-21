@@ -17,6 +17,14 @@ from gbif_meteo import gruppi  # noqa: E402  stesso ordine del meteo dei punti
 UA = {"User-Agent": "mappa-funghi (github.com/alessiobandiera/mappa-funghi)"}
 VAR = ["sunshine_duration", "shortwave_radiation_sum", "cloud_cover_mean"]
 DIR_G, FILE_C = "data/gbif/sole", "data/validazione/sole.json"
+LOG = "data/gbif/sole_log.txt"     # i log di Actions non si leggono dalla sessione: avanzamento e attese salvati qui
+
+
+def log(*a):
+    riga = time.strftime("%Y-%m-%d %H:%M:%S ") + " ".join(str(x) for x in a)
+    print(riga, flush=True)
+    with open(LOG, "a") as f:
+        f.write(riga + "\n")
 
 
 class Basta(Exception):
@@ -41,20 +49,20 @@ def scarica(la, lo, s, e, var):
                 if "Daily" in corpo:
                     raise Basta("limite giornaliero di Open-Meteo raggiunto")
                 attesa = 65 if "Minutely" in corpo else 900
-                print(f"  429 ({corpo[:90]}): aspetto {attesa} s", flush=True); time.sleep(attesa)
+                log(f"429 ({corpo[:120]}): aspetto {attesa} s"); time.sleep(attesa)
             elif ex.code == 400 and "cloud_cover_mean" in corpo and "cloud_cover_mean" in var:
                 return None   # variabile non disponibile: lo dice il chiamante
             else:
-                print("  errore", ex.code, corpo[:150], flush=True); time.sleep(5 * (t + 1))
+                log("errore", ex.code, corpo[:150]); time.sleep(5 * (t + 1))
         except Exception as ex:
-            print("  errore", ex, flush=True); time.sleep(5 * (t + 1))
+            log("errore", ex); time.sleep(5 * (t + 1))
     raise RuntimeError(f"Open-Meteo non risponde per {la},{lo} {s}..{e}")
 
 
 def commit(msg):
     if not os.environ.get("GITHUB_ACTIONS"):
         return
-    cmd = (f'git add {DIR_G} {FILE_C} && git commit -q -m "{msg} [skip ci]" && '
+    cmd = (f'git add {DIR_G} {FILE_C} {LOG} && git commit -q -m "{msg} [skip ci]" && '
            'git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main')
     r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     print("  salvataggio:", "ok" if r.returncode == 0 else (r.stderr or r.stdout)[-200:], flush=True)
@@ -98,7 +106,7 @@ def main():
 
     fatti = sum(len(v) for v in G.values()); nuovi = 0; ultimo = time.time()
     tutti = [k for k, _ in gruppi() if k.split(",")[2] in M and k in M[k.split(",")[2]]]
-    print(f"gruppi GBIF: {len(tutti)}, già scaricati: {fatti}", flush=True)
+    log(f"inizio: gruppi GBIF {len(tutti)}, già scaricati {fatti}")
     try:
         for k in tutti:
             la, lo, anno = k.split(",")
@@ -110,14 +118,14 @@ def main():
             e = (date.fromisoformat(m["s"]) + timedelta(days=len(m["R"]) - 1)).isoformat()
             G.setdefault(anno, {})[k] = scarica(float(la), float(lo), m["s"], e, VAR); nuovi += 1
             time.sleep(0.25)
-            if nuovi % 100 == 0:
-                print(f"  {nuovi} nuovi gruppi ({(time.time() - t0) / 60:.0f} min)", flush=True)
+            if nuovi % 50 == 0:
+                log(f"{nuovi} nuovi gruppi ({(time.time() - t0) / 60:.0f} min)")
             if time.time() - ultimo > 900:
                 salva("Sole dei punti GBIF: salvataggio intermedio"); ultimo = time.time()
     except Basta as ex:
-        print(ex)
+        log(ex)
     salva()
-    print(f"fine: {nuovi} nuovi, totale {sum(len(v) for v in G.values())} su {len(tutti)}")
+    log(f"fine: {nuovi} nuovi, totale {sum(len(v) for v in G.values())} su {len(tutti)}")
 
 
 if __name__ == "__main__":

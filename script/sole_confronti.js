@@ -1,6 +1,6 @@
 // Il sole conta? Ritrovamenti GBIF: giorno del ritrovamento contro gli stessi giorni della settimana ±1-4 settimane, stesso punto
 // (come gbif_specie.js), con l'indice della mappa (docs/porcini.js, specie migliore con stagione) e il sole dei giorni prima.
-// Sole = frazione del sole possibile (ore di sole ERA5 / durata del giorno), meno l'andamento della stagione in quel punto.
+// Sole = sole relativo stimato dalla radiazione ERA5 (0 = coperto, 1 = sereno), meno l'andamento della stagione in quel punto.
 // Il sole del giorno stesso e del giorno prima dice soprattutto quando la gente esce a cercare (e fotografare): resta come correzione.
 // Uso: node script/sole_confronti.js   ->   data/gbif/sole_confronti.json   (poi python script/sole_analisi.py)
 const fs = require("fs");
@@ -12,11 +12,14 @@ const leggi = dir => { const o = {}; if (fs.existsSync(dir)) for (const f of fs.
 const METEO = leggi("data/gbif/meteo"), SOLE = leggi("data/gbif/sole");
 const oss = JSON.parse(fs.readFileSync("data/gbif/porcini.json")).righe;
 const add = (d, n) => { const x = new Date(d + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
-// durata del giorno astronomica (ore), per la frazione di sole
-function durata(lat, iso) {
-  const n = (Date.parse(iso + "T12:00:00Z") - Date.parse(iso.slice(0, 4) + "-01-01T00:00:00Z")) / 864e5;
-  const dec = 23.44 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + n) / 365), f = lat * Math.PI / 180;
-  const c = -Math.tan(f) * Math.tan(dec); return c >= 1 ? 0 : c <= -1 ? 24 : 24 * Math.acos(c) / Math.PI;
+// Sole relativo dalla radiazione (FAO-56): le «ore di sole» di Open-Meteo/ERA5 risultano troppo alte (es. 14,3 ore su 15,3 con il
+// 66% di nuvole), la radiazione no. Radiazione fuori dall'atmosfera Ra (FAO-56, eq. 21), poi Ångström-Prescott: n/N = (Rs/Ra − 0,25)/0,5.
+function soleRelativo(lat, iso, rad) {
+  const J = Math.round((Date.parse(iso + "T12:00:00Z") - Date.parse(iso.slice(0, 4) + "-01-01T12:00:00Z")) / 864e5) + 1;
+  const f = lat * Math.PI / 180, dr = 1 + .033 * Math.cos(2 * Math.PI * J / 365), dec = .409 * Math.sin(2 * Math.PI * J / 365 - 1.39);
+  const ws = Math.acos(Math.max(-1, Math.min(1, -Math.tan(f) * Math.tan(dec))));
+  const Ra = 24 * 60 / Math.PI * .082 * dr * (ws * Math.sin(f) * Math.sin(dec) + Math.cos(f) * Math.cos(dec) * Math.sin(ws));
+  return Ra > 0 ? Math.max(0, Math.min(1, (rad / Ra - .25) / .5)) : .5;
 }
 function serie(m, s, lat) {
   let u = [0, 10, 20, 70, .25, .25, 15, 10, 0], us = [5, 10, 50];
@@ -24,7 +27,7 @@ function serie(m, s, lat) {
     const x = r.map((v, k) => (v == null ? u[k] : v)); u = x; const [p, tn, tx, ur, s0, s1, st, vm, vd] = x, tm = (tn + tx) / 2, d = add(m.s, i);
     const z = s.R[i] ? s.R[i].map((v, k) => (v == null ? us[k] : v)) : us; us = z;
     return { d, p, tmin: tn, tmax: tx, tmed: tm, st: r[6] != null ? st : tm, ur, su: (s0 + s1) / 2, vm, vd,
-             sole: z[0], fr: Math.min(1, z[0] / Math.max(1, durata(lat, d))), rad: z[1], nuv: z[2] };
+             sole: z[0], fr: soleRelativo(lat, d, z[1]), rad: z[1], nuv: z[2] };
   });
 }
 // Andamento della stagione nel punto (parabola sui ~100 giorni della serie) tolto da sole e nuvole: i giorni di confronto sono

@@ -38,7 +38,7 @@ jobs:
       - name: Salva
         if: always()
         run: |
-          git add data/gbif/sole data/validazione/sole.json 2>/dev/null || true
+          git add data/gbif/sole data/gbif/sole_log.txt data/validazione/sole.json 2>/dev/null || true
           git commit -q -m "Sole e nuvole per le verifiche [skip ci]" || exit 0
           for t in 1 2 3; do git pull -q --rebase -X theirs origin main && git push -q origin HEAD:main && exit 0; git rebase --abort 2>/dev/null || true; sleep 10; done
           exit 1
