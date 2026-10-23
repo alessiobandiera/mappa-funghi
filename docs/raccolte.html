@@ -183,7 +183,7 @@ html.mappa-piena #mappa{position:fixed!important;inset:env(safe-area-inset-top) 
       <label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" id="opt-percorso" style="width:22px;height:22px;margin:2px 0 0">
         <span>Registra il percorso durante i giri. L'app tiene acceso lo schermo (consuma batteria: per giri lunghi porta una powerbank); se lo schermo si spegne o cambi app la traccia si ferma e riprende quando torni.</span></label>
       <p class="nota" style="text-align:left">Percorso completo anche col telefono in tasca: registralo con un'app di tracce che esporta GPX e caricalo qui. Si aggancia da solo al giro con gli stessi orari.</p>
-      <label class="btn" style="align-self:flex-start">Importa percorso (GPX)…<input class="sr" type="file" id="importa-gpx" accept=".gpx,application/gpx+xml,application/xml,text/xml"></label>
+      <label class="btn" style="align-self:flex-start">Importa percorso (GPX)…<input class="sr" type="file" id="importa-gpx"></label>
     </div>
     <div class="box" id="archivio"></div>
     <div class="box">
@@ -455,7 +455,7 @@ async function apri(id) {
       </div>
       <p class="nota" style="text-align:left;margin:0" id="mappanota">${v.indice_mappa != null ? "Porcino, cella della mappa più vicina al punto di partenza." : ""}</p></div>
     <div class="campo"><span>Percorso</span><p style="margin:0" id="percorso">${percorsoTxt(v)}</p>
-      <div class="riga"><label class="btn">Importa percorso (GPX)…<input class="sr" type="file" id="gpx-giro" accept=".gpx,application/gpx+xml,application/xml,text/xml"></label>
+      <div class="riga"><label class="btn">Importa percorso (GPX)…<input class="sr" type="file" id="gpx-giro"></label>
         ${TRACCE.get(v.id) && (!traccia || traccia.id !== v.id) ? `<button class="btn rosso" type="button" id="togli-traccia">Elimina percorso</button>` : ""}</div></div>
     ${!v.fine ? `<p class="avviso">Giro ancora aperto.</p>` : ""}`}
     <div class="campo"><label for="nota">Nota</label><textarea id="nota" placeholder="${fungo ? "es. sotto il faggio grande, versante nord" : "es. terreno secco, tanta gente"}">${esc(v.nota)}</textarea></div>
@@ -802,9 +802,20 @@ function trkGPX(tr, nome) {
   return `<trk><name>${esc(nome)}</name>` + S.map((a, i) => tr.punti.slice(a, i + 1 < S.length ? S[i + 1] : tr.punti.length))
     .filter(t => t.length).map(t => "<trkseg>" + t.map(pt).join("") + "</trkseg>").join("") + "</trk>";
 }
-// GPX di un'app di tracce: si aggancia al giro indicato o a quello con gli orari che si sovrappongono di più; se non c'è, nuovo giro
+// GPX di un'app di tracce: si aggancia al giro indicato o a quello con gli orari che si sovrappongono di più; se non c'è, nuovo giro.
+// Niente «accept» sui due campi file: su iPhone i file .gpx risultavano grigi e non si potevano scegliere (iOS non conosce il tipo
+// GPX se nessuna app lo dichiara). Si può scegliere qualsiasi file e il controllo lo fa importaGPX (23/10/2026).
 async function importaGPX(file, giroId) {
-  let doc; try { doc = new DOMParser().parseFromString(await file.text(), "application/xml"); } catch { avviso("File GPX non valido"); return; }
+  try { return await importaGPXfile(file, giroId); }
+  catch (e) { avviso("Non riesco a leggere il file: " + (e && e.message || e)); }
+}
+async function importaGPXfile(file, giroId) {
+  avviso("Leggo " + file.name + "…");
+  const testo = await file.text();
+  if (/<kml[\s>]/i.test(testo)) { avviso("È un file KML: dall'app delle tracce esporta in formato GPX"); return; }
+  if (!/<gpx[\s>]/i.test(testo)) { avviso("Il file scelto non è un GPX (" + file.name + ")"); return; }
+  const doc = new DOMParser().parseFromString(testo, "application/xml");
+  if (doc.getElementsByTagName("parsererror").length) { avviso("File GPX rovinato: non riesco a leggerlo"); return; }
   const punti = [], seg = [];
   const segmenti = [...doc.getElementsByTagNameNS("*", "trkseg")];
   const gruppi = segmenti.length ? segmenti.map(x => [...x.getElementsByTagNameNS("*", "trkpt")]) : [[...doc.getElementsByTagNameNS("*", "rtept")]];
