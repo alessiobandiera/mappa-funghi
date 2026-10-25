@@ -1,9 +1,11 @@
 {
  "giorno": "2026-10-24",
  "stazioni_pronte": {
-  "pluvio": "105/141"
+  "pluvio": "140/141"
  },
- "chiusi": [],
- "secondi": 434,
- "quando": "2026-10-25T11:53+01:00"
+ "chiusi": [
+  "2026-10-24 pluvio"
+ ],
+ "secondi": 162,
+ "quando": "2026-10-25T14:46+01:00"
 }
