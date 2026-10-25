@@ -1,14 +1,9 @@
 {
  "giorno": "2026-10-24",
  "stazioni_pronte": {
-  "anemo": "47/47",
-  "termo": "89/89",
-  "pluvio": "2/141"
+  "pluvio": "105/141"
  },
- "chiusi": [
-  "2026-10-24 anemo",
-  "2026-10-24 termo"
- ],
+ "chiusi": [],
  "secondi": 434,
- "quando": "2026-10-25T08:54+01:00"
+ "quando": "2026-10-25T11:53+01:00"
 }
