@@ -329,12 +329,25 @@ function metri(a, b) {   // [lat, lon] → metri
   const k = Math.PI / 180, dl = (b[0] - a[0]) * k, dn = (b[1] - a[1]) * k * Math.cos((a[0] + b[0]) / 2 * k);
   return 6371000 * Math.hypot(dl, dn);
 }
+// Quote del GPS: alcune app di tracce scrivono a tratti quote impossibili (GPX del 25/10/2026 alle Pizzorne: 806 punti su 2.167 a
+// 8.850-9.440 m invece di 885-944, cioè ×10). Si tolgono le quote fuori dal possibile o lontane più di 1.500 m dalla mediana del
+// percorso; la posizione del punto resta. Restituisce quante quote ha tolto.
+const QUOTA_MIN = -100, QUOTA_MAX = 4810;
+function pulisciQuote(P) {
+  let tolte = 0;
+  for (const p of P) if (p[2] != null && !(p[2] >= QUOTA_MIN && p[2] <= QUOTA_MAX)) { p[2] = null; tolte++; }
+  const q = P.map(p => p[2]).filter(x => x != null).sort((a, b) => a - b);
+  if (q.length) { const med = q[q.length >> 1]; for (const p of P) if (p[2] != null && Math.abs(p[2] - med) > 1500) { p[2] = null; tolte++; } }
+  return tolte;
+}
+// Salita: conta solo i dislivelli di almeno 10 m dal punto più basso precedente, così il tremolio della quota GPS (qualche metro su e giù
+// a ogni punto) non si somma (24/10/2026: 390 m di «salita» in un giro fra 723 e 799 m).
 function misuraTraccia(tr) {
-  let m = 0, su = 0; const P = tr.punti, S = new Set(tr.seg || [0]);
-  for (let i = 1; i < P.length; i++) {
-    if (S.has(i)) continue;
-    m += metri(P[i - 1], P[i]);
-    if (P[i][2] != null && P[i - 1][2] != null && P[i][2] > P[i - 1][2]) su += P[i][2] - P[i - 1][2];
+  let m = 0, su = 0, rif = null; const P = tr.punti, S = new Set(tr.seg || [0]);
+  for (let i = 0; i < P.length; i++) {
+    if (i > 0 && !S.has(i)) m += metri(P[i - 1], P[i]);
+    const e = P[i][2]; if (e == null) continue;
+    if (rif == null || e < rif) rif = e; else if (e >= rif + 10) { su += e - rif; rif = e; }
   }
   const t = P.filter(x => x[3]).map(x => x[3]);
   return { traccia_km: +(m / 1000).toFixed(2), traccia_punti: P.length, traccia_salita: Math.round(su),
@@ -381,7 +394,8 @@ function nuovoPunto(p) {
     if (d < Math.max(8, .8 * c.accuracy) && dt < 120000) return;    // fermo o quasi: niente punto nuovo (al massimo uno ogni 2 minuti)
     if (dt > 180000 && traccia.seg[traccia.seg.length - 1] !== P.length) traccia.seg.push(P.length);   // buco di più di 3 minuti: nuovo tratto
   }
-  P.push([+c.latitude.toFixed(6), +c.longitude.toFixed(6), c.altitude != null ? Math.round(c.altitude) : null, p.timestamp, Math.round(c.accuracy)]);
+  const quota = c.altitude != null && c.altitude >= QUOTA_MIN && c.altitude <= QUOTA_MAX ? Math.round(c.altitude) : null;
+  P.push([+c.latitude.toFixed(6), +c.longitude.toFixed(6), quota, p.timestamp, Math.round(c.accuracy)]);
   if (Date.now() - salvataT > 15000) salvaTraccia();
   disegnaGiro(); if (mappa) disegnaTracce(); if (frame) disegnaSopra();
 }
@@ -828,6 +842,7 @@ async function importaGPXfile(file, giroId) {
     }
   }
   if (punti.length < 2) { avviso("Nel file non c'è un percorso"); return; }
+  pulisciQuote(punti);
   const t0 = punti.find(x => x[3]), t1 = [...punti].reverse().find(x => x[3]);
   let g = giroId ? VOCI.find(v => v.id === giroId) : null;
   if (!g && t0) {
@@ -1039,7 +1054,19 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("raccolte-sw.
 // GPS acceso mentre la pagina è aperta: al tocco la posizione è già pronta
 function sveglia() { if (document.visibilityState === "visible") posizione(30000); }
 document.addEventListener("visibilitychange", sveglia);
-ricarica().then(async () => { statoApp(); const g = giroAttivo(); if (g && await registraPercorso()) avviaTraccia(g.id); else sveglia(); });
+// Tracce già salvate prima della pulizia delle quote (30/10/2026): si tolgono le quote impossibili e si rifanno le misure del giro.
+// Se cambia qualcosa il giro si risalva (e va nell'archivio privato al prossimo salvataggio automatico).
+async function ripulisciTracce() {
+  let n = 0;
+  for (const tr of [...TRACCE.values()]) {
+    if (traccia && traccia.id === tr.id) continue;
+    const tolte = pulisciQuote(tr.punti), m = misuraTraccia(tr), g = VOCI.find(v => v.id === tr.id);
+    if (tolte) await salvaTracciaDB(tr);
+    if (g && (tolte || g.traccia_salita !== m.traccia_salita || g.traccia_km !== m.traccia_km)) { Object.assign(g, m); await salva(g); n++; }
+  }
+  if (n) await ricarica();
+}
+ricarica().then(async () => { try { await ripulisciTracce(); } catch (e) {} statoApp(); const g = giroAttivo(); if (g && await registraPercorso()) avviaTraccia(g.id); else sveglia(); });
 </script>
 </body>
 </html>
