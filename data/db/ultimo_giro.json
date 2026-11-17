@@ -1,14 +1,9 @@
 {
  "giorno": "2026-11-16",
  "stazioni_pronte": {
-  "anemo": "47/47",
-  "termo": "89/89",
-  "pluvio": "2/141"
+  "pluvio": "105/141"
  },
- "chiusi": [
-  "2026-11-16 anemo",
-  "2026-11-16 termo"
- ],
+ "chiusi": [],
  "secondi": 433,
- "quando": "2026-11-17T15:24+01:00"
+ "quando": "2026-11-17T18:07+01:00"
 }
